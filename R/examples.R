@@ -13,8 +13,9 @@ tau.pred <- function(x,burnin,num_sweeps)
 ## Setup
 set.seed(000)
 library(XBART)
+##mu <- function(W, X) return(0.1 * rowSums(W) + 1/(1+exp(-5*X)))
 mu <- function(W, X) return(0.1 * rowSums(W) + 1/(1+exp(-5*X)))
-tau <- function(W, X) return( sin(mu(W, X)) + 1) # make sure the treatment effect is non-zero
+tau <- function(W, X) return( mu(W, X)^3 + 1) # make sure the treatment effect is non-zero
 
 n <- 2000
 p <- 2
@@ -25,6 +26,7 @@ w <- matrix(rnorm(n*p), n, p)
 x <- rnorm(n,sd=.5)
 z <- x >= c
 y <- mu(w, x) + tau(w, x)*z + rnorm(n, 0, 0.1)
+true.ate <- mean(tau(w,0))
 
 ## Estimation settings
 ### Owidth: overlap bandiwdth
@@ -74,7 +76,7 @@ for (i in 1:length(Owidth))
 ate <- do.call("rbind",lapply(pred.list,tau.pred,burnin,num_sweeps))
 ### Plot
 ylim <- c(min(range(true.ate,ate)), max(range(true.ate,ate)))
-png("bias_variance.png")
+##png("bias_variance.png")
 matplot(Owidth,ate,ylim=ylim,type="l",lty=c(2,2,1),lwd=c(1,1,1.5),col="blue")
 abline(h=mean(tau(w,0)),lty=2)
-dev.off()
+##dev.off()
