@@ -81,15 +81,8 @@ results$cont.tau <- matrix(0,nrow=s,ncol=6,dimnames=dims)
 results$cont.zero <- matrix(0,nrow=s,ncol=6,dimnames=dims)
 results$int.length <- matrix(0,nrow=s,ncol=6,dimnames=dims)
 ###
-
-## Data
-mu <- function(W, X) return(0.1 * rowSums(W) + 1/(1+exp(-5*X)))
-tau <- function(W, X) return( sin(mu(W, X)) + 1)
 for (i in 1:s)
 {
-    n <- 2000
-    p <- 2
-    c <- 0 # Cutoff
     w <- matrix(rnorm(n*p), n, p)
     x <- rnorm(n,sd=.5)
     z <- x >= c
