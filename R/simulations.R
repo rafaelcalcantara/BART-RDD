@@ -78,14 +78,14 @@ Owidth
 ## Simulations
 s <- 10 ## samples
 ###
-results <- list("mse"=NA,"cont.tau"=NA,
-                "cont.zero"=NA,int.length=NA)
+results <- list(mse=NA,cont.tau=NA,cont.zero=NA,int.length=NA,pe=NA)
 dims <- list(NULL,c("XBCF-RDD (1)","XBCF-RDD (2)","XBCF-RDD (3)",
                     "CGS","KR","FH"))
 results$mse <- matrix(0,nrow=s,ncol=6,dimnames=dims)
 results$cont.tau <- matrix(0,nrow=s,ncol=6,dimnames=dims)
 results$cont.zero <- matrix(0,nrow=s,ncol=6,dimnames=dims)
 results$int.length <- matrix(0,nrow=s,ncol=6,dimnames=dims)
+results$pe <- matrix(0,nrow=s,ncol=6,dimnames=dims)
 ###
 for (i in 1:s)
 {
@@ -103,39 +103,37 @@ for (i in 1:s)
     ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
                 ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
                 ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
-### other methods
     ## Store results
 ### mse
     results$mse[i,1] <- (ate.xbcf[1,3]-true.ate)^2
     results$mse[i,2] <- (ate.xbcf[2,3]-true.ate)^2
     results$mse[i,3] <- (ate.xbcf[3,3]-true.ate)^2
     results$mse[i,"KR"] <- (ate.kr[1]-true.ate)^2
-#### other methods
 ### cont.tau
     results$cont.tau[i,1] <- true.ate >= ate.xbcf[1,1] & true.ate <= ate.xbcf[1,2]
     results$cont.tau[i,2] <- true.ate >= ate.xbcf[2,1] & true.ate <= ate.xbcf[2,2]
     results$cont.tau[i,3] <- true.ate >= ate.xbcf[3,1] & true.ate <= ate.xbcf[3,2]
     results$cont.tau[i,"KR"] <- true.ate >= ate.kr[2] & true.ate <= ate.kr[3]
-#### other methods
 ### cont.zero
     results$cont.zero[i,1] <- 0 >= ate.xbcf[1,1] & 0 <= ate.xbcf[1,2]
     results$cont.zero[i,2] <- 0 >= ate.xbcf[2,1] & 0 <= ate.xbcf[2,2]
     results$cont.zero[i,3] <- 0 >= ate.xbcf[3,1] & 0 <= ate.xbcf[3,2]
     results$cont.zero[i,"KR"] <- 0 >= ate.kr[2] & 0 <= ate.kr[3]
-#### other methods
 ### int.length
     results$int.length[i,1] <- ate.xbcf[1,2] - ate.xbcf[1,1]
     results$int.length[i,2] <- ate.xbcf[2,2] - ate.xbcf[2,1]
     results$int.length[i,3] <- ate.xbcf[3,2] - ate.xbcf[3,1]
     results$int.length[i,"KR"] <- ate.kr[3] - ate.kr[2]
-#### other methods
+### pe (point.estimate)
+    results$pe[i,1] <- ate.xbcf[1,3]
+    results$pe[i,2] <- ate.xbcf[2,3]
+    results$pe[i,3] <- ate.xbcf[3,3]
+    results$pe[i,"KR"] <- ate.kr[1]
 }
 ## Load CGS results and merge
 cgs <- readRDS("results_cgs.rds")
 ## Plot results
-par(mfrow=c(2,2))
-boxplot(results$mse+cgs$mse,cex.axis=.75)
-barplot(t(do.call("rbind",as.list(apply(results$cont.tau+cgs$cont.tau,2,table)))),beside=T)
-barplot(t(do.call("rbind",as.list(apply(results$cont.zero+cgs$cont.zero,2,table)))),beside=T)
-boxplot(results$int.length+cgs$int.length)
+par(mfrow=c(1,2))
+boxplot(sqrt(results$mse+cgs$mse),cex.axis=.75)
+boxplot(results$pe+cgs$pe,cex.axis=.75)
 par(mfrow=c(1,1))

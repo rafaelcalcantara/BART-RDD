@@ -23,14 +23,14 @@ nsamples <- 100
 ## Simulations
 s <- 100 ## samples
 ###
-results <- list("mse"=NA,"cont.tau"=NA,
-                "cont.zero"=NA,int.length=NA)
+results <- list(mse=NA,cont.tau=NA,cont.zero=NA,int.length=NA,pe=NA)
 dims <- list(NULL,c("XBCF-RDD (1)","XBCF-RDD (2)","XBCF-RDD (3)",
                     "CGS","KR","FH"))
 results$mse <- matrix(0,nrow=s,ncol=6,dimnames=dims)
 results$cont.tau <- matrix(0,nrow=s,ncol=6,dimnames=dims)
 results$cont.zero <- matrix(0,nrow=s,ncol=6,dimnames=dims)
 results$int.length <- matrix(0,nrow=s,ncol=6,dimnames=dims)
+results$pe <- matrix(0,nrow=s,ncol=6,dimnames=dims)
 ###
 for (i in 1:s)
 {
@@ -60,13 +60,15 @@ for (i in 1:s)
   ate.cgs <- c(quantile(ate.cgs$atem,c(.025,.975)),mean(ate.cgs$atem))
   ## Store results
   ### mse
-  results$mse[i,4] <- (ate.cgs[3]-true.ate)^2
+  results$mse[i,"CGS"] <- (ate.cgs[3]-true.ate)^2
   ### cont.tau
-  results$cont.tau[i,4] <- true.ate >= ate.cgs[1] & true.ate <= ate.cgs[2]
+  results$cont.tau[i,"CGS"] <- true.ate >= ate.cgs[1] & true.ate <= ate.cgs[2]
   ### cont.zero
-  results$cont.zero[i,4] <- 0 >= ate.cgs[1] & 0 <= ate.cgs[2]
+  results$cont.zero[i,"CGS"] <- 0 >= ate.cgs[1] & 0 <= ate.cgs[2]
   ### int.length
-  results$int.length[i,4] <- ate.cgs[2] - ate.cgs[1]
+  results$int.length[i,"CGS"] <- ate.cgs[2] - ate.cgs[1]
+### pe (point estimate)
+  results$pe[i,"CGS"] <- ate.cgs[3]
 }
 ##
 saveRDS(results,"~/Git/XBCF-RDD/R/results_cgs.rds")
