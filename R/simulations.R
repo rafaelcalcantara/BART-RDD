@@ -1,6 +1,12 @@
 ## Install latest version of XBART package if available
 library(devtools)
 install_github("JingyuHe/XBART@XBCF-RDD")
+## Install latest version of HighDimRD package (KR)
+#library(remotes)
+#remotes::install_github("kolesarm/RDHonest")
+#library(RDHonest)
+install_github("Rafael-C-Alcantara/HighDimRD")
+library(HighDimRD)
 
 ## Helper functions
 ### Extract 95% CI and posterior mean from pred.XBCFrd
@@ -49,7 +55,7 @@ true.ate <- mean(tau(w,0))
 ### Omin: minimum number of observations inside overlap region for each leaf node
 ### Opct: If nb is the number of obs in node b, Opct*nb of them have to be inside overlap region
 Owidth        <- seq(0.01,0.1,by=0.005)
-Omin          <- 10
+Omin          <- 5
 Opct          <- 0.9
 num_trees_mod <- 10
 num_trees_con <- 10
@@ -88,35 +94,48 @@ for (i in 1:s)
     z <- x >= c
     y <- mu(w, x) + tau(w, x)*z + rnorm(n, 0, 0.1)
     true.ate <- mean(tau(w,0))
+    ## Get interactions and expansions for KR
+    w1 <- fourier_basis(w,4)
+    w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
     ## Estimation
     ate.xbcf <- min.mse(Owidth)
+    ate.kr  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
+    ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
+                ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
+                ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
 ### other methods
     ## Store results
 ### mse
     results$mse[i,1] <- (ate.xbcf[1,3]-true.ate)^2
     results$mse[i,2] <- (ate.xbcf[2,3]-true.ate)^2
     results$mse[i,3] <- (ate.xbcf[3,3]-true.ate)^2
+    results$mse[i,"KR"] <- (ate.kr[1]-true.ate)^2
 #### other methods
 ### cont.tau
     results$cont.tau[i,1] <- true.ate >= ate.xbcf[1,1] & true.ate <= ate.xbcf[1,2]
     results$cont.tau[i,2] <- true.ate >= ate.xbcf[2,1] & true.ate <= ate.xbcf[2,2]
     results$cont.tau[i,3] <- true.ate >= ate.xbcf[3,1] & true.ate <= ate.xbcf[3,2]
+    results$cont.tau[i,"KR"] <- true.ate >= ate.kr[2] & true.ate <= ate.kr[3]
 #### other methods
 ### cont.zero
     results$cont.zero[i,1] <- 0 >= ate.xbcf[1,1] & 0 <= ate.xbcf[1,2]
     results$cont.zero[i,2] <- 0 >= ate.xbcf[2,1] & 0 <= ate.xbcf[2,2]
     results$cont.zero[i,3] <- 0 >= ate.xbcf[3,1] & 0 <= ate.xbcf[3,2]
+    results$cont.zero[i,"KR"] <- 0 >= ate.kr[2] & 0 <= ate.kr[3]
 #### other methods
 ### int.length
     results$int.length[i,1] <- ate.xbcf[1,2] - ate.xbcf[1,1]
     results$int.length[i,2] <- ate.xbcf[2,2] - ate.xbcf[2,1]
     results$int.length[i,3] <- ate.xbcf[3,2] - ate.xbcf[3,1]
+    results$int.length[i,"KR"] <- ate.kr[3] - ate.kr[2]
 #### other methods
 }
+## Load CGS results and merge
+cgs <- readRDS("results_cgs.rds")
 ## Plot results
 par(mfrow=c(2,2))
-boxplot(results$mse)
-barplot(t(do.call("rbind",as.list(apply(results$cont.tau,2,table)))),beside=T)
-barplot(t(do.call("rbind",as.list(apply(results$cont.zero,2,table)))),beside=T)
-boxplot(results$int.length)
+boxplot(results$mse+cgs$mse,cex.axis=.75)
+barplot(t(do.call("rbind",as.list(apply(results$cont.tau+cgs$cont.tau,2,table)))),beside=T)
+barplot(t(do.call("rbind",as.list(apply(results$cont.zero+cgs$cont.zero,2,table)))),beside=T)
+boxplot(results$int.length+cgs$int.length)
 par(mfrow=c(1,1))
