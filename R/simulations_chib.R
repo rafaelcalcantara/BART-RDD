@@ -21,7 +21,7 @@ nuval = 100;
 burn <- 1000
 nsamples <- 100
 ## Simulations
-s <- 100 ## samples
+s <- 1000 ## samples
 ###
 results <- list(mse=NA,cont.tau=NA,cont.zero=NA,int.length=NA,pe=NA)
 dims <- list(NULL,c("XBCF-RDD (1)","XBCF-RDD (2)","XBCF-RDD (3)",
@@ -34,41 +34,42 @@ results$pe <- matrix(0,nrow=s,ncol=6,dimnames=dims)
 ###
 for (i in 1:s)
 {
-  w <- matrix(rnorm(n*p), n, p)
-  x <- rnorm(n,sd=.5)
-  z <- x >= c
-  y <- mu(w, x) + tau(w, x)*z + rnorm(n, 0, 0.1)
-  true.ate <- mean(tau(w,0))
-  ## Estimation
-  ate.cgs <- bayesrddest(y = y,
-                         z = x,
-                         tau = c,
-                         p = P,
-                         mz = mz,
-                         mztau = mztau,
-                         beta0_ = rep(0,4),
-                         lamstmean0_ = lamstmean0_,
-                         lamstsd0_ = lamstsd0_,
-                         d = c(1,1),
-                         s2mean0_ = s2mean0_,
-                         s2sd0_ = s2sd0_,
-                         distribution = "gaussian",
-                         nuval = nuval,
-                         hetero = FALSE,
-                         n0=burn,
-                         m=nsamples)
-  ate.cgs <- c(quantile(ate.cgs$atem,c(.025,.975)),mean(ate.cgs$atem))
-  ## Store results
-  ### mse
-  results$mse[i,"CGS"] <- (ate.cgs[3]-true.ate)^2
-  ### cont.tau
-  results$cont.tau[i,"CGS"] <- true.ate >= ate.cgs[1] & true.ate <= ate.cgs[2]
-  ### cont.zero
-  results$cont.zero[i,"CGS"] <- 0 >= ate.cgs[1] & 0 <= ate.cgs[2]
-  ### int.length
-  results$int.length[i,"CGS"] <- ate.cgs[2] - ate.cgs[1]
+    print(paste0("Iteration ",i))
+    w <- matrix(rnorm(n*p), n, p)
+    x <- rnorm(n,sd=.5)
+    z <- x >= c
+    y <- mu(w, x) + tau(w, x)*z + rnorm(n, 0, 0.1)
+    true.ate <- mean(tau(w,0))
+    ## Estimation
+    ate.cgs <- invisible(bayesrddest(y = y,
+                                     z = x,
+                                     tau = c,
+                                     p = P,
+                                     mz = mz,
+                                     mztau = mztau,
+                                     beta0_ = rep(0,4),
+                                     lamstmean0_ = lamstmean0_,
+                                     lamstsd0_ = lamstsd0_,
+                                     d = c(1,1),
+                                     s2mean0_ = s2mean0_,
+                                     s2sd0_ = s2sd0_,
+                                     distribution = "gaussian",
+                                     nuval = nuval,
+                                     hetero = FALSE,
+                                     n0=burn,
+                                     m=nsamples))
+    ate.cgs <- c(quantile(ate.cgs$atem,c(.025,.975)),mean(ate.cgs$atem))
+    ## Store results
+### mse
+    results$mse[i,"CGS"] <- (ate.cgs[3]-true.ate)^2
+### cont.tau
+    results$cont.tau[i,"CGS"] <- true.ate >= ate.cgs[1] & true.ate <= ate.cgs[2]
+### cont.zero
+    results$cont.zero[i,"CGS"] <- 0 >= ate.cgs[1] & 0 <= ate.cgs[2]
+### int.length
+    results$int.length[i,"CGS"] <- ate.cgs[2] - ate.cgs[1]
 ### pe (point estimate)
-  results$pe[i,"CGS"] <- ate.cgs[3]
+    results$pe[i,"CGS"] <- ate.cgs[3]
 }
 ##
 saveRDS(results,"~/Git/XBCF-RDD/R/results_cgs.rds")

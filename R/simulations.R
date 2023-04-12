@@ -7,7 +7,9 @@ install_github("JingyuHe/XBART@XBCF-RDD")
 #library(RDHonest)
 install_github("Rafael-C-Alcantara/HighDimRD")
 library(HighDimRD)
-
+## Source code from FH
+install.packages(c("np","rdd","matrixStats","xtable","boot"))
+source("R_code_for_Including_covariates_in_the_regression.R")
 ## Helper functions
 ### Extract 95% CI and posterior mean from pred.XBCFrd
 tau.pred <- function(x,burnin,num_sweeps)
@@ -76,7 +78,7 @@ ind <- which(ind %in% head(sort(ind),n=3))
 Owidth <- Owidth[ind]
 Owidth
 ## Simulations
-s <- 10 ## samples
+s <- 100 ## samples
 ###
 results <- list(mse=NA,cont.tau=NA,cont.zero=NA,int.length=NA,pe=NA)
 dims <- list(NULL,c("XBCF-RDD (1)","XBCF-RDD (2)","XBCF-RDD (3)",
