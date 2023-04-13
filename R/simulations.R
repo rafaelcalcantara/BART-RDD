@@ -8,8 +8,8 @@ install_github("JingyuHe/XBART@XBCF-RDD")
 install_github("Rafael-C-Alcantara/HighDimRD")
 library(HighDimRD)
 ## Source code from FH
-install.packages(c("np","rdd","matrixStats","xtable","boot"))
-source("R_code_for_Including_covariates_in_the_regression.R")
+## install.packages(c("np","rdd","matrixStats","xtable","boot"))
+source("R_code_for_Including_covariates_in_the_regression_.R")
 ## Helper functions
 ### Extract 95% CI and posterior mean from pred.XBCFrd
 tau.pred <- function(x,burnin,num_sweeps)
@@ -105,6 +105,7 @@ for (i in 1:s)
     ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
                 ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
                 ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
+    ate.fh <- rdd.x.sim(y,w,x)
     ## Store results
 ### mse
     results$mse[i,1] <- (ate.xbcf[1,3]-true.ate)^2

@@ -1,10 +1,8 @@
-rm(list=ls( ))
 library(np)  
 library(rdd)
 library(matrixStats)
 library(xtable)
 library(boot)
-
 ##############
                                         # Procedures #
 ##############
@@ -26,54 +24,79 @@ library(boot)
                                         # neffect, neffectu, neffecto: "naive effects" without boundary kernel
 
 rdd.x.sim=function(y,z,x, t=NULL, bw0=NULL, bw1=NULL, bwz=NULL, bw0t=NULL, bw1t=NULL){
+    ## NOTE: we don't consider under- or over-smoothing (regXo and regXu, i.e. CV/2 and 2*CV)
+    ## NOTE: we don't consider the naive estimator
+    ## Setting
     d=1*(z>=0)
     xz=data.frame(x,z)
     xzcutoff=data.frame(x,rep(0,length(d)))
     xz0=xz[d==0,]; xz1=xz[d==1,]; d1=d[d==1]; d0=d[d==0]; y1=y[d==1]; y0=y[d==0];
-    if (is.null(bw0)==1) regbw0 <- npregbw(ydat=y0, xdat=xz0, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")
-    if (is.null(bw0)==0) regbw0 <- bw0
-    reg0<-npreg(bws=regbw0, tydat=y0, txdat=xz0, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean 
-    reg0u<-npreg(bws=regbw0$bw/2, tydat=y0, txdat=xz0, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean 
-    reg0o<-npreg(bws=regbw0$bw*2, tydat=y0, txdat=xz0, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
-    if (is.null(bw1)==1) regbw1 <- npregbw(ydat=y1, xdat=xz1, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")
-    if (is.null(bw1)==0) regbw1 <- bw1
+    ## bw0
+    if (is.null(bw0))
+    {
+        regbw0 <- npregbw(ydat=y0, xdat=xz0, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")
+    } else {
+        regbw0 <- bw0
+    }
+    ## reg0
+    reg0<-npreg(bws=regbw0, tydat=y0, txdat=xz0, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
+    ### reg0u<-npreg(bws=regbw0$bw/2, tydat=y0, txdat=xz0, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
+    ### reg0o<-npreg(bws=regbw0$bw*2, tydat=y0, txdat=xz0, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
+    ## bw1
+    if (is.null(bw1))
+    {
+        regbw1 <- npregbw(ydat=y1, xdat=xz1, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")
+    } else {
+        regbw1 <- bw1
+    }
+    ## reg1
     reg1<-npreg(bws=regbw1, tydat=y1, txdat=xz1, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
-    reg1u<-npreg(bws=regbw1$bw/2, tydat=y1, txdat=xz1, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
-    reg1o<-npreg(bws=regbw1$bw*2, tydat=y1, txdat=xz1, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
-    if (is.null(bwz)==1) regbw <- npregbw(ydat=y, xdat=z, bwmethod="cv.ls", ckertype="epanechnikov", regtype="lc")
-    if (is.null(bwz)==0) regbw <- bwz
+    ### reg1u<-npreg(bws=regbw1$bw/2, tydat=y1, txdat=xz1, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
+### reg1o<-npreg(bws=regbw1$bw*2, tydat=y1, txdat=xz1, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
+    ## bwz
+    if (is.null(bwz))
+    {
+        regbw <- npregbw(ydat=y, xdat=z, bwmethod="cv.ls", ckertype="epanechnikov", regtype="lc")
+    } else {
+        regbw <- bwz
+    }
+    ## kernwgt
     kernwgt=npksum(bws=regbw, tydat=y, txdat=z, exdat=0, ckertype="epanechnikov", regtype="lc", return.kernel.weights=TRUE )$kw
-    kernwgtu=npksum(bws=regbw$bw/2, tydat=y, txdat=z, exdat=0, ckertype="epanechnikov", regtype="lc", return.kernel.weights=TRUE )$kw
-    kernwgto=npksum(bws=regbw$bw*2, tydat=y, txdat=z, exdat=0, ckertype="epanechnikov", regtype="lc", return.kernel.weights=TRUE )$kw
+    ### kernwgtu=npksum(bws=regbw$bw/2, tydat=y, txdat=z, exdat=0, ckertype="epanechnikov", regtype="lc", return.kernel.weights=TRUE )$kw
+    ### kernwgto=npksum(bws=regbw$bw*2, tydat=y, txdat=z, exdat=0, ckertype="epanechnikov", regtype="lc", return.kernel.weights=TRUE )$kw
     if (is.null(t)==1){
-        neffect=(sum((reg1-reg0)*kernwgt))/(sum(kernwgt)); neffectu=(sum((reg1u-reg0u)*kernwgtu))/(sum(kernwgtu))
-        neffecto=(sum((reg1o-reg0o)*kernwgto))/(sum(kernwgto))
+        ## neffect=(sum((reg1-reg0)*kernwgt))/(sum(kernwgt))
+        ## neffectu=(sum((reg1u-reg0u)*kernwgtu))/(sum(kernwgtu))
+        ## neffecto=(sum((reg1o-reg0o)*kernwgto))/(sum(kernwgto))
         mu2=0.1; mu1=3/16
-        kernwgt=(mu2-mu1*z)*kernwgt; kernwgtu=(mu2-mu1*z)*kernwgtu
+        kernwgt=(mu2-mu1*z)*kernwgt
+        kernwgtu=(mu2-mu1*z)*kernwgtu
         kernwgto=(mu2-mu1*z)*kernwgto
-        effect=(sum((reg1-reg0)*kernwgt))/(sum(kernwgt)); effectu=(sum((reg1u-reg0u)*kernwgtu))/(sum(kernwgtu))
-        effecto=(sum((reg1o-reg0o)*kernwgto))/(sum(kernwgto))
+        effect=(sum((reg1-reg0)*kernwgt))/(sum(kernwgt))
+        ## effectu=(sum((reg1u-reg0u)*kernwgtu))/(sum(kernwgtu))
+        ## effecto=(sum((reg1o-reg0o)*kernwgto))/(sum(kernwgto))
     }
-    if (is.null(t)!=1){
-        y1=t[d==1]; y0=t[d==0];
-        if (is.null(bw0t)==1) regbw0t <- npregbw(ydat=y0, xdat=xz0, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")
-        if (is.null(bw0t)==0) regbw0t <- bw0t
-        reg0t<-npreg(bws=regbw0t, tydat=y0, txdat=xz0, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean 
-        reg0ut<-npreg(bws=regbw0t$bw/2, tydat=y0, txdat=xz0, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean 
-        reg0ot<-npreg(bws=regbw0t$bw*2, tydat=y0, txdat=xz0, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
-        if (is.null(bw1t)==1) regbw1t <- npregbw(ydat=y1, xdat=xz1, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")
-        if (is.null(bw1t)==0) regbw1t <- bw1t
-        reg1t<-npreg(bws=regbw1t, tydat=y1, txdat=xz1, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
-        reg1ut<-npreg(bws=regbw1t$bw/2, tydat=y1, txdat=xz1, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
-        reg1ot<-npreg(bws=regbw1t$bw*2, tydat=y1, txdat=xz1, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
-        neffect=(sum((reg1-reg0)*kernwgt))/(sum((reg1t-reg0t)*kernwgt)); neffectu=(sum((reg1u-reg0u)*kernwgtu))/(sum((reg1ut-reg0ut)*kernwgtu))
-        neffecto=(sum((reg1o-reg0o)*kernwgto))/(sum((reg1ot-reg0ot)*kernwgto))
-        mu2=0.1; mu1=3/16
-        kernwgt=(mu2-mu1*z)*kernwgt; kernwgtu=(mu2-mu1*z)*kernwgtu
-        kernwgto=(mu2-mu1*z)*kernwgto
-        effect=(sum((reg1-reg0)*kernwgt))/(sum((reg1t-reg0t)*kernwgt)); effectu=(sum((reg1u-reg0u)*kernwgtu))/(sum((reg1ut-reg0ut)*kernwgtu))
-        effecto=(sum((reg1o-reg0o)*kernwgto))/(sum((reg1ot-reg0ot)*kernwgto))
-    }
+    ## Comment out the region below because it's for fuzzy RDD only
+    ## if (is.null(t)!=1){
+    ##     y1=t[d==1]; y0=t[d==0];
+    ##     if (is.null(bw0t)==1) regbw0t <- npregbw(ydat=y0, xdat=xz0, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")
+    ##     if (is.null(bw0t)==0) regbw0t <- bw0t
+    ##     reg0t<-npreg(bws=regbw0t, tydat=y0, txdat=xz0, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean 
+    ##     reg0ut<-npreg(bws=regbw0t$bw/2, tydat=y0, txdat=xz0, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean 
+    ##     reg0ot<-npreg(bws=regbw0t$bw*2, tydat=y0, txdat=xz0, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
+    ##     if (is.null(bw1t)==1) regbw1t <- npregbw(ydat=y1, xdat=xz1, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")
+    ##     if (is.null(bw1t)==0) regbw1t <- bw1t
+    ##     reg1t<-npreg(bws=regbw1t, tydat=y1, txdat=xz1, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
+    ##     reg1ut<-npreg(bws=regbw1t$bw/2, tydat=y1, txdat=xz1, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
+    ##     reg1ot<-npreg(bws=regbw1t$bw*2, tydat=y1, txdat=xz1, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
+    ##     neffect=(sum((reg1-reg0)*kernwgt))/(sum((reg1t-reg0t)*kernwgt)); neffectu=(sum((reg1u-reg0u)*kernwgtu))/(sum((reg1ut-reg0ut)*kernwgtu))
+    ##     neffecto=(sum((reg1o-reg0o)*kernwgto))/(sum((reg1ot-reg0ot)*kernwgto))
+    ##     mu2=0.1; mu1=3/16
+    ##     kernwgt=(mu2-mu1*z)*kernwgt; kernwgtu=(mu2-mu1*z)*kernwgtu
+    ##     kernwgto=(mu2-mu1*z)*kernwgto
+    ##     effect=(sum((reg1-reg0)*kernwgt))/(sum((reg1t-reg0t)*kernwgt)); effectu=(sum((reg1u-reg0u)*kernwgtu))/(sum((reg1ut-reg0ut)*kernwgtu))
+    ##     effecto=(sum((reg1o-reg0o)*kernwgto))/(sum((reg1ot-reg0ot)*kernwgto))
+    ## }
     output=c(effect, effectu, effecto, neffect, neffectu, neffecto)
     output
 }
