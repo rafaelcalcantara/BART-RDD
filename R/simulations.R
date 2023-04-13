@@ -9,7 +9,7 @@ install_github("Rafael-C-Alcantara/HighDimRD")
 library(HighDimRD)
 ## Source code from FH
 ## install.packages(c("np","rdd","matrixStats","xtable","boot"))
-source("R_code_for_Including_covariates_in_the_regression_.R")
+## source("R_code_for_Including_covariates_in_the_regression_.R")
 ## Helper functions
 ### Extract 95% CI and posterior mean from pred.XBCFrd
 tau.pred <- function(x,burnin,num_sweeps)
@@ -76,7 +76,7 @@ burnin        <- 10
 ate <- min.mse(Owidth)
 ylim <- c(min(range(true.ate,ate)), max(range(true.ate,ate)))
 ##
-matplot(Owidth,ate,ylim=ylim,type=c("l","l","b"),lty=c(2,2,1),pch=16,cex=0.75,col="blue")
+matplot(Owidth,ate,ylim=ylim,type=c("l","b","l"),lty=c(2,1,2),pch=16,cex=0.75,col="blue")
 abline(h=mean(tau(w,0)),lty=2)
 ### Get 3 smallest MSE for that run and set Owidth to that
 ind <- (ate[,3]-true.ate)^2
@@ -84,7 +84,7 @@ ind <- which(ind %in% head(sort(ind),n=3))
 Owidth <- Owidth[ind]
 Owidth
 ## Simulations
-s <- 1 ## samples
+s <- 100 ## samples
 ###
 results <- list("XBCF-RDD (1)"=matrix(0,s,3),"XBCF-RDD (2)"=matrix(0,s,3),
                 "XBCF-RDD (3)"=matrix(0,s,3),"CGS"=NA,"KR"=matrix(0,s,3),"FH"=NA)
@@ -105,12 +105,13 @@ for (i in 1:s)
     ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
                 ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
                 ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
-    ### ate.fh <- rdd.x.sim(y,w,x)
+    ### ate.fh <- rdd.x(y,x,w)
     ## Store results
     results[["XBCF-RDD (1)"]][i,] <- ate.xbcf[1,]
     results[["XBCF-RDD (2)"]][i,] <- ate.xbcf[2,]
     results[["XBCF-RDD (3)"]] <- ate.xbcf[3,]
     results[["KR"]][i,] <- ate.kr
+    ## results[["FH"]][i,] <- ate.fh
 }
 ## Load CGS results and merge
 cgs <- readRDS("results_cgs.rds")
@@ -118,6 +119,6 @@ results[["CGS"]] <- cgs$CGS
 results[["FH"]] <- cgs$FH
 saveRDS(results,"results.rds")
 ## Plot MSE
-boxplot(sqrt(results$mse+cgs$mse),cex.axis=.75)
+# boxplot(sqrt(results$mse+cgs$mse),cex.axis=.75)
 ## Table results
-round(resTab(results)+resTab(cgs),digits=4)
+# round(resTab(results)+resTab(cgs),digits=4)
