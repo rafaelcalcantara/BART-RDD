@@ -15,7 +15,7 @@ source("R_code_for_Including_covariates_in_the_regression_.R")
 tau.pred <- function(x,burnin,num_sweeps)
 {
     ate.posterior <- colMeans(x$tau.adj[,(burnin+1):num_sweeps])
-    return(c(quantile(ate.posterior,c(.025,.975)),mean(ate.posterior)))
+    return(c(mean(ate.posterior),quantile(ate.posterior,c(.025,.975))))
 }
 ### Minimize MSE for XBCF-RDD for a given grid of Owidth
 min.mse <- function(h)
@@ -36,6 +36,12 @@ min.mse <- function(h)
 
     ## ATE summary for pred.list
     return(do.call("rbind",lapply(pred.list,tau.pred,burnin,num_sweeps)))
+}
+### Table results
+resTab <- function(x)
+{
+    
+    return(do.call("rbind",lapply(x,colMeans)))
 }
 ## Setup
 set.seed(000)
@@ -78,16 +84,10 @@ ind <- which(ind %in% head(sort(ind),n=3))
 Owidth <- Owidth[ind]
 Owidth
 ## Simulations
-s <- 100 ## samples
+s <- 1 ## samples
 ###
-results <- list(mse=NA,cont.tau=NA,cont.zero=NA,int.length=NA,pe=NA)
-dims <- list(NULL,c("XBCF-RDD (1)","XBCF-RDD (2)","XBCF-RDD (3)",
-                    "CGS","KR","FH"))
-results$mse <- matrix(0,nrow=s,ncol=6,dimnames=dims)
-results$cont.tau <- matrix(0,nrow=s,ncol=6,dimnames=dims)
-results$cont.zero <- matrix(0,nrow=s,ncol=6,dimnames=dims)
-results$int.length <- matrix(0,nrow=s,ncol=6,dimnames=dims)
-results$pe <- matrix(0,nrow=s,ncol=6,dimnames=dims)
+results <- list("XBCF-RDD (1)"=NA,"XBCF-RDD (2)"=NA,
+                "XBCF-RDD (3)"=NA,"CGS"=NA,"KR"=NA,"FH"=NA)
 ###
 for (i in 1:s)
 {
@@ -105,38 +105,18 @@ for (i in 1:s)
     ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
                 ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
                 ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
-    ate.fh <- rdd.x.sim(y,w,x)
+    ### ate.fh <- rdd.x.sim(y,w,x)
     ## Store results
-### mse
-    results$mse[i,1] <- (ate.xbcf[1,3]-true.ate)^2
-    results$mse[i,2] <- (ate.xbcf[2,3]-true.ate)^2
-    results$mse[i,3] <- (ate.xbcf[3,3]-true.ate)^2
-    results$mse[i,"KR"] <- (ate.kr[1]-true.ate)^2
-### cont.tau
-    results$cont.tau[i,1] <- true.ate >= ate.xbcf[1,1] & true.ate <= ate.xbcf[1,2]
-    results$cont.tau[i,2] <- true.ate >= ate.xbcf[2,1] & true.ate <= ate.xbcf[2,2]
-    results$cont.tau[i,3] <- true.ate >= ate.xbcf[3,1] & true.ate <= ate.xbcf[3,2]
-    results$cont.tau[i,"KR"] <- true.ate >= ate.kr[2] & true.ate <= ate.kr[3]
-### cont.zero
-    results$cont.zero[i,1] <- 0 >= ate.xbcf[1,1] & 0 <= ate.xbcf[1,2]
-    results$cont.zero[i,2] <- 0 >= ate.xbcf[2,1] & 0 <= ate.xbcf[2,2]
-    results$cont.zero[i,3] <- 0 >= ate.xbcf[3,1] & 0 <= ate.xbcf[3,2]
-    results$cont.zero[i,"KR"] <- 0 >= ate.kr[2] & 0 <= ate.kr[3]
-### int.length
-    results$int.length[i,1] <- ate.xbcf[1,2] - ate.xbcf[1,1]
-    results$int.length[i,2] <- ate.xbcf[2,2] - ate.xbcf[2,1]
-    results$int.length[i,3] <- ate.xbcf[3,2] - ate.xbcf[3,1]
-    results$int.length[i,"KR"] <- ate.kr[3] - ate.kr[2]
-### pe (point.estimate)
-    results$pe[i,1] <- ate.xbcf[1,3]
-    results$pe[i,2] <- ate.xbcf[2,3]
-    results$pe[i,3] <- ate.xbcf[3,3]
-    results$pe[i,"KR"] <- ate.kr[1]
+    results[["XBCF-RDD (1)"]] <- ate.xbcf[1,]
+    results[["XBCF-RDD (2)"]] <- ate.xbcf[2,]
+    results[["XBCF-RDD (3)"]] <- ate.xbcf[3,]
+    results[["KR"]] <- ate.kr
 }
 ## Load CGS results and merge
 cgs <- readRDS("results_cgs.rds")
-## Plot results
-par(mfrow=c(1,2))
+results[["CGS"]] <- cgs
+saveRDS(results,"results.rds")
+## Plot MSE
 boxplot(sqrt(results$mse+cgs$mse),cex.axis=.75)
-boxplot(results$pe+cgs$pe,cex.axis=.75)
-par(mfrow=c(1,1))
+## Table results
+round(resTab(results)+resTab(cgs),digits=4)
