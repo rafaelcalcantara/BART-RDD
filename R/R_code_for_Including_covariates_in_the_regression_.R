@@ -23,7 +23,7 @@ library(boot)
                                         # effecto: effect based on oversmoothing (CV*2)
                                         # neffect, neffectu, neffecto: "naive effects" without boundary kernel
 
-rdd.x.sim=function(y,z,x, t=NULL, bw0=NULL, bw1=NULL, bwz=NULL, bw0t=NULL, bw1t=NULL){
+rdd.x.sim=function(y,z,x, t=NULL, bw0=NULL, bw1=NULL, bwz=NULL, bw0t=NULL, bw1t=NULL,boot=1999){
     ## NOTE: we don't consider under- or over-smoothing (regXo and regXu, i.e. CV/2 and 2*CV)
     ## NOTE: we don't consider the naive estimator
     ## Setting
@@ -70,9 +70,9 @@ rdd.x.sim=function(y,z,x, t=NULL, bw0=NULL, bw1=NULL, bwz=NULL, bw0t=NULL, bw1t=
         ## neffecto=(sum((reg1o-reg0o)*kernwgto))/(sum(kernwgto))
         mu2=0.1; mu1=3/16
         kernwgt=(mu2-mu1*z)*kernwgt
-        kernwgtu=(mu2-mu1*z)*kernwgtu
-        kernwgto=(mu2-mu1*z)*kernwgto
-        effect=(sum((reg1-reg0)*kernwgt))/(sum(kernwgt))
+        ## kernwgtu=(mu2-mu1*z)*kernwgtu
+        ## kernwgto=(mu2-mu1*z)*kernwgto
+        est=(sum((reg1-reg0)*kernwgt))/(sum(kernwgt))
         ## effectu=(sum((reg1u-reg0u)*kernwgtu))/(sum(kernwgtu))
         ## effecto=(sum((reg1o-reg0o)*kernwgto))/(sum(kernwgto))
     }
@@ -97,8 +97,15 @@ rdd.x.sim=function(y,z,x, t=NULL, bw0=NULL, bw1=NULL, bwz=NULL, bw0t=NULL, bw1t=
     ##     effect=(sum((reg1-reg0)*kernwgt))/(sum((reg1t-reg0t)*kernwgt)); effectu=(sum((reg1u-reg0u)*kernwgtu))/(sum((reg1ut-reg0ut)*kernwgtu))
     ##     effecto=(sum((reg1o-reg0o)*kernwgto))/(sum((reg1ot-reg0ot)*kernwgto))
     ## }
-    output=c(effect, effectu, effecto, neffect, neffectu, neffecto)
-    output
+    ## output=c(effect, effectu, effecto, neffect, neffectu, neffecto)
+    ###
+    ## se=sqrt(colVars(rdd.x.boot(y=y,z=z,x=x, bw0=regbw0$bw, bw1=regbw1$bw, bwz=regbw$bw, boot=boot)))
+    ## results=rbind(est,se, 2*pnorm(-abs(est/se)))
+    ## colnames(results)=c("bw/2", "bw", "bw*2")
+    ## rownames(results)=c("est", "se", "p-val")
+    ## results
+    print(regbw$bw)
+    return(est)
 }
 
 
@@ -117,7 +124,7 @@ rdd.x.sim=function(y,z,x, t=NULL, bw0=NULL, bw1=NULL, bwz=NULL, bw0t=NULL, bw1t=
                                         # estimates when using bandiwdths  bw0, bw1, and bwz (bw),
                                         # estimates when using bandiwdths  bw0, bw1 and twice bandwidth bwz (bw*2)
 
-rdd.x=function(y,z,x, boot=1999, bw0=NULL, bw1=NULL, bwz=NULL){
+rdd.x=function(y,z,x, boot=100, bw0=NULL, bw1=NULL, bwz=NULL){
     d=1*(z>=0)
     xz=data.frame(x,z)
     xzcutoff=data.frame(x,rep(0,length(d)))
@@ -128,12 +135,14 @@ rdd.x=function(y,z,x, boot=1999, bw0=NULL, bw1=NULL, bwz=NULL){
     if (is.null(bw1)==0) regbw1 <- bw1
     if (is.null(bwz)==1) regbw <- npregbw(ydat=y, xdat=z, bwmethod="cv.ls", ckertype="epanechnikov", regtype="lc")$bw
     if (is.null(bwz)==0) regbw <- bwz
-    est=rdd.x.est(y,z,x, bw0, bw1, bwz)
-    se=sqrt(colVars(rdd.x.boot(y=y,z=z,x=x, bw0=bw0, bw1=bw1, bwz=bwz, boot=boot)))
-    results=rbind(est,se, 2*pnorm(-abs(est/se)))
-    colnames(results)=c("bw/2", "bw", "bw*2")
-    rownames(results)=c("est", "se", "p-val")
-    results
+    est=rdd.x.est(y,z,x, regbw0, regbw1, regbw)
+    se=sqrt(colVars(rdd.x.boot(y=y,z=z,x=x, bw0=regbw0, bw1=regbw1, bwz=regbw, boot=boot)))
+    ## print(se)
+    ## results=rbind(est,se, 2*pnorm(-abs(est/se)))
+    ## colnames(results)=c("bw/2", "bw", "bw*2")
+    ## rownames(results)=c("est", "se", "p-val")
+    ## results
+    return(c(est,est-1.96*se,est+1.96*se))
 }
 
 rdd.x.est=function(y,z,x, bw0, bw1, bwz){
@@ -142,19 +151,20 @@ rdd.x.est=function(y,z,x, bw0, bw1, bwz){
     xzcutoff=data.frame(x,rep(0,length(d)))
     xz0=xz[d==0,]; xz1=xz[d==1,]; d1=d[d==1]; d0=d[d==0]; y1=y[d==1]; y0=y[d==0]; 
     reg0<-npreg(bws=bw0, tydat=y0, txdat=xz0, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean 
-    reg0u<-reg0; reg0o<-reg0
+    ## reg0u<-reg0; reg0o<-reg0
     reg1<-npreg(bws=bw1, tydat=y1, txdat=xz1, exdat=xzcutoff, bwmethod="cv.ls", ckertype="epanechnikov", regtype="ll")$mean
-    reg1u<-reg1; reg1o<-reg1 
+    ## reg1u<-reg1; reg1o<-reg1
     kernwgt=npksum(bws=bwz, tydat=y, txdat=z, exdat=0, ckertype="epanechnikov", regtype="lc", return.kernel.weights=TRUE )$kw
-    kernwgtu=npksum(bws=bwz/2, tydat=y, txdat=z, exdat=0, ckertype="epanechnikov", regtype="lc", return.kernel.weights=TRUE )$kw
-    kernwgto=npksum(bws=bwz*2, tydat=y, txdat=z, exdat=0, ckertype="epanechnikov", regtype="lc", return.kernel.weights=TRUE )$kw
+    ## kernwgtu=npksum(bws=bwz/2, tydat=y, txdat=z, exdat=0, ckertype="epanechnikov", regtype="lc", return.kernel.weights=TRUE )$kw
+    ## kernwgto=npksum(bws=bwz*2, tydat=y, txdat=z, exdat=0, ckertype="epanechnikov", regtype="lc", return.kernel.weights=TRUE )$kw
     mu2=0.1; mu1=3/16
-    kernwgt=(mu2-mu1*z)*kernwgt; kernwgtu=(mu2-mu1*z)*kernwgtu
-    kernwgto=(mu2-mu1*z)*kernwgto
-    effect=(sum((reg1-reg0)*kernwgt))/(sum(kernwgt)); effectu=(sum((reg1u-reg0u)*kernwgtu))/(sum(kernwgtu))
-    effecto=(sum((reg1o-reg0o)*kernwgto))/(sum(kernwgto))
-    output=c(effectu, effect, effecto) 
-    output
+    kernwgt=(mu2-mu1*z)*kernwgt; ## kernwgtu=(mu2-mu1*z)*kernwgtu
+    ## kernwgto=(mu2-mu1*z)*kernwgto
+    effect=(sum((reg1-reg0)*kernwgt))/(sum(kernwgt)); ## effectu=(sum((reg1u-reg0u)*kernwgtu))/(sum(kernwgtu))
+    ## effecto=(sum((reg1o-reg0o)*kernwgto))/(sum(kernwgto))
+    ## output=c(effectu, effect, effecto) 
+    ## output
+    return(effect)
 }
 
 

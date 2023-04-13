@@ -2,6 +2,9 @@
 install.packages("http://apps.olin.wustl.edu/faculty/chib/rpackages/rdd/bayesrdd_1.0.zip",
                  repo=NULL,source=T)
 library(bayesrdd)
+## Install and load FH
+install.packages(c("np","rdd","matrixStats","xtable","boot"))
+source("R_code_for_Including_covariates_in_the_regression_.R")
 set.seed(000)
 ## Setup
 mu <- function(W, X) return(0.1 * rowSums(W) + 1/(1+exp(-5*X)))
@@ -21,16 +24,10 @@ nuval = 100;
 burn <- 1000
 nsamples <- 100
 ## Simulations
-s <- 1000 ## samples
+s <- 2 ## samples
 ###
-results <- list(mse=NA,cont.tau=NA,cont.zero=NA,int.length=NA,pe=NA)
-dims <- list(NULL,c("XBCF-RDD (1)","XBCF-RDD (2)","XBCF-RDD (3)",
-                    "CGS","KR","FH"))
-results$mse <- matrix(0,nrow=s,ncol=6,dimnames=dims)
-results$cont.tau <- matrix(0,nrow=s,ncol=6,dimnames=dims)
-results$cont.zero <- matrix(0,nrow=s,ncol=6,dimnames=dims)
-results$int.length <- matrix(0,nrow=s,ncol=6,dimnames=dims)
-results$pe <- matrix(0,nrow=s,ncol=6,dimnames=dims)
+results <- list("XBCF-RDD (1)"=NA,"XBCF-RDD (2)"=NA,
+                "XBCF-RDD (3)"=NA,"CGS"=matrix(0,s,3),"KR"=NA,"FH"=matrix(0,s,3))
 ###
 for (i in 1:s)
 {
@@ -58,18 +55,11 @@ for (i in 1:s)
                                      hetero = FALSE,
                                      n0=burn,
                                      m=nsamples))
-    ate.cgs <- c(quantile(ate.cgs$atem,c(.025,.975)),mean(ate.cgs$atem))
+    ate.cgs <- c(mean(ate.cgs$atem),quantile(ate.cgs$atem,c(.025,.975)))
+    ate.fh <- rdd.x(y,x,w)
     ## Store results
-### mse
-    results$mse[i,"CGS"] <- (ate.cgs[3]-true.ate)^2
-### cont.tau
-    results$cont.tau[i,"CGS"] <- true.ate >= ate.cgs[1] & true.ate <= ate.cgs[2]
-### cont.zero
-    results$cont.zero[i,"CGS"] <- 0 >= ate.cgs[1] & 0 <= ate.cgs[2]
-### int.length
-    results$int.length[i,"CGS"] <- ate.cgs[2] - ate.cgs[1]
-### pe (point estimate)
-    results$pe[i,"CGS"] <- ate.cgs[3]
+    results$CGS[i,] <- ate.cgs
+    results$FH[i,] <- ate.fh
 }
 ##
 saveRDS(results,"~/Git/XBCF-RDD/R/results_cgs.rds")

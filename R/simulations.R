@@ -86,8 +86,8 @@ Owidth
 ## Simulations
 s <- 1 ## samples
 ###
-results <- list("XBCF-RDD (1)"=NA,"XBCF-RDD (2)"=NA,
-                "XBCF-RDD (3)"=NA,"CGS"=NA,"KR"=NA,"FH"=NA)
+results <- list("XBCF-RDD (1)"=matrix(0,s,3),"XBCF-RDD (2)"=matrix(0,s,3),
+                "XBCF-RDD (3)"=matrix(0,s,3),"CGS"=NA,"KR"=matrix(0,s,3),"FH"=NA)
 ###
 for (i in 1:s)
 {
@@ -107,14 +107,15 @@ for (i in 1:s)
                 ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
     ### ate.fh <- rdd.x.sim(y,w,x)
     ## Store results
-    results[["XBCF-RDD (1)"]] <- ate.xbcf[1,]
-    results[["XBCF-RDD (2)"]] <- ate.xbcf[2,]
+    results[["XBCF-RDD (1)"]][i,] <- ate.xbcf[1,]
+    results[["XBCF-RDD (2)"]][i,] <- ate.xbcf[2,]
     results[["XBCF-RDD (3)"]] <- ate.xbcf[3,]
-    results[["KR"]] <- ate.kr
+    results[["KR"]][i,] <- ate.kr
 }
 ## Load CGS results and merge
 cgs <- readRDS("results_cgs.rds")
-results[["CGS"]] <- cgs
+results[["CGS"]] <- cgs$CGS
+results[["FH"]] <- cgs$FH
 saveRDS(results,"results.rds")
 ## Plot MSE
 boxplot(sqrt(results$mse+cgs$mse),cex.axis=.75)
