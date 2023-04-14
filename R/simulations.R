@@ -40,7 +40,13 @@ min.mse <- function(h)
 ### Plot results
 resPlot <- function(x)
 {
-    
+    plotMat <- do.call("cbind",lapply(x[2:7],function(y) (y[,1]-x$ATE)^2))
+    boxplot(plotMat)
+}
+### Table results
+resTab <- function(x)
+{
+    return(colMeans(do.call("cbind",lapply(x[2:7],function(y) (y[,1]-x$ATE)^2))))
 }
 ## Example data
 set.seed(000)
@@ -58,13 +64,13 @@ true.ate <- mean(tau(w,0))
 ### Owidth: overlap bandiwdth
 ### Omin: minimum number of observations inside overlap region for each leaf node
 ### Opct: If nb is the number of obs in node b, Opct*nb of them have to be inside overlap region
-Owidth        <- seq(0.01,0.1,by=0.005)
+Owidth        <- seq(0.01,0.5,by=0.005)
 Omin          <- 5
 Opct          <- 0.9
 num_trees_mod <- 10
 num_trees_con <- 10
 num_cutpoints <- n
-Nmin          <- 20
+Nmin          <- 10
 num_sweeps    <- 20
 burnin        <- 10
 
@@ -75,7 +81,7 @@ ylim <- c(min(range(true.ate,ate)), max(range(true.ate,ate)))
 matplot(Owidth,ate,ylim=ylim,type=c("b","l","l"),lty=c(1,2,2),pch=16,cex=0.75,col="blue")
 abline(h=mean(tau(w,0)),lty=2)
 ### Get 3 smallest MSE for that run and set Owidth to that
-ind <- (ate[,3]-true.ate)^2
+ind <- (ate[,1]-true.ate)^2
 ind <- which(ind %in% head(sort(ind),n=3))
 Owidth <- Owidth[ind]
 Owidth
@@ -107,7 +113,7 @@ for (i in 1:s)
     ## Store results
     results[["XBCF-RDD (1)"]][i,] <- ate.xbcf[1,]
     results[["XBCF-RDD (2)"]][i,] <- ate.xbcf[2,]
-    results[["XBCF-RDD (3)"]] <- ate.xbcf[3,]
+    results[["XBCF-RDD (3)"]][i,] <- ate.xbcf[3,]
     results[["KR"]][i,] <- ate.kr
     results[["FH"]][i,] <- ate.fh
     results[["ATE"]][i] <- mean(tau(w,0))
@@ -117,6 +123,6 @@ cgs <- readRDS("R/results_cgs.rds")
 results[["CGS"]] <- cgs$CGS
 saveRDS(results,"R/results.rds")
 ## Plot MSE
-# boxplot(sqrt(results$mse+cgs$mse),cex.axis=.75)
-## Table results
-# round(resTab(results)+resTab(cgs),digits=4)
+resPlot(results)
+## Table MSE
+resTab(results)
