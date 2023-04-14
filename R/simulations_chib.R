@@ -4,7 +4,7 @@ install.packages("http://apps.olin.wustl.edu/faculty/chib/rpackages/rdd/bayesrdd
 library(bayesrdd)
 ## Install and load FH
 install.packages(c("np","rdd","matrixStats","xtable","boot"))
-source("R_code_for_Including_covariates_in_the_regression_.R")
+source("FH.R")
 set.seed(000)
 ## Setup
 mu <- function(W, X) return(0.1 * rowSums(W) + 1/(1+exp(-5*X)))
@@ -24,9 +24,9 @@ nuval = 100;
 burn <- 1000
 nsamples <- 100
 ## Simulations
-s <- 2 ## samples
+s <- 100 ## samples
 ###
-results <- list("XBCF-RDD (1)"=NA,"XBCF-RDD (2)"=NA,
+results <- list("ATE"=vector("numeric",s),"XBCF-RDD (1)"=NA,"XBCF-RDD (2)"=NA,
                 "XBCF-RDD (3)"=NA,"CGS"=matrix(0,s,3),"KR"=NA,"FH"=matrix(0,s,3))
 ###
 for (i in 1:s)
@@ -36,7 +36,7 @@ for (i in 1:s)
     x <- rnorm(n,sd=.5)
     z <- x >= c
     y <- mu(w, x) + tau(w, x)*z + rnorm(n, 0, 0.1)
-    true.ate <- mean(tau(w,0))
+    results[["ATE"]][i] <- mean(tau(w,0))
     ## Estimation
     ate.cgs <- invisible(bayesrddest(y = y,
                                      z = x,

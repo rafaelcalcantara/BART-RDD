@@ -8,8 +8,8 @@ install_github("JingyuHe/XBART@XBCF-RDD")
 install_github("Rafael-C-Alcantara/HighDimRD")
 library(HighDimRD)
 ## Source code from FH
-## install.packages(c("np","rdd","matrixStats","xtable","boot"))
-## source("R_code_for_Including_covariates_in_the_regression_.R")
+install.packages(c("np","rdd","matrixStats","xtable","boot"))
+source("FH.R")
 ## Helper functions
 ### Extract 95% CI and posterior mean from pred.XBCFrd
 tau.pred <- function(x,burnin,num_sweeps)
