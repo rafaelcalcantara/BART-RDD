@@ -1,15 +1,15 @@
-## Install latest version of XBART package if available
 library(devtools)
+## Install latest version of XBART package if available
 install_github("JingyuHe/XBART@XBCF-RDD")
+library(XBART)
 ## Install latest version of HighDimRD package (KR)
-#library(remotes)
-#remotes::install_github("kolesarm/RDHonest")
-#library(RDHonest)
-install_github("Rafael-C-Alcantara/HighDimRD")
+install_github("kolesarm/RDHonest")
+library(RDHonest)
+install_github("akreiss/HighDimRD")
 library(HighDimRD)
 ## Source code from FH
-install.packages(c("np","rdd","matrixStats","xtable","boot"))
-source("FH.R")
+### install.packages(c("np","rdd","matrixStats","xtable","boot"))
+source("R/FH.R")
 ## Helper functions
 ### Extract 95% CI and posterior mean from pred.XBCFrd
 tau.pred <- function(x,burnin,num_sweeps)
@@ -37,20 +37,16 @@ min.mse <- function(h)
     ## ATE summary for pred.list
     return(do.call("rbind",lapply(pred.list,tau.pred,burnin,num_sweeps)))
 }
-### Table results
-resTab <- function(x)
+### Plot results
+resPlot <- function(x)
 {
     
-    return(do.call("rbind",lapply(x,colMeans)))
 }
-## Setup
-set.seed(000)
-library(XBART)
-
 ## Example data
+set.seed(000)
 mu <- function(W, X) return(0.1 * rowSums(W) + 1/(1+exp(-5*X)))
 tau <- function(W, X) return( sin(mu(W, X)) + 1)
-n <- 2000
+n <- 100
 p <- 2
 c <- 0 # Cutoff
 w <- matrix(rnorm(n*p), n, p)
@@ -76,7 +72,7 @@ burnin        <- 10
 ate <- min.mse(Owidth)
 ylim <- c(min(range(true.ate,ate)), max(range(true.ate,ate)))
 ##
-matplot(Owidth,ate,ylim=ylim,type=c("l","b","l"),lty=c(2,1,2),pch=16,cex=0.75,col="blue")
+matplot(Owidth,ate,ylim=ylim,type=c("b","l","l"),lty=c(1,2,2),pch=16,cex=0.75,col="blue")
 abline(h=mean(tau(w,0)),lty=2)
 ### Get 3 smallest MSE for that run and set Owidth to that
 ind <- (ate[,3]-true.ate)^2
@@ -86,16 +82,18 @@ Owidth
 ## Simulations
 s <- 100 ## samples
 ###
-results <- list("XBCF-RDD (1)"=matrix(0,s,3),"XBCF-RDD (2)"=matrix(0,s,3),
-                "XBCF-RDD (3)"=matrix(0,s,3),"CGS"=NA,"KR"=matrix(0,s,3),"FH"=NA)
+results <- list("ATE"=vector("numeric",s),"XBCF-RDD (1)"=matrix(0,s,3),
+                "XBCF-RDD (2)"=matrix(0,s,3),"XBCF-RDD (3)"=matrix(0,s,3),
+                "CGS"=NA,"KR"=matrix(0,s,3),"FH"=matrix(0,s,3))
 ###
 for (i in 1:s)
 {
+    print(paste0("Iteration: ",i))
+    ###
     w <- matrix(rnorm(n*p), n, p)
     x <- rnorm(n,sd=.5)
     z <- x >= c
     y <- mu(w, x) + tau(w, x)*z + rnorm(n, 0, 0.1)
-    true.ate <- mean(tau(w,0))
     ## Get interactions and expansions for KR
     w1 <- fourier_basis(w,4)
     w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
@@ -105,19 +103,19 @@ for (i in 1:s)
     ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
                 ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
                 ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
-    ### ate.fh <- rdd.x(y,x,w)
+    ate.fh <- rdd.x(y,x,w)
     ## Store results
     results[["XBCF-RDD (1)"]][i,] <- ate.xbcf[1,]
     results[["XBCF-RDD (2)"]][i,] <- ate.xbcf[2,]
     results[["XBCF-RDD (3)"]] <- ate.xbcf[3,]
     results[["KR"]][i,] <- ate.kr
-    ## results[["FH"]][i,] <- ate.fh
+    results[["FH"]][i,] <- ate.fh
+    results[["ATE"]][i] <- mean(tau(w,0))
 }
 ## Load CGS results and merge
-cgs <- readRDS("results_cgs.rds")
+cgs <- readRDS("R/results_cgs.rds")
 results[["CGS"]] <- cgs$CGS
-results[["FH"]] <- cgs$FH
-saveRDS(results,"results.rds")
+saveRDS(results,"R/results.rds")
 ## Plot MSE
 # boxplot(sqrt(results$mse+cgs$mse),cex.axis=.75)
 ## Table results

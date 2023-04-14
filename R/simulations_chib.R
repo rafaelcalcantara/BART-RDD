@@ -2,14 +2,11 @@
 install.packages("http://apps.olin.wustl.edu/faculty/chib/rpackages/rdd/bayesrdd_1.0.zip",
                  repo=NULL,source=T)
 library(bayesrdd)
-## Install and load FH
-install.packages(c("np","rdd","matrixStats","xtable","boot"))
-source("FH.R")
 set.seed(000)
 ## Setup
 mu <- function(W, X) return(0.1 * rowSums(W) + 1/(1+exp(-5*X)))
 tau <- function(W, X) return( sin(mu(W, X)) + 1)
-n <- 2000
+n <- 100
 p <- 2
 c <- 0 # Cutoff
 P = c(.70,.30);
@@ -27,7 +24,7 @@ nsamples <- 100
 s <- 100 ## samples
 ###
 results <- list("ATE"=vector("numeric",s),"XBCF-RDD (1)"=NA,"XBCF-RDD (2)"=NA,
-                "XBCF-RDD (3)"=NA,"CGS"=matrix(0,s,3),"KR"=NA,"FH"=matrix(0,s,3))
+                "XBCF-RDD (3)"=NA,"CGS"=matrix(0,s,3),"KR"=NA,"FH"=NA)
 ###
 for (i in 1:s)
 {
@@ -56,10 +53,8 @@ for (i in 1:s)
                                      n0=burn,
                                      m=nsamples))
     ate.cgs <- c(mean(ate.cgs$atem),quantile(ate.cgs$atem,c(.025,.975)))
-    ate.fh <- rdd.x(y,x,w)
     ## Store results
     results$CGS[i,] <- ate.cgs
-    results$FH[i,] <- ate.fh
 }
 ##
 saveRDS(results,"~/Git/XBCF-RDD/R/results_cgs.rds")
