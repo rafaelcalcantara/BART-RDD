@@ -21,15 +21,14 @@ tau.pred <- function(x,burnin,num_sweeps)
 pred.ate.xbcf <- function()
 {
     ## XBCF
-    fit.XBCFrd <- XBCF.rd(y, w, x, c, Owidth = Owidth, Omin = Omin, Opct = Opct,
+    fit.XBCFrdd1 <- XBCF.rd(y, w, x, c, Owidth = Owidth, Omin = Omin, Opct = Opct,
                           pcat_con = 0, pcat_mod = 0,
                           num_trees_mod = num_trees_mod, num_trees_con = num_trees_con,
                           num_cutpoints = num_cutpoints, num_sweeps = num_sweeps,
-                          burnin = burnin, Nmin = Nmin,
-                          random_seed=0)
+                          burnin = burnin, Nmin = Nmin)
 
 ### Given the original (w,x) used for fitting the model, we take (w,x=0) as the test set
-    pred <- predict.XBCFrd(fit.XBCFrd, W = w, X = rep(0,n))
+    pred1 <- predict.XBCFrd(fit.XBCFrd1, W = w, X = rep(0,n))
 
     ## ATE summary for pred.list
     return(tau.pred(pred,burnin,num_sweeps))
@@ -83,14 +82,14 @@ Nmin          <- 10
 num_sweeps    <- 20
 burnin        <- 10
 ## Simulations
-s <- 100 ## samples
+s <- 50 ## samples
 ###
 results <- list("ATE"=vector("numeric",s),"XBCF-RDD"=matrix(0,s,3),
                 "CGS"=NA,"KR"=matrix(0,s,3),"FH"=matrix(0,s,3))
 cut <- vector("numeric",s)
 h <- vector("numeric",s)
 ###
-set.seed(1)
+set.seed(000)
 for (i in 1:s)
 {
     print(paste0("Iteration: ",i))

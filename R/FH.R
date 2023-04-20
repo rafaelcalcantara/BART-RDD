@@ -22,7 +22,7 @@ library(boot)
 # estimates when using bandiwdths  bw0, bw1, and bwz (bw),
 # estimates when using bandiwdths  bw0, bw1 and twice bandwidth bwz (bw*2)
 
-rdd.x=function(y,z,x, boot=100, bw0=NULL, bw1=NULL, bwz=NULL){
+rdd.x=function(y,z,x, boot=200, bw0=NULL, bw1=NULL, bwz=NULL){
     d=1*(z>=0)
     xz=data.frame(x,z)
     xzcutoff=data.frame(x,rep(0,length(d)))
