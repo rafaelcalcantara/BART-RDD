@@ -1,0 +1,10 @@
+data <- readstata13::read.dta13("Merged_1853_1864_data.dta")
+data$dist_netw <- data$dist_netw/100
+data$dist_netw2 <- data$dist_netw^2
+data$dist_netw3 <- data$dist_netw^3
+data$dist_2 <- ifelse(data$broad==0,-data$dist_netw,data$dist_netw)
+##
+cct1 <- rdrobust::rdrobust(data$deaths,data$dist_2)
+cct2 <- rdrobust::rdrobust(data$deaths,data$dist_2,covs=data[,c("dist_cent","dist_urinal","no_sewer","old_sewer")])
+##
+poly <- lm(deaths~broad+dist_netw+dist_netw2+dist_netw3+dist_cent+dist_urinal+no_sewer+old_sewer,data,subset=data$dist_netw<cct1$bws[1,1])
