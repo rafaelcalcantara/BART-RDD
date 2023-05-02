@@ -1,4 +1,4 @@
-## devtools::install_github("Rafael-C-Alcantara/XBART@XBCF-RDD")
+devtools::install_github("Rafael-C-Alcantara/XBART@XBCF-RDD")
 library(XBART)
 ## Helper functions
 ### Extract 95% CI and posterior mean from pred.XBCFrd
@@ -95,13 +95,12 @@ num_cutpoints <- n
 Nmin          <- 10
 num_sweeps    <- 50
 burnin        <- 20
-p_categorical <- 0
+p_categorical <- 2
 ## Owidth        <- findOwidth(0.01)
 Owidth <- 1
 ##
 fit.XBCFrd <- XBCF.rd(y, w, x, c,
                       Owidth = Owidth, Omin = Omin, Opct = Opct,
-                      pcat_con = 0, pcat_mod = 0,
                       num_trees_mod = num_trees_mod, num_trees_con = num_trees_con,
                       num_cutpoints = num_cutpoints, num_sweeps = num_sweeps,
                       burnin = burnin, Nmin = Nmin,
