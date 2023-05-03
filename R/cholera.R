@@ -1,6 +1,11 @@
 devtools::install_github("Rafael-C-Alcantara/XBART@XBCF-RDD")
 library(XBART)
 ## Helper functions
+post.sum <- function(x)
+{
+    post <- colMeans(x)
+    return(c(mean(post),quantile(post,c(0.025,0.975))))
+}
 ### Extract 95% CI and posterior mean from pred.XBCFrd
 tau.pred <- function(x,burnin,num_sweeps)
 {
@@ -89,15 +94,14 @@ cct2 <- rdrobust::rdrobust(y,x,covs=w)
 ##
 Omin          <- 2
 Opct          <- 0.7
-num_trees_mod <- 20
+num_trees_mod <- 10
 num_trees_con <- 10
 num_cutpoints <- n
 Nmin          <- 10
 num_sweeps    <- 50
 burnin        <- 20
 p_categorical <- 2
-## Owidth        <- findOwidth(0.01)
-Owidth <- 1
+Owidth        <- findOwidth(0.01)
 ##
 fit.XBCFrd <- XBCF.rd(y, w, x, c,
                       Owidth = Owidth, Omin = Omin, Opct = Opct,
@@ -114,6 +118,7 @@ mu  <- pred.tot$mu.adj[,(burnin+1):num_sweeps]
 ate.xbcf <- colMeans(tau)
 ##
 tau.pred(pred,burnin,num_sweeps)
+print(paste0("MSE: ",round(mean((pred.tot$yhats.adj.mean-y)^2),3)))
 ## Plot individual treatment effects and mu
 ind.mu <- t(apply(mu,1,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
 ind.mu <- ind.mu[order(ind.mu[,1]),]
