@@ -51,7 +51,7 @@ findOwidth <- function(seq)
     return(i)
 }
 ##
-data <- readstata13::read.dta13("R/Merged_1853_1864_data.dta")
+data <- readstata13::read.dta13("Data/Merged_1853_1864_data.dta")
 data$dist_netw <- data$dist_netw/100
 data$dist_2 <- ifelse(data$broad==0,-data$dist_netw,data$dist_netw)
 vars <- c("log_rentals_1864","dist_netw","dist_2",
