@@ -22,10 +22,19 @@ each of the DGPs above. Finally, the script ~FH.R~ defines
 the functions to obtain the LATE as in [[https://www.tandfonline.com/doi/full/10.1080/07350015.2017.1421544][Frolich and Huber
 (2019)]].
 
-The original code from each of those papers can be found on[fn:1]:
+The original code from each of those papers can be found on:
 1. [[http://apps.olin.wustl.edu/faculty/chib/rpackages/rdd/][Chib, Greenberg and Simoni R package]]
 2. [[https://github.com/akreiss/HighDimRD/blob/master/README.md][Kreiss and Rothe code]]
 3. [[https://www.researchgate.net/publication/326649436_R_code_for_Including_covariates_in_the_regression_discontinuity_design][Frolich and Huber code]]
+
+It is worth noting that the method of CGS is only made
+available through Windows and Mac binary files of their R
+package on Siddhartha Chib's webpage. Since the package is
+not available in CRAN as of yet, this means the package
+cannot be compiled on Linux. This is why we check the OS in
+the simulation scripts before running each method. CGS was
+run on a Windows machine while all the others were run on a
+Linux machine.
 ** Data reanalysis
 To discuss implementation of XBCF-RDD to real datasets we
 perform a reanalysis of the data studied by [[https://www.aeaweb.org/articles?id=10.1257/aer.20190759][Ambrus, Field
@@ -34,15 +43,4 @@ the impact of a cholera outbreak in 1854 London on housing
 prices in the vicinity of a `contamination area' defined by
 the distance to a contaminated water pump. The previous link
 contains the paper, data and code for their analysis. From
-that, we only study the ~Merged_1853_1864_data.dta~
-dataset.
-* Footnotes
-
-[fn:1] It is worth noting that the method of CGS is only
-made available through Windows and Mac binary files of their
-R package on Siddhartha Chib's webpage. Since the package is
-not available in CRAN as of yet, this means the package
-cannot be compiled on Linux. This is why we check the OS in
-the simulation scripts before running each method. CGS was
-run on a Windows machine while all the others were run on a
-Linux machine
+that, we only study the ~Merged_1853_1864_data.dta~ dataset.
