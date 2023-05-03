@@ -1,4 +1,0 @@
-library(devtools)
-## Install latest version of XBART package if available
-install_github("JingyuHe/XBART@XBCF-RDD")
-library(XBART)
