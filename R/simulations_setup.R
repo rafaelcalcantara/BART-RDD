@@ -81,13 +81,40 @@ dgp.cgs <- function(n,p)
     w  <- matrix(rnorm(n*p),n,p)
     x  <- 2*rbeta(n,2,4)-1
     z  <- x>=0
-    g0 <- 0.48 + 1.27*x + 7.18*x^2 + 20.21*x^3 + 21.54*x^4 + 7.33*x^5
-    g1 <- 0.52 + 0.84*x - 3*x^2 + 7.99*x^3 - 9.01*x^4 + 3.56*x^5
-    y  <- z*g1 + (1-z)*g0 + 0.1295*rt(n,3)
-    tau <- 0.04
-    return(list(y=y,x=x,z=z,w=w,tau=tau))
+    mu <- function(x)
+    {
+        0.48 + 1.27*x + 7.18*x^2 + 20.21*x^3 + 21.54*x^4 + 7.33*x^5
+    }
+    tau <- function(x)
+    {
+        0.04 - 0.43*x - 10.18*x^2 - 12.22*x^3 - 30.55*x^4 - 3.77*x^5
+    }
+    y  <- mu(x) + tau(x)*z + 0.1295*rt(n,3)
+    ate <- 0.04
+    tau.x <- tau(x)
+    return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
 }
-### 2) KR
+### 2) FH
+dgp.fh <- function(n,p=2)
+{
+    ## We consider only the case where the distribution of W varies by treatment state and covariates also affect Y
+    x <- rnorm(n)
+    z <- x >= 0
+    w <- matrix(rnorm(n*p,sd=sqrt(0.25)),n,p)
+    mu <- function(x,w)
+    {
+        0.5*x + 0.25*x^2 + 0.4*rowSums(w) + 0.2*rowSums(w^2)
+    }
+    tau <- function(x)
+    {
+        1 - 0.25*x
+    }
+    y <- mu(x,w) + tau(x)*z + rnorm(n)
+    ate <- 1
+    tau.x <- tau(x)
+    return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
+}
+### 3) KR
 dgp.kr <- function(n,p=200)
 {
     sig.e <- 0.1295^2
@@ -104,25 +131,18 @@ dgp.kr <- function(n,p=200)
     a <- 2/(1:p)^2
     x  <- 2*rbeta(n,2,4)-1
     z  <- x>=0
-    y0 <- 0.36 + 0.96*x + 5.47*x^2 + 15.28*x^3 + 15.87*x^4 + 5.14*x^5 + 0.22*w%*%a
-    y1 <- 0.38 + 0.62*x - 2.84*x^2 + 8.42*x^3 - 10.24*x^4 + 4.31*x^5 + 0.28*w%*%a
-    y  <- as.vector(z*y1 + (1-z)*y0 + e)
-    tau <- 0.02
-    return(list(y=y,x=x,z=z,w=w,tau=tau))
-}
-### 3) FH
-dgp.fh <- function(n,p=2)
-{
-    ## We consider only the case where the distribution of W varies by treatment state and covariates also affect Y
-    x <- rnorm(n)
-    latent.vars <- matrix(rnorm(3*n),n,3)
-    z <- x >= 0
-    w1 <- 0.2*z + 0.5*latent.vars[,1]
-    w2 <- 0.2*z + 0.5*latent.vars[,2]
-    w <- cbind(w1,w2)
-    y <- z + 0.5*x - 0.25*z*x + 0.25*x^2 + 0.4*(w1+w2) + 0.2*(w1^2+w2^2) + latent.vars[,3]
-    tau <- 1
-    return(list(y=y,x=x,z=z,w=w,tau=tau))
+    mu <- function(x,w,a)
+    {
+        0.36 + 0.96*x + 5.47*x^2 + 15.28*x^3 + 5.14*x^5 + as.vector(w%*%a)
+    }
+    tau <- function(x,w,a)
+    {
+        0.02 - 0.34*x - 8.31*x^2 - 6.86*x^3 - 0.83*x^5 + as.vector(0.06*w%*%a)
+    }
+    y  <- mu(x,w,a) + tau(x,w,a)*z + e
+    ate <- mean(tau(0,w,a))
+    tau.x <- tau(x,w,a)
+    return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
 }
 ## Generate 1 dataset
 dgp <- function(n,p,type)

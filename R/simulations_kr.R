@@ -3,7 +3,7 @@ set.seed(0)
 source("R/simulations_setup.R")
 time <- rep(0,3*s)
 ## CGS data
-results.cgs <- matrix(0,s,3)
+results.cgs <- matrix(0,s,4)
 for (i in 1:s)
 {
     print(paste0("Simulation ",i," for CGS data"))
@@ -19,10 +19,11 @@ for (i in 1:s)
     ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
                 ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
                 ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
-    results.cgs[i,] <- ate.kr
+    results.cgs[i,1:3] <- ate.kr
+    results.cgs[i,4] <- ate
 }
 ## KR data
-results.kr <- matrix(0,s,3)
+results.kr <- matrix(0,s,4)
 for (i in 1:s)
 {
     print(paste0("Simulation ",i," for KR data"))
@@ -36,10 +37,11 @@ for (i in 1:s)
     ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
                 ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
                 ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
-    results.kr[i,] <- ate.kr
+    results.kr[i,1:3] <- ate.kr
+    results.kr[i,4] <- ate
 }
 ## FH data
-results.fh <- matrix(0,s,3)
+results.fh <- matrix(0,s,4)
 for (i in 1:s)
 {
     print(paste0("Simulation ",i," for FH data"))
@@ -55,11 +57,12 @@ for (i in 1:s)
     ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
                 ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
                 ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
-    results.fh[i,] <- ate.kr
+    results.fh[i,1:3] <- ate.kr
+    results.fh[i,4] <- ate
 }
 ## Save results
 results <- list(CGS=results.cgs,
-                KR=results.kr,
-                FH=results.fh)
-saveRDS(results,"R/results_kr.rds")
-saveRDS(time,"R/time_kr.rds")
+                FH=results.fh,
+                KR=results.kr)
+saveRDS(results,"Results/results_kr.rds")
+saveRDS(time,"Results/time_kr.rds")

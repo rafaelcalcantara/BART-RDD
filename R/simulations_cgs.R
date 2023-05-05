@@ -1,3 +1,4 @@
+## ADD COVARIATES TO CGS ESTIMATION
 set.seed(0)
 ## Simulations for XBCF-RDD
 source("R/simulations_setup.R")
@@ -14,7 +15,7 @@ burn <- 1000
 nsamples <- 100
 time <- rep(0,3*s)
 ## CGS data
-results.cgs <- matrix(0,s,3)
+results.cgs <- matrix(0,s,4)
 for (i in 1:s)
 {
     print(paste0("Simulation ",i," for CGS data"))
@@ -38,12 +39,13 @@ for (i in 1:s)
                            n0=burn,
                            m=nsamples)
     ate.cgs <- c(mean(ate.cgs$atem),quantile(ate.cgs$atem,c(.025,.975)))
-    results.cgs[i,] <- ate.cgs
+    results.cgs[i,1:3] <- ate.cgs
+    results.cgs[i,4] <- ate
     t1 <- Sys.time()
     time[i] <- t1-t0
 }
 ## KR data
-results.kr <- matrix(0,s,3)
+results.kr <- matrix(0,s,4)
 for (i in 1:s)
 {
     print(paste0("Simulation ",i," for KR data"))
@@ -67,12 +69,13 @@ for (i in 1:s)
                            n0=burn,
                            m=nsamples)
     ate.cgs <- c(mean(ate.cgs$atem),quantile(ate.cgs$atem,c(.025,.975)))
-    results.kr[i,] <- ate.cgs
+    results.kr[i,1:3] <- ate.cgs
+    results.kr[i,4] <- ate
     t1 <- Sys.time()
     time[s+i] <- t1-t0
 }
 ## FH data
-results.fh <- matrix(0,s,3)
+results.fh <- matrix(0,s,4)
 for (i in 1:s)
 {
     print(paste0("Simulation ",i," for FH data"))
@@ -96,13 +99,14 @@ for (i in 1:s)
                            n0=burn,
                            m=nsamples)
     ate.cgs <- c(mean(ate.cgs$atem),quantile(ate.cgs$atem,c(.025,.975)))
-    results.fh[i,] <- ate.cgs
+    results.fh[i,1:3] <- ate.cgs
+    results.fh[i,4] <- ate
     t1 <- Sys.time()
     time[2*s+i] <- t1-t0
 }
 ## Save results
 results <- list(CGS=results.cgs,
-                KR=results.kr,
-                FH=results.fh)
+                FH=results.fh,
+                KR=results.kr)
 saveRDS(results,"R/results_cgs.rds")
 saveRDS(time,"R/time_cgs.rds")
