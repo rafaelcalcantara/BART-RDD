@@ -1,7 +1,4 @@
 library(devtools)
-## Install latest version of XBART package if available
-install_github("Rafael-C-Alcantara/XBART@XBCF-RDD")
-library(XBART)
 ## Install CGS package if on Windows
 if (Sys.info()["sysname"] == "Windows")
 {
@@ -9,15 +6,20 @@ if (Sys.info()["sysname"] == "Windows")
     install.packages("http://apps.olin.wustl.edu/faculty/chib/rpackages/rdd/bayesrdd_1.0.zip",
                      repo=NULL,source=T)
     library(bayesrdd)
+} else
+{
+  ## Install latest version of XBART package if available
+  install_github("Rafael-C-Alcantara/XBART@XBCF-RDD")
+  library(XBART)
+  ## Install latest version of HighDimRD package (KR)
+  install_github("kolesarm/RDHonest")
+  library(RDHonest)
+  install_github("akreiss/HighDimRD")
+  library(HighDimRD)
+  ## Source code from FH
+  ### install.packages(c("np","rdd","matrixStats","xtable","boot"))
+  source("R/FH.R")
 }
-## Install latest version of HighDimRD package (KR)
-install_github("kolesarm/RDHonest")
-library(RDHonest)
-install_github("akreiss/HighDimRD")
-library(HighDimRD)
-## Source code from FH
-### install.packages(c("np","rdd","matrixStats","xtable","boot"))
-source("R/FH.R")
 ## Helper functions
 ### Extract 95% CI and posterior mean from pred.XBCFrd
 tau.pred <- function(x,burnin,num_sweeps)
