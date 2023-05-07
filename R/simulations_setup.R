@@ -55,12 +55,12 @@ cutpoints <- function(Owidth)
     trees_json <- jsonlite::fromJSON(fit$tree_json_mod,simplifyVector=F)
     return(trees_json$trees[["0"]][["0"]][["avail.cutpoints"]])
 }
-### Find minimum Owidth that leads to more than 1 available cutppoint at root noden
+### Find minimum Owidth that leads to more than 1 available cutppoint at root node
 findOwidth <- function(seq)
 {
     i <- 0.01
     ## Do this to avoid i s.t. there are no obs in the bandwidth
-    while(sum(x>=-i & x<=i)<15) i <- i+0.01
+    while(sum(x>=-i & x<0)<0.04*n & sum(x>=0 & x<=i)<0.04*n) i <- i+0.01
     while(cutpoints(i)==1) i <- i+seq
     return(i)
 }
@@ -99,7 +99,7 @@ dgp.cgs <- function(n,p)
 ### 2) FH
 dgp.fh <- function(n,p=2)
 {
-    ## We consider only the case where the distribution of W varies by treatment state and covariates also affect Y
+    ## We consider only the case where the covariates affect Y but don't change across treatment states
     x <- rnorm(n)
     z <- x >= 0
     w <- matrix(rnorm(n*p,sd=sqrt(0.25)),n,p)
