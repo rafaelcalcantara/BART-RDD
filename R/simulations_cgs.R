@@ -114,5 +114,5 @@ for (i in 1:s)
 results <- list(CGS=results.cgs,
                 FH=results.fh,
                 KR=results.kr)
-saveRDS(results,"R/results_cgs.rds")
-saveRDS(time,"R/time_cgs.rds")
+saveRDS(results,"Results/results_cgs.rds")
+saveRDS(time,"Results/time_cgs.rds")
