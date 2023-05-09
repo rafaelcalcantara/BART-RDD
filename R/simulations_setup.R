@@ -73,7 +73,14 @@ resPlot <- function(x)
 ### Table results
 resTab <- function(x)
 {
-    return(colMeans(do.call("cbind",lapply(x[-1],function(y) (y[,1]-x$ATE)^2))))
+    return(do.call("cbind",
+                   lapply(list(xbcf,cgs,kr,fh),
+                          function(x) do.call("rbind",
+                                              lapply(x, function(y) mean((y[,1]-y[,4])^2))
+                                              )
+                          )
+                   )
+           )
 }
 ## DGP functions
 ### 1) CGS
