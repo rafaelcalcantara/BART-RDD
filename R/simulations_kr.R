@@ -10,7 +10,7 @@ for (i in 1:s)
     print(paste0("Simulation ",i," for CGS data - No covariates"))
     dgp(n,p,"cgs")
     ## Get interactions and expansions for KR
-    w1 <- fourier_basis(x,4)
+    w1 <- fourier_basis(matrix(x),4)
     ## Estimation
     t0 <- Sys.time()
     ate.kr  <- HighDim_rd(y,x,w1,tpc="CV" ,rd="robust")
