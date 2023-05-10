@@ -1,12 +1,32 @@
 set.seed(0)
 ## Simulations for XBCF-RDD
 source("R/simulations_setup.R")
-time <- rep(0,3*s)
+time <- rep(0,4*s)
 ## CGS data
+### No covariates
+results.cgs0 <- matrix(0,s,4)
+for (i in 1:s)
+{
+    print(paste0("Simulation ",i," for CGS data - No covariates"))
+    dgp(n,p,"cgs")
+    ## Get interactions and expansions for KR
+    w1 <- fourier_basis(x,4)
+    ## Estimation
+    t0 <- Sys.time()
+    ate.kr  <- HighDim_rd(y,x,w1,tpc="CV" ,rd="robust")
+    t1 <- Sys.time()
+    time[i] <- t1-t0
+    ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
+                ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
+                ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
+    results.cgs0[i,1:3] <- ate.kr
+    results.cgs0[i,4] <- ate
+}
+### With covariates
 results.cgs <- matrix(0,s,4)
 for (i in 1:s)
 {
-    print(paste0("Simulation ",i," for CGS data"))
+    print(paste0("Simulation ",i," for CGS data - With covariates"))
     dgp(n,p,"cgs")
     ## Get interactions and expansions for KR
     w1 <- fourier_basis(w,4)
@@ -15,7 +35,7 @@ for (i in 1:s)
     t0 <- Sys.time()
     ate.kr  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
     t1 <- Sys.time()
-    time[i] <- t1-t0
+    time[s+i] <- t1-t0
     ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
                 ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
                 ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
@@ -33,7 +53,7 @@ for (i in 1:s)
     t0 <- Sys.time()
     ate.kr  <- HighDim_rd(y,x,w,tpc="CV" ,rd="robust")
     t1 <- Sys.time()
-    time[s+i] <- t1-t0
+    time[2*s+i] <- t1-t0
     ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
                 ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
                 ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
@@ -53,7 +73,7 @@ for (i in 1:s)
     t0 <- Sys.time()
     ate.kr  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
     t1 <- Sys.time()
-    time[2*s+i] <- t1-t0
+    time[3*s+i] <- t1-t0
     ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
                 ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
                 ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
@@ -61,7 +81,8 @@ for (i in 1:s)
     results.fh[i,4] <- ate
 }
 ## Save results
-results <- list(CGS=results.cgs,
+results <- list(CGS0=results.cgs0,
+                CGS=results.cgs,
                 FH=results.fh,
                 KR=results.kr)
 saveRDS(results,"Results/results_kr.rds")

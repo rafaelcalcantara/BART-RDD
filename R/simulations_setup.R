@@ -9,16 +9,13 @@ if (Sys.info()["sysname"] == "Windows")
 } else
 {
   ## Install latest version of XBART package if available
-  install_github("Rafael-C-Alcantara/XBART@XBCF-RDD")
+  install_github("rafaelcalcantara/XBART@XBCF-RDD")
   library(XBART)
   ## Install latest version of HighDimRD package (KR)
   install_github("kolesarm/RDHonest")
   library(RDHonest)
   install_github("akreiss/HighDimRD")
   library(HighDimRD)
-  ## Source code from FH
-  ### install.packages(c("np","rdd","matrixStats","xtable","boot"))
-  source("R/FH.R")
 }
 ## Helper functions
 ### Extract 95% CI and posterior mean from pred.XBCFrd
@@ -40,6 +37,24 @@ pred.ate.xbcf <- function()
 
 ### Given the original (w,x) used for fitting the model, we take (w,x=0) as the test set
     pred <- predict.XBCFrd(fit.XBCFrd, W = w, X = rep(0,n))
+
+    ## ATE summary for pred.list
+    return(tau.pred(pred,burnin,num_sweeps))
+}
+
+#### For CGS with no covariates
+pred.ate.xbcf0 <- function()
+{
+    ## XBCF
+    fit.XBCFrd <- XBCF.rd(y, NULL, x, c, Owidth = Owidth, Omin = Omin, Opct = Opct,
+                          num_trees_mod = num_trees_mod, num_trees_con = num_trees_con,
+                          num_cutpoints = num_cutpoints, num_sweeps = num_sweeps,
+                          burnin = burnin, Nmin = Nmin,
+                          p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
+                          random_seed=0)
+
+### Given the original (w,x) used for fitting the model, we take (w,x=0) as the test set
+    pred <- predict.XBCFrd(fit.XBCFrd, W = NULL, X = rep(0,n))
 
     ## ATE summary for pred.list
     return(tau.pred(pred,burnin,num_sweeps))
@@ -109,7 +124,7 @@ dgp.fh <- function(n,p=2)
     ## We consider only the case where the covariates affect Y but don't change across treatment states
     x <- rnorm(n)
     z <- x >= 0
-    w <- matrix(rnorm(n*p,sd=sqrt(0.25)),n,p)
+    w <- matrix(rnorm(n*p),n,p)
     mu <- function(x,w)
     {
         0.5*x + 0.25*x^2 + 0.4*rowSums(w) + 0.2*rowSums(w^2)

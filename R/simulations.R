@@ -14,9 +14,6 @@ if (Sys.info()["sysname"] == "Linux")
     ## KR simulations
     source("R/simulations_kr.R")
     gc()
-    ## FH simulations
-    source("R/simulations_fh.R")
-    gc()
 } else
 {
     setwd("~/Git/XBCF-RDD/")
