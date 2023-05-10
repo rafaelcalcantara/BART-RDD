@@ -122,18 +122,19 @@ dgp.cgs <- function(n,p)
 dgp.fh <- function(n,p=2)
 {
     ## We consider only the case where the covariates affect Y but don't change across treatment states
-    x <- rnorm(n)
+    x <- 2*rbeta(n,2,4)-1
     z <- x >= 0
-    w <- matrix(rnorm(n*p),n,p)
+    w <- matrix(rnorm(n*p,sd=0.5),n,p)
+    a <- 2/(1:p)^2
     mu <- function(x,w)
     {
-        0.5*x + 0.25*x^2 + 0.4*rowSums(w) + 0.2*rowSums(w^2)
+        0.5*x + 0.25*x^2 + 0.4*w%*%a + 0.2*w^2%*%a
     }
     tau <- function(x)
     {
         1 - 0.25*x
     }
-    y <- mu(x,w) + tau(x)*z + rnorm(n)
+    y <- mu(x,w) + tau(x)*z + rnorm(n,sd=0.25)
     ate <- 1
     tau.x <- tau(x)
     return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
