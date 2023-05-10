@@ -7,13 +7,15 @@ nsamples <- 100
 time <- rep(0,4*s)
 ## CGS data
 ### No covariates
-p = c(.70,.30);
+P = c(.70,.30);
 mz = c(3, 3);
 mztau = c(3, 2);
 lamstmean0_ = c(1,1);
 lamstsd0_ = 5*c(1,1);
 s2mean0_ = .3;
 s2sd0_ = 1;
+nudgp = 3;
+nuval = 3;
 results.cgs0 <- matrix(0,s,4)
 for (i in 1:s)
 {
