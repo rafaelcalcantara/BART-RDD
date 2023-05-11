@@ -33,6 +33,8 @@ pred.ate.xbcf <- function()
                           num_cutpoints = num_cutpoints, num_sweeps = num_sweeps,
                           burnin = burnin, Nmin = Nmin,
                           p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
+                          tau_con = var(y)/num_trees_con,
+                          tau_mod = var(y)/num_trees_mod,
                           random_seed=0)
 
 ### Given the original (w,x) used for fitting the model, we take (w,x=0) as the test set
@@ -51,6 +53,8 @@ pred.ate.xbcf0 <- function()
                           num_cutpoints = num_cutpoints, num_sweeps = num_sweeps,
                           burnin = burnin, Nmin = Nmin,
                           p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
+                          tau_con = var(y)/num_trees_con,
+                          tau_mod = var(y)/num_trees_mod,
                           random_seed=0)
 
 ### Given the original (w,x) used for fitting the model, we take (w,x=0) as the test set
@@ -65,7 +69,9 @@ cutpoints <- function(Owidth)
     fit <- XBCF.rd(y, w, x, c, Owidth = Owidth, Omin = Omin, Opct = Opct,
                    num_trees_mod = 1, num_trees_con = 1,
                    num_cutpoints = num_cutpoints, num_sweeps = 1,
-                                             p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
+                   p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
+                   tau_con = var(y)/num_trees_con,
+                   tau_mod = var(y)/num_trees_mod,
                    burnin = 0, Nmin = Nmin)
     trees_json <- jsonlite::fromJSON(fit$tree_json_mod,simplifyVector=F)
     return(trees_json$trees[["0"]][["0"]][["avail.cutpoints"]])
