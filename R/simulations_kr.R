@@ -1,89 +1,69 @@
-set.seed(0)
-## Simulations for XBCF-RDD
-source("R/simulations_setup.R")
-time <- rep(0,4*s)
-## CGS data
-### No covariates
-results.cgs0 <- matrix(0,s,4)
+## Setup
+## Install latest version of HighDimRD package (KR)
+### install_github("kolesarm/RDHonest")
+library(RDHonest)
+### install_github("akreiss/HighDimRD")
+library(HighDimRD)
+## DGP1a
+dgp <- readRDS("Data/DGP1a.rds")
+s <- length(dgp) ## number of samples
 for (i in 1:s)
 {
-    print(paste0("Simulation ",i," for CGS data - No covariates"))
-    dgp(n,p,"cgs")
-    ## Get interactions and expansions for KR
+    data <- dgp[[i]]
+    list2env(data,globalenv())
     w1 <- fourier_basis(matrix(x),4)
     ## Estimation
     t0 <- Sys.time()
-    ate.kr  <- HighDim_rd(y,x,w1,tpc="CV" ,rd="robust")
+    fit  <- HighDim_rd(y,x,w1,tpc="CV" ,rd="robust")
     t1 <- Sys.time()
-    time[i] <- t1-t0
-    ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
-                ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
-                ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
-    results.cgs0[i,1:3] <- ate.kr
-    results.cgs0[i,4] <- ate
+    write.table(t1-t0,"Results/time_kr_dgp1a.csv",append=T)
+    saveRDS(fit,paste0("Results/kr_dgp1a_",i,".rds"))
 }
-### With covariates
-results.cgs <- matrix(0,s,4)
+## DGP1b
+dgp <- readRDS("Data/DGP1b.rds")
+s <- length(dgp) ## number of samples
 for (i in 1:s)
 {
-    print(paste0("Simulation ",i," for CGS data - With covariates"))
-    dgp(n,p,"cgs")
-    ## Get interactions and expansions for KR
+    data <- dgp[[i]]
+    list2env(data,globalenv())
     w1 <- fourier_basis(w,4)
     w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
     ## Estimation
     t0 <- Sys.time()
-    ate.kr  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
+    fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
     t1 <- Sys.time()
-    time[s+i] <- t1-t0
-    ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
-                ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
-                ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
-    results.cgs[i,1:3] <- ate.kr
-    results.cgs[i,4] <- ate
+    write.table(t1-t0,"Results/time_kr_dgp1b.csv",append=T)
+    saveRDS(fit,paste0("Results/kr_dgp1b_",i,".rds"))
 }
-## KR data
-results.kr <- matrix(0,s,4)
+## DGP2
+dgp <- readRDS("Data/DGP2.rds")
+s <- length(dgp) ## number of samples
 for (i in 1:s)
 {
-    print(paste0("Simulation ",i," for KR data"))
-    dgp(n,p,"kr")
-    ## Don't get interactions and expansions for KR: already p=200 and makes it slower
-    ## Estimation
-    t0 <- Sys.time()
-    ate.kr  <- HighDim_rd(y,x,w,tpc="CV" ,rd="robust")
-    t1 <- Sys.time()
-    time[2*s+i] <- t1-t0
-    ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
-                ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
-                ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
-    results.kr[i,1:3] <- ate.kr
-    results.kr[i,4] <- ate
-}
-## FH data
-results.fh <- matrix(0,s,4)
-for (i in 1:s)
-{
-    print(paste0("Simulation ",i," for FH data"))
-    dgp(n,p,"fh")
-    ## Get interactions and expansions for KR
+    data <- dgp[[i]]
+    list2env(data,globalenv())
     w1 <- fourier_basis(w,4)
     w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
     ## Estimation
     t0 <- Sys.time()
-    ate.kr  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
+    fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
     t1 <- Sys.time()
-    time[3*s+i] <- t1-t0
-    ate.kr <- c(ate.kr$rd$Estimate[,"tau.bc"],
-                ate.kr$rd$Estimate[,"tau.bc"]-1.96*ate.kr$rd$Estimate[,"se.rb"],
-                ate.kr$rd$Estimate[,"tau.bc"]+1.96*ate.kr$rd$Estimate[,"se.rb"])
-    results.fh[i,1:3] <- ate.kr
-    results.fh[i,4] <- ate
+    write.table(t1-t0,"Results/time_kr_dgp2.csv",append=T)
+    saveRDS(fit,paste0("Results/kr_dgp2_",i,".rds"))
 }
-## Save results
-results <- list(CGS0=results.cgs0,
-                CGS=results.cgs,
-                FH=results.fh,
-                KR=results.kr)
-saveRDS(results,"Results/results_kr.rds")
-saveRDS(time,"Results/time_kr.rds")
+## DGP1b
+dgp <- readRDS("Data/DGP3.rds")
+s <- length(dgp) ## number of samples
+for (i in 1:s)
+{
+    data <- dgp[[i]]
+    list2env(data,globalenv())
+    w1 <- fourier_basis(w,4)
+    w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
+    ## Estimation
+    t0 <- Sys.time()
+    fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
+    t1 <- Sys.time()
+    write.table(t1-t0,"Results/time_kr_dgp3.csv",append=T)
+    saveRDS(fit,paste0("Results/kr_dgp3_",i,".rds"))
+}
