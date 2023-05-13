@@ -1,8 +1,8 @@
 ## Setup
 ## Install latest version of HighDimRD package (KR)
-### install_github("kolesarm/RDHonest")
+### devtools::install_github("kolesarm/RDHonest")
 library(RDHonest)
-### install_github("akreiss/HighDimRD")
+### devtools::install_github("akreiss/HighDimRD")
 library(HighDimRD)
 ## DGP1a
 dgp <- readRDS("Data/DGP1a.rds")

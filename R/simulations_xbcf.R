@@ -1,5 +1,5 @@
 ## Setup
-install_github("rafaelcalcantara/XBART@XBCF-RDD")
+devtools::install_github("rafaelcalcantara/XBART@XBCF-RDD")
 library(XBART)
 ### Return available cutpoints at root node for a given Owidth
 cutpoints <- function(Owidth)
