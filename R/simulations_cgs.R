@@ -1,6 +1,7 @@
 ## Setup
 ## install.packages("http://apps.olin.wustl.edu/faculty/chib/rpackages/rdd/bayesrdd_1.0.zip",repo=NULL,source=T)
 library(bayesrdd)
+c <- 0
 ## DGP1a
 P = c(.70,.30)
 mz = c(3, 3)

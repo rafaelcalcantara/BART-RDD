@@ -1,0 +1,47 @@
+## Setup
+devtools::install_github("rafaelcalcantara/XBART@XBCF-RDD")
+library(XBART)
+## DGP1a
+dgp <- readRDS("Data/DGP1a.rds")
+s <- length(dgp) ## number of samples
+for (i in 1:s)
+{
+    data <- dgp[[i]]
+    results <- readRDS(paste0("Results/xbcf_dgp1a_",i,".rds"))
+    wts <- XBART.multinomial(data$x>=-results$Owidth & data$x<=results$Owidth,num_class=2,X=data$w)
+    wts <- predict.XBARTmultinomial(wts,data$w)
+    saveRDS(wts,paste0("Results/weights_dgp1a_",i,".rds"))
+}
+## DGP1b
+dgp <- readRDS("Data/DGP1b.rds")
+s <- length(dgp) ## number of samples
+for (i in 1:s)
+{
+    data <- dgp[[i]]
+    results <- readRDS(paste0("Results/xbcf_dgp1b_",i,".rds"))
+    wts <- XBART.multinomial(data$x>=-results$Owidth & data$x<=results$Owidth,num_class=2,X=data$w)
+    wts <- predict.XBARTmultinomial(wts,data$w)
+    saveRDS(wts,paste0("Results/weights_dgp1b_",i,".rds"))
+}
+## DGP2
+dgp <- readRDS("Data/DGP2.rds")
+s <- length(dgp) ## number of samples
+for (i in 1:s)
+{
+    data <- dgp[[i]]
+    results <- readRDS(paste0("Results/xbcf_dgp2_",i,".rds"))
+    wts <- XBART.multinomial(data$x>=-results$Owidth & data$x<=results$Owidth,num_class=2,X=data$w)
+    wts <- predict.XBARTmultinomial(wts,data$w)
+    saveRDS(wts,paste0("Results/weights_dgp2_",i,".rds"))
+}
+## DGP3
+dgp <- readRDS("Data/DGP3.rds")
+s <- length(dgp) ## number of samples
+for (i in 1:s)
+{
+    data <- dgp[[i]]
+    results <- readRDS(paste0("Results/xbcf_dgp3_",i,".rds"))
+    wts <- XBART.multinomial(data$x>=-results$Owidth & data$x<=results$Owidth,num_class=2,X=data$w)
+    wts <- predict.XBARTmultinomial(wts,data$w)
+    saveRDS(wts,paste0("Results/weights_dgp3_",i,".rds"))
+}

@@ -8,8 +8,8 @@ cutpoints <- function(Owidth)
                    num_trees_mod = 1, num_trees_con = 1,
                    num_cutpoints = num_cutpoints, num_sweeps = 1,
                    p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
-                   tau_con = var(y)/num_trees_con,
-                   tau_mod = var(y)/num_trees_mod,
+                   tau_con = 1/num_trees_con,
+                   tau_mod = 1/num_trees_mod,
                    burnin = 0, Nmin = Nmin)
     trees_json <- jsonlite::fromJSON(fit$tree_json_mod,simplifyVector=F)
     return(trees_json$trees[["0"]][["0"]][["avail.cutpoints"]])
@@ -18,23 +18,25 @@ cutpoints <- function(Owidth)
 findOwidth <- function(seq)
 {
     i <- 0.01
-    ## Do this to avoid i s.t. there are no obs in the bandwidth
-    while(sum(x>=-i & x<0)<15 & sum(x>=0 & x<=i)<15) i <- i+0.01
-    while(cutpoints(i)==1) i <- i+seq
+    ## . > 1: no obs inside bandwidth (numerical error)
+    ## . < 0.75: sufficient num of cutpoints available (not too restrictive)
+    while(cutpoints(i)/cutpoints(sqrt(max(x^2))) > 1|
+          cutpoints(i)/cutpoints(sqrt(max(x^2)))<0.75) i <- i+seq
     return(i)
 }
 ###
+c             <- 0
 Omin          <- 2
 Opct          <- 0.9
 num_trees_mod <- 10
 num_trees_con <- 10
-num_cutpoints <- n
 Nmin          <- 10
 num_sweeps    <- 50
 burnin        <- 20
 p_categorical <- 0
 ## DGP1a
 dgp <- readRDS("Data/DGP1a.rds")
+num_cutpoints <- length(dgp[[1]]$y) ## Same for all DGPs assuming n doesn't change
 s <- length(dgp) ## number of samples
 for (i in 1:s)
 {
@@ -92,11 +94,13 @@ for (i in 1:s)
                    tau_con = 1/num_trees_con,
                    tau_mod = 1/num_trees_mod)
     t1 <- Sys.time()
-    write.table(Owidth,"Results/Owidth_dgp2.csv",append=T)
-    write.table(t1-t0,"Results/time_xbcf_dgp2.csv",append=T)
-    saveRDS(fit,paste0("Results/xbcf_dgp2_",i,".rds"))
+    ## write.table(Owidth,"Results/Owidth_dgp2.csv",append=T)
+    ## write.table(t1-t0,"Results/time_xbcf_dgp2.csv",append=T)
+    saveRDS(list(fit=fit,wts=(1/x^2)/sum(1/x^2),
+                 Owidth = Owidth, time=t1-t0),
+            paste0("Results/xbcf_dgp2_",i,".rds"))
 }
-## DGP1b
+## DGP3
 dgp <- readRDS("Data/DGP3.rds")
 s <- length(dgp) ## number of samples
 for (i in 1:s)

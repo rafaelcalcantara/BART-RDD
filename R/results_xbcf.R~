@@ -1,0 +1,24 @@
+library(XBART)
+setwd("~/Documents/Git/XBCF-RDD/")
+## DGP2
+dgp <- readRDS("Data/DGP2.rds")
+dgp <- dgp[1:20]
+s <- 20
+results <- list()
+for (i in 1:s)
+{
+    results[[i]] <- readRDS(paste0("Results/xbcf_dgp2_",i,".rds"))
+}
+weights <- list()
+for (i in 1:s)
+{
+    weights[[i]] <- readRDS(paste0("Results/weights_dgp2_",i,".rds"))
+}
+### Obtain ATE posterior
+pred <- mapply(function(x,y) predict.XBCFrd(x$fit,y$w,rep(0,500)),results,dgp)
+post1 <- sapply(pred["tau.adj",],colMeans)
+post2 <- mapply(function(x,y) colSums(y$wts*x),pred["tau.adj",],results)
+post3 <- mapply(function(x,y) colSums(y*x),pred["tau.adj",],weights)
+post1.sum <- t(apply(post1,2,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
+post2.sum <- t(apply(post2,2,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
+post3.sum <- t(apply(post3,2,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
