@@ -39,6 +39,7 @@ colnames(res.mat) <- c("DGP1a","DGP1b","DGP2","DGP3")
 rownames(res.mat) <- c("MSE","Coverage","Int. Length")
 res.mat
 saveRDS(res.mat,"Results/kr_simulations_1.rds")
+write.csv(res.mat,"Tables/kr_simulations_1.csv")
 ####
 stopImplicitCluster()
 ####
