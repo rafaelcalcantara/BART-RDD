@@ -1,4 +1,11 @@
 ## Setup
+if (Sys.info()[1]=="Linux")
+{
+  setwd("~/Documents/Git/XBCF-RDD")
+} else
+{
+  setwd("~/Git/XBCF-RDD/")
+}
 set.seed(0)
 ## s <- 1000
 s <- 1000
