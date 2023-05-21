@@ -1,5 +1,6 @@
 ## Setup
 set.seed(0)
+## s <- 1000
 s <- 1000
 n <- 500
 p <- 10
@@ -64,25 +65,21 @@ dgp.kr <- function(n,p=200)
     z  <- x>=0
     mu <- function(x,w,a)
     {
-        0.36 + 0.96*x + 5.47*x^2 + 15.28*x^3 + 5.14*x^5 + as.vector(w%*%a)
+        0.36 + 0.96*x + 5.47*x^2 + 15.28*x^3 + 5.14*x^5 + as.vector(0.22*w%*%a)
     }
     tau <- function(x,w,a)
     {
-        0.02 - 0.34*x - 8.31*x^2 - 6.86*x^3 - 0.83*x^5 + as.vector(0.06*w%*%a)
+        2 - 0.34*x - 8.31*x^2 - 6.86*x^3 - 0.83*x^5 + as.vector(0.06*w%*%a)
     }
     y  <- mu(x,w,a) + tau(x,w,a)*z + e
     ate <- mean(tau(0,w,a))
     tau.x <- tau(x,w,a)
     return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
 }
-## DGP1a
-dgp1a <- vector("list",s)
-for (i in 1:s) dgp1a[[i]] <- dgp.cgs(n,p)
-saveRDS(dgp1a,"Data/DGP1a.rds")
-## DGP1b
-dgp1b <- vector("list",s)
-for (i in 1:s) dgp1b[[i]] <- dgp1a[[i]]
-saveRDS(dgp1b,"Data/DGP1b.rds")
+## DGP1
+dgp1 <- vector("list",s)
+for (i in 1:s) dgp1[[i]] <- dgp.cgs(n,p)
+saveRDS(dgp1,"Data/DGP1.rds")
 ## DGP2
 dgp2 <- vector("list",s)
 for (i in 1:s) dgp2[[i]] <- dgp.fh(n,p)

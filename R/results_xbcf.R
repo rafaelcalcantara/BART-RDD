@@ -1,47 +1,44 @@
 library(XBART)
+library(parallel)
+library(foreach)
+library(doParallel)
 setwd("~/Documents/Git/XBCF-RDD/")
-## Weights function
-sample.tau.ind <- function(tau,wts)
+### Function to read results files
+readFiles <- function(s,dgp,file)
 {
-    ## Function to calculate tau for a given sweep
-    p <- apply(wts$yhats,2,sample,1)
-    gamma <- rbinom(length(p),1,p)
-    return(gamma*tau/sum(gamma))
+    foreach(x=1:s,.multicombine=T) %dopar%
+        readRDS(paste0("Results/",file,"_dgp",dgp,"_",x,".rds"))
 }
-## CHECK IF SAMPLE.TAU.SAMPLE IS RIGHT
-sample.tau.sample <- function(n,pred,weights)
-{
-    ## Function to calculate tau for every sweep of a given sample
-    ate <- sapply(n,function(x) sample.tau.ind(pred$tau.adj[,x],weights))
-    return(colSums(ate))
-}
-sample.tau <- function(n,pred,weights)
-{
-    return(mapply(function(x,y) sample.tau.sample(n,x,y),pred,weights))
-}
-## DGP2
-dgp <- readRDS("Data/DGP2.rds")
-dgp <- dgp[1:50]
-s <- 50
-results <- list()
-for (i in 1:s)
-{
-    results[[i]] <- readRDS(paste0("Results/xbcf_dgp2_",i,".rds"))
-}
-weights <- list()
-for (i in 1:s)
-{
-    weights[[i]] <- readRDS(paste0("Results/weights_dgp2_",i,".rds"))
-}
+#### Parallelization
+no_cores <- detectCores() - 1
+registerDoParallel(no_cores)
+## DGP1a
+results <- readFiles(s,"1a","xbcf")
 ### Obtain ATE posterior
-pred <- mapply(function(x,y) predict.XBCFrd(x$fit,y$w,rep(0,500)),results,dgp,SIMPLIFY=F)
-post1 <- sapply(pred["tau.adj",],colMeans)
-post2 <- mapply(function(x,y) colSums(y$wts*x),pred["tau.adj",],results)
-post3 <- mapply(function(x,y) colMeans(x[y==1,]),pred["tau.adj",],tau.sample)
-post1.sum <- t(apply(post1,2,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
-post2.sum <- t(apply(post2,2,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
-post3.sum <- t(apply(post3,2,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
-###
-mean((post3.sum[,1]-1)^2)
-mean(post3.sum[,2]<=1 & 1<=post3.sum[,3])
-mean(post3.sum[,3]-post3.sum[,2])
+ate.post1a <- t(sapply(results,function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+## DGP1b
+results <- readFiles(s,"1b","xbcf")
+### Obtain ATE posterior
+ate.post1b <- t(sapply(results,function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+## DGP2
+results <- readFiles(s,"2","xbcf")
+### Obtain ATE posterior
+ate.post2 <- t(sapply(results,function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+## DGP3
+dgp <- readRDS("Data/DGP3.rds")
+results <- readFiles(s,"3","xbcf")
+ate3 <- sapply(dgp,function(x) x$ate) ## Heterogeneous ATE
+### Obtain ATE posterior
+ate.post3 <- t(sapply(results,function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+####
+res.mat <- cbind(c(mean((ate.post1a[,1]-0.04)^2),mean(ate.post1a[,2]<=0.04 & 0.04<=ate.post1a[,3]),mean(ate.post1a[,3]-ate.post1a[,2])),
+                 c(mean((ate.post1b[,1]-0.04)^2),mean(ate.post1b[,2]<=0.04 & 0.04<=ate.post1b[,3]),mean(ate.post1b[,3]-ate.post1b[,2])),
+                 c(mean((ate.post2[,1]-1)^2),mean(ate.post2[,2]<=1 & 1<=ate.post2[,3]),mean(ate.post2[,3]-ate.post2[,2])),
+                 c(mean((ate.post3[,1]-ate3)^2),mean(ate.post3[,2]<=ate3 & ate3<=ate.post3[,3]),mean(ate.post3[,3]-ate.post3[,2])))
+colnames(res.mat) <- c("DGP1a","DGP1b","DGP2","DGP3")
+rownames(res.mat) <- c("MSE","Coverage","Int. Length")
+res.mat
+saveRDS(res.mat,"Results/xbcf_simulations_1.rds")
+####
+stopImplicitCluster()
+####
