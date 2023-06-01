@@ -1,5 +1,5 @@
 ## Master file to run everything necessary for XBCF (fit, weights and predictions)
-s <- 1000
+s <- 20
 n <- 500
 p <- 10
 if (Sys.info()[1]=="Linux")

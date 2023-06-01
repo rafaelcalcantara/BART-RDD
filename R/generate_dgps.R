@@ -7,7 +7,6 @@ if (Sys.info()[1]=="Linux")
   setwd("~/Git/XBCF-RDD/")
 }
 set.seed(0)
-## s <- 1000
 s <- 1000
 n <- 500
 p <- 10
