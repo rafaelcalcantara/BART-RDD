@@ -1,4 +1,8 @@
 set.seed(0)
+## Setup
+library(parallel)
+library(foreach)
+library(doParallel)
 devtools::install_github("rafaelcalcantara/XBART@XBCF-RDD")
 library(XBART)
 setwd("~/Documents/Git/XBCF-RDD")
@@ -55,6 +59,69 @@ nbot <- function(tree)
     if (length(tree)==0) return(1)
     nbot(tree$left)+nbot(tree$right)
 }
+### Functions to find good Owidth values
+params <- function(x)
+{
+    if (is.null(x$theta)) c(params(x$left),params(x$right))
+    else x$theta
+}
+nbot <- function(t) length(params(t))
+nbot.trees <- function(t,m) sapply(0:(m-1),function(y) nbot(t[[as.character(y)]]))
+nbot.sweeps <- function(t,num_sweeps,m) sapply(1:num_sweeps, function(y) nbot.trees(t[[y]],m))
+avg.nbot <- function(Owidth,y,w,x)
+{
+    foreach(i=1:length(Owidth),.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+        {
+            fit <- XBCF.rd(y, w, x, c, Owidth = Owidth[i], Omin = Omin, Opct = Opct,
+                           num_trees_mod = 1, num_trees_con = 1,
+                           num_cutpoints = n, num_sweeps = 100,
+                           burnin = 0, Nmin = Nmin,
+                           p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
+                           tau_con = 2*var(y),
+                           tau_mod = 0.5*var(y), parallel=F)
+            trees <- jsonlite::parse_json(fit$tree_json_mod)$trees
+            IQR(nbot.sweeps(trees,100,1))
+        }
+}
+findOwidth <- function(Owidth,y,w,x,t)
+{
+    ## nbots <- sapply(1:5,function(a) unlist(avg.nbot(Owidth,y,w,x)))
+    ## nbots <- t(nbots)
+    ## nbots <- apply(nbots,2,function(x) sum(x>t))
+    ## nbots <- nbots/5
+    nbots <- unlist(avg.nbot(Owidth,y,w,x))
+    ## nbots <- rbinom(length(Owidth),1,nbots)
+    return(Owidth[nbots>4])
+}
+fit.general <- function(h,y,w,x)
+{
+    foreach(i=1:length(h),.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+        {
+            fit <- XBCF.rd(y, w, x, c, Owidth = h[i], Omin = Omin, Opct = Opct,
+                           num_trees_mod = m, num_trees_con = m,
+                           num_cutpoints = n, num_sweeps = num_sweeps,
+                           burnin = burnin, Nmin = Nmin,
+                           p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
+                           tau_con = 2*var(y)/m,
+                           tau_mod = 0.5*var(y)/m, parallel=F)
+            predict.XBCFrd(fit,w,rep(0,n))
+        }
+}
+fit.xbcf <- function(Owidth,y,w,x,t)
+{
+    t0 <- Sys.time()
+    h <- findOwidth(Owidth,y,w,x,t)
+    while(length(h)==0) h <- findOwidth(Owidth,y,w,x,t)
+    fit <- fit.general(h,y,w,x)
+    pred <- lapply(1:length(h), function(x) fit[[x]]$tau.adj)
+    pred <- do.call("cbind",pred)
+    post <- colMeans(pred,na.rm=T)
+    t1 <- Sys.time()
+    dt <- difftime(t1,t0)
+    print(paste0("Selected ",length(h)," out of ",length(Owidth)," values provided for Owidth"))
+    print(paste0("Elapsed time: ",round(dt,2)," seconds"))
+    return(list(ate.post=post,pred=fit,Owidth=h,time=dt))
+}
 ## Example data: w independent of x
 h <- 0.25
 n <- 100
@@ -63,10 +130,10 @@ w <- runif(n,-1,1)
 ### Plots
 #### This plot makes it clear that Owidth=0.25 is too narrow for
 #### this dataset
-plot(x,w)
-abline(v=-h,lty=2)
-abline(v=h,lty=2)
-abline(v=0,lty=3)
+## plot(x,w)
+## abline(v=-h,lty=2)
+## abline(v=h,lty=2)
+## abline(v=0,lty=3)
 #### This tree is invalid because it partitions the window
 root1 <- list()
 root1 <- split(root1,1,order(w)[50])
@@ -133,8 +200,19 @@ n <- 1000
 x <- rnorm(n,0,0.25)
 w <- rnorm(n,0,0.25)
 y <- w + x + (x>=0)*(3+sin(0.5*w+0.5*x)) + rnorm(n)
+####
+c             <- 0
+Owidth        <- seq(0.01,0.5,0.01)
+Omin          <- 10
+Opct          <- 0.95
+m             <- 10
+Nmin          <- 20
+num_sweeps    <- 100
+burnin        <- 10
+p_categorical <- 0
+num_cutpoints <- n
 ## Good Owidth
-fit <- XBCF.rd(y, w, x, c=0, Owidth = 0.06, Omin = 10, Opct = 0.95,
+fit <- XBCF.rd(y, w, x, c=0, Owidth = 0.08, Omin = 10, Opct = 0.95,
                num_trees_mod = 10, num_trees_con = 10,
                num_cutpoints = n, num_sweeps = 100,
                burnin = 10, Nmin = 20,
@@ -148,12 +226,22 @@ tau <- predict.XBCFrd(fit,w,x)
 ###
 png("Figures/good_owidth.png")
 plot(sort(x),tau$tau.adj.mean[order(x)],col="blue",
-     xlab = "x", ylab=expression(tau(w,x)),type="l",
+     xlab = "x", ylab=expression(tau(w,x)),type="p",
      ylim = range(tau$tau.adj.mean,3+sin(0.5*x+0.5*w))*c(1,1.1))
 lines(sort(x),3+sin(0.5*sort(x) + 0.5*w[order(x)]))
 abline(v=-0.1,lty=2)
 abline(v=0.1,lty=2)
 dev.off()
+###
+### Parallelization
+no_cores <- detectCores() - 1
+registerDoParallel(no_cores)
+fit <- fit.general(Owidth,y,w,x)
+Error <- (sapply(fit, function(i) mean(colMeans(i$tau.adj)))-3-mean(sin(0.5*w)))^2
+png("Figures/error.png")
+plot(Owidth,Error,"b")
+dev.off()
+stopImplicitCluster()
 ## ## Example data: w and x related
 ## ### In this setting, the partitions must reflect the relationship
 ## ### between w and x otherwise we end up with empty nodes.
