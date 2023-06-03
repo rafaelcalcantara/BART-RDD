@@ -1,4 +1,6 @@
 set.seed(0)
+devtools::install_github("rafaelcalcantara/XBART@XBCF-RDD")
+library(XBART)
 setwd("~/Documents/Git/XBCF-RDD")
 ## Functions
 temp <- function(tree,w,x,x0,y0,x1,y1)
@@ -58,7 +60,6 @@ h <- 0.25
 n <- 100
 x <- runif(n,-1,1)
 w <- runif(n,-1,1)
-y <- w + x + (x>=0)*3 + rnorm(n)
 ### Plots
 #### This plot makes it clear that Owidth=0.25 is too narrow for
 #### this dataset
@@ -127,47 +128,74 @@ dev.off()
 png("Figures/good_tree_1.png")
 plot.trees(w,x,root4,0.36)
 dev.off()
-## Example data: w and x related
-### In this setting, the partitions must reflect the relationship
-### between w and x otherwise we end up with empty nodes.
-### For example, in this case high w equals high x, meaning
-### partitions at high values of w are less likely to feature
-### x near the cutoff and thus inside the window. Similarly for
-### low w and low x.
-h <- 0.25
-n <- 100
-x <- runif(n,-1,1)
-w <- sapply(x,function(i) rnorm(1,i,0.5))
-y <- w + x + (x>=0)*3 + rnorm(n)
-### Plots
-#### This plot makes it clear that Owidth=0.25 is too narrow for
-#### this dataset
-plot(x,w)
-abline(v=-h,lty=2)
-abline(v=h,lty=2)
-abline(v=0,lty=3)
-#### This tree is invalid because it creates empty nodes in window
-root1 <- list()
-root1 <- split(root1,1,order(w)[49])
-root1$left <- split(root1$left,2,order(x)[30])
-root1$right <- split(root1$right,2,order(x)[32])
-root1$left$left <- split(root1$left$left,1,order(w)[15])
-root1$left$right <- split(root1$left$right,2,order(x)[65])
-root1$right$left <- split(root1$right$left,2,order(x)[25])
-root1$right$right <- split(root1$right$right,1,order(w)[85])
+## Fit
+n <- 1000
+x <- rnorm(n,0,0.25)
+w <- rnorm(n,0,0.25)
+y <- w + x + (x>=0)*(3+sin(0.5*w+0.5*x)) + rnorm(n)
+## Good Owidth
+fit <- XBCF.rd(y, w, x, c=0, Owidth = 0.06, Omin = 10, Opct = 0.95,
+               num_trees_mod = 10, num_trees_con = 10,
+               num_cutpoints = n, num_sweeps = 100,
+               burnin = 10, Nmin = 20,
+               p_categorical_con = 0, p_categorical_mod = 0,
+               tau_con = 2*var(y)/10,
+               tau_mod = 0.5*var(y)/10, parallel=F,
+               random_seed=0)
+tau <- predict.XBCFrd(fit,w,rep(0,n))
+mean((colMeans(tau$tau.adj) - mean(3+sin(0.5*w)))^2)
+tau <- predict.XBCFrd(fit,w,x)
 ###
-root2 <- list()
-root2 <- split(root2,1,order(w)[49])
-root2$left <- split(root2$left,2,order(x)[30])
-root2$right <- split(root2$right,2,order(x)[32])
-root2$left$left <- split(root2$left$left,1,order(w)[15])
-root2$left$right <- split(root2$left$right,2,order(x)[65])
-root2$right$left <- split(root2$right$left,2,order(x)[25])
-root2$right$right <- split(root2$right$right,2,order(x)[67])
-###
-png("Figures/bad_tree_2.png")
-plot.trees(w,x,root1,h)
+png("Figures/good_owidth.png")
+plot(sort(x),tau$tau.adj.mean[order(x)],col="blue",
+     xlab = "x", ylab=expression(tau(w,x)),type="l",
+     ylim = range(tau$tau.adj.mean,3+sin(0.5*x+0.5*w))*c(1,1.1))
+lines(sort(x),3+sin(0.5*sort(x) + 0.5*w[order(x)]))
+abline(v=-0.1,lty=2)
+abline(v=0.1,lty=2)
 dev.off()
-png("Figures/good_tree_2.png")
-plot.trees(w,x,root2,h)
-dev.off()
+## ## Example data: w and x related
+## ### In this setting, the partitions must reflect the relationship
+## ### between w and x otherwise we end up with empty nodes.
+## ### For example, in this case high w equals high x, meaning
+## ### partitions at high values of w are less likely to feature
+## ### x near the cutoff and thus inside the window. Similarly for
+## ### low w and low x.
+## h <- 0.25
+## n <- 100
+## x <- runif(n,-1,1)
+## w <- sapply(x,function(i) rnorm(1,i,0.5))
+## y <- w + x + (x>=0)*(3 + w + x) + rnorm(n)
+## ### Plots
+## #### This plot makes it clear that Owidth=0.25 is too narrow for
+## #### this dataset
+## plot(x,w)
+## abline(v=-h,lty=2)
+## abline(v=h,lty=2)
+## abline(v=0,lty=3)
+## #### This tree is invalid because it creates empty nodes in window
+## root1 <- list()
+## root1 <- split(root1,1,order(w)[49])
+## root1$left <- split(root1$left,2,order(x)[30])
+## root1$right <- split(root1$right,2,order(x)[32])
+## root1$left$left <- split(root1$left$left,1,order(w)[15])
+## root1$left$right <- split(root1$left$right,2,order(x)[65])
+## root1$right$left <- split(root1$right$left,2,order(x)[25])
+## root1$right$right <- split(root1$right$right,1,order(w)[85])
+## ###
+## root2 <- list()
+## root2 <- split(root2,1,order(w)[49])
+## root2$left <- split(root2$left,2,order(x)[30])
+## root2$right <- split(root2$right,2,order(x)[32])
+## root2$left$left <- split(root2$left$left,1,order(w)[15])
+## root2$left$right <- split(root2$left$right,2,order(x)[65])
+## root2$right$left <- split(root2$right$left,2,order(x)[25])
+## root2$right$right <- split(root2$right$right,2,order(x)[67])
+## ###
+## png("Figures/bad_tree_2.png")
+## plot.trees(w,x,root1,h)
+## dev.off()
+## png("Figures/good_tree_2.png")
+## plot.trees(w,x,root2,h)
+## dev.off()
+## ###
