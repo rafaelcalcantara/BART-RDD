@@ -83,7 +83,7 @@ avg.nbot <- function(Owidth,y,w,x)
             IQR(nbot.sweeps(trees,100,1))
         }
 }
-findOwidth <- function(Owidth,y,w,x,t)
+findOwidth <- function(Owidth,y,w,x)
 {
     ## nbots <- sapply(1:5,function(a) unlist(avg.nbot(Owidth,y,w,x)))
     ## nbots <- t(nbots)
@@ -107,11 +107,11 @@ fit.general <- function(h,y,w,x)
             predict.XBCFrd(fit,w,rep(0,n))
         }
 }
-fit.xbcf <- function(Owidth,y,w,x,t)
+fit.xbcf <- function(Owidth,y,w,x)
 {
     t0 <- Sys.time()
-    h <- findOwidth(Owidth,y,w,x,t)
-    while(length(h)==0) h <- findOwidth(Owidth,y,w,x,t)
+    h <- findOwidth(Owidth,y,w,x)
+    while(length(h)==0) h <- findOwidth(Owidth,y,w,x)
     fit <- fit.general(h,y,w,x)
     pred <- lapply(1:length(h), function(x) fit[[x]]$tau.adj)
     pred <- do.call("cbind",pred)
@@ -196,10 +196,13 @@ png("Figures/good_tree_1.png")
 plot.trees(w,x,root4,0.36)
 dev.off()
 ## Fit
-n <- 1000
+n <- 500
 x <- rnorm(n,0,0.25)
 w <- rnorm(n,0,0.25)
-y <- w + x + (x>=0)*(3+sin(0.5*w+0.5*x)) + rnorm(n)
+z <- x>=0
+mu.fun <- function(W, X){return(0.1 * w + 1/(1+exp(-5*X)))} 
+tau.fun <- function(W, X) return( sin(mu.fun(W, X)) +1) # make sure the treatment effect is non-zero
+y <- mu.fun(w, x) + tau.fun(w, x)*z + rnorm(n, 0, 0.2)
 ####
 c             <- 0
 Owidth        <- seq(0.01,0.5,0.01)
@@ -211,8 +214,18 @@ num_sweeps    <- 100
 burnin        <- 10
 p_categorical <- 0
 num_cutpoints <- n
+## Error
+### Parallelization
+no_cores <- detectCores() - 1
+registerDoParallel(no_cores)
+fit <- fit.general(Owidth,y,w,x)
+Error <- (sapply(fit, function(i) mean(colMeans(i$tau.adj)))-mean(tau.fun(w,0)))^2
+png("Figures/error.png")
+plot(Owidth,Error,"b",xlab="h")
+dev.off()
+stopImplicitCluster()
 ## Good Owidth
-fit <- XBCF.rd(y, w, x, c=0, Owidth = 0.08, Omin = 10, Opct = 0.95,
+fit <- XBCF.rd(y, w, x, c=0, Owidth = 0.03, Omin = 10, Opct = 0.95,
                num_trees_mod = 10, num_trees_con = 10,
                num_cutpoints = n, num_sweeps = 100,
                burnin = 10, Nmin = 20,
@@ -221,27 +234,18 @@ fit <- XBCF.rd(y, w, x, c=0, Owidth = 0.08, Omin = 10, Opct = 0.95,
                tau_mod = 0.5*var(y)/10, parallel=F,
                random_seed=0)
 tau <- predict.XBCFrd(fit,w,rep(0,n))
-mean((colMeans(tau$tau.adj) - mean(3+sin(0.5*w)))^2)
+mean((colMeans(tau$tau.adj) - mean(tau.fun(w,0)))^2)
 tau <- predict.XBCFrd(fit,w,x)
 ###
 png("Figures/good_owidth.png")
 plot(sort(x),tau$tau.adj.mean[order(x)],col="blue",
      xlab = "x", ylab=expression(tau(w,x)),type="p",
-     ylim = range(tau$tau.adj.mean,3+sin(0.5*x+0.5*w))*c(1,1.1))
-lines(sort(x),3+sin(0.5*sort(x) + 0.5*w[order(x)]))
+     ylim = range(tau$tau.adj.mean,tau.fun(w,x)))
+lines(sort(x),tau.fun(w,x)[order(x)])
 abline(v=-0.1,lty=2)
 abline(v=0.1,lty=2)
 dev.off()
 ###
-### Parallelization
-no_cores <- detectCores() - 1
-registerDoParallel(no_cores)
-fit <- fit.general(Owidth,y,w,x)
-Error <- (sapply(fit, function(i) mean(colMeans(i$tau.adj)))-3-mean(sin(0.5*w)))^2
-png("Figures/error.png")
-plot(Owidth,Error,"b")
-dev.off()
-stopImplicitCluster()
 ## ## Example data: w and x related
 ## ### In this setting, the partitions must reflect the relationship
 ## ### between w and x otherwise we end up with empty nodes.
