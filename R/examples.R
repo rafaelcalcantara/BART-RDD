@@ -83,6 +83,21 @@ avg.nbot <- function(Owidth,y,w,x)
             IQR(nbot.sweeps(trees,100,1))
         }
 }
+nbot.par <- function(Owidth,y,w,x)
+{
+    foreach(i=1:length(Owidth),.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+        {
+            fit <- XBCF.rd(y, w, x, c, Owidth = Owidth[i], Omin = Omin, Opct = Opct,
+                           num_trees_mod = 1, num_trees_con = 1,
+                           num_cutpoints = n, num_sweeps = 100,
+                           burnin = 0, Nmin = Nmin,
+                           p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
+                           tau_con = 2*var(y),
+                           tau_mod = 0.5*var(y), parallel=F)
+            trees <- jsonlite::parse_json(fit$tree_json_mod)$trees
+            nbot.sweeps(trees,100,1)
+        }
+}
 findOwidth <- function(Owidth,y,w,x)
 {
     ## nbots <- sapply(1:5,function(a) unlist(avg.nbot(Owidth,y,w,x)))
@@ -245,6 +260,11 @@ lines(sort(x),tau.fun(w,x)[order(x)])
 abline(v=-0.1,lty=2)
 abline(v=0.1,lty=2)
 dev.off()
+###
+nbots <- nbot.par(Owidth,y,w,x)
+nbots <- do.call("rbind",nbots)
+plot(Owidth,sapply(apply(nbots,1,table),length))
+#### Maybe counting depths is better than IQR?
 ###
 ## ## Example data: w and x related
 ## ### In this setting, the partitions must reflect the relationship
