@@ -21,3 +21,4 @@ if (Sys.info()["sysname"] == "Linux")
     source("R/simulations_cgs.R")
     gc()
 }
+print("Simulation ended!")

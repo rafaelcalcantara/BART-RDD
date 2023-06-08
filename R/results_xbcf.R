@@ -34,7 +34,7 @@ ate.post3 <- t(sapply(results,function(x) c(mean(x$ate.post),quantile(x$ate.post
 res.mat <- cbind(c(mean((ate.post1a[,1]-0.04)^2),mean(ate.post1a[,2]<=0.04 & 0.04<=ate.post1a[,3]),mean(ate.post1a[,3]-ate.post1a[,2])),
                  c(mean((ate.post1b[,1]-0.04)^2),mean(ate.post1b[,2]<=0.04 & 0.04<=ate.post1b[,3]),mean(ate.post1b[,3]-ate.post1b[,2])),
                  c(mean((ate.post2[,1]-1)^2),mean(ate.post2[,2]<=1 & 1<=ate.post2[,3]),mean(ate.post2[,3]-ate.post2[,2])),
-                 c(mean((ate.post3[,1]-ate3)^2),mean(ate.post3[,2]<=ate3 & ate3<=ate.post3[,3]),mean(ate.post3[,3]-ate.post3[,2])))
+                 c(mean((ate.post3[,1]-ate3[1:s])^2),mean(ate.post3[,2]<=ate3[1:s] & ate3[1:s]<=ate.post3[,3]),mean(ate.post3[,3]-ate.post3[,2])))
 colnames(res.mat) <- c("DGP1a","DGP1b","DGP2","DGP3")
 rownames(res.mat) <- c("MSE","Coverage","Int. Length")
 res.mat

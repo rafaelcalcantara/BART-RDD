@@ -21,16 +21,16 @@ avg.nbot <- function(Owidth,y,w,x)
         {
             fit <- XBCF.rd(y, w, x, c, Owidth = Owidth[i], Omin = Omin, Opct = Opct,
                            num_trees_mod = 1, num_trees_con = 1,
-                           num_cutpoints = n, num_sweeps = 100,
+                           num_cutpoints = n, num_sweeps = 500,
                            burnin = 0, Nmin = Nmin,
                            p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
                            tau_con = 2*var(y),
                            tau_mod = 0.5*var(y), parallel=F)
             trees <- jsonlite::parse_json(fit$tree_json_mod)$trees
-            IQR(nbot.sweeps(trees,100,1))
+            median(nbot.sweeps(trees,500,1))
         }
 }
-findOwidth <- function(Owidth,y,w,x,t)
+findOwidth <- function(Owidth,y,w,x)
 {
     ## nbots <- sapply(1:5,function(a) unlist(avg.nbot(Owidth,y,w,x)))
     ## nbots <- t(nbots)
@@ -54,11 +54,14 @@ fit.general <- function(h,y,w,x)
             predict.XBCFrd(fit,w,rep(0,n))
         }
 }
-fit.xbcf <- function(Owidth,y,w,x,t)
+fit.xbcf <- function(Owidth,y,w,x)
 {
     t0 <- Sys.time()
-    h <- findOwidth(Owidth,y,w,x,t)
-    while(length(h)==0) h <- findOwidth(Owidth,y,w,x,t)
+    ## h <- findOwidth(Owidth,y,w,x)
+    ## while(length(h)==0) h <- findOwidth(Owidth,y,w,x)
+    nbots <- avg.nbot(Owidth,y,w,x)
+    nbots <- unlist(nbots)
+    h <- Owidth[min(which(nbots==max(nbots)))]
     fit <- fit.general(h,y,w,x)
     pred <- lapply(1:length(h), function(x) fit[[x]]$tau.adj)
     pred <- do.call("cbind",pred)
@@ -71,59 +74,91 @@ fit.xbcf <- function(Owidth,y,w,x,t)
 }
 ####
 c             <- 0
-Owidth        <- seq(0.01,1,0.01)
-Omin          <- 5
-Opct          <- 0.7
+Owidth        <- function(x) quantile(x,seq(0.05,0.5,0.05))
+Omin          <- as.integer(0.03*n)
+Opct          <- 0.9
 m             <- 10
-Nmin          <- 10
-num_sweeps    <- 30
+Nmin          <- as.integer(0.02*n)
+num_sweeps    <- 50
 burnin        <- 20
 p_categorical <- 0
 num_cutpoints <- n
 ### Parallelization
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
-## ## DGP1a
+## DGP1a
 dgp <- readRDS("Data/DGP1.rds")
 for (i in s)
 {
     print(paste0("Simulation ",i," for DGP 1a"))
     data <- dgp[[i]]
     list2env(data,globalenv())
-    fit <- fit.xbcf(Owidth,y,NULL,x,2)
+    fit <- fit.general(Owidth(abs(x)),y,NULL,x)
     ## saveRDS(fit,paste0("Results/xbcf_dgp1a_",i,".rds"))
 }
+h <- Owidth(abs(x))
+pred <- sapply(fit, function(i) mean(colMeans(i$tau.adj)))
+plot(h,pred,"b")
+nbots <- avg.nbot(h,y,NULL,x)
+nbots <- unlist(nbots)
+Error <- sqrt((sapply(fit,function(i) mean(colMeans(i$tau.adj)))-data$ate)^2)
+plot(nbots,Error,xlab="median nbots")
+p1a <- recordPlot()
 ## DGP1b
-## for (i in s)
-## {
-##     print(paste0("Simulation ",i," for DGP 1b"))
-##     data <- dgp[[i]]
-##     list2env(data,globalenv())
-##     fit <- fit.xbcf(Owidth,y,w,x,3)
-##     ## saveRDS(fit,paste0("Results/xbcf_dgp1b_",i,".rds"))
-## }
+for (i in s)
+{
+    print(paste0("Simulation ",i," for DGP 1b"))
+    data <- dgp[[i]]
+    list2env(data,globalenv())
+    fit <- fit.general(Owidth(abs(x)),y,w,x)
+    ## saveRDS(fit,paste0("Results/xbcf_dgp1b_",i,".rds"))
+}
+h <- Owidth(abs(x))
+pred <- sapply(fit, function(i) mean(colMeans(i$tau.adj)))
+plot(h,pred,"b")
+nbots <- avg.nbot(h,y,w,x)
+nbots <- unlist(nbots)
+Error <- sqrt((sapply(fit,function(i) mean(colMeans(i$tau.adj)))-data$ate)^2)
+plot(apply(nbots,2,median),Error,xlab="median nbots")
+p1b <- recordPlot()
 ## DGP2
-## dgp <- readRDS("Data/DGP2.rds")
-## for (i in s)
-## {
-##     print(paste0("Simulation ",i," for DGP 2"))
-##     data <- dgp[[i]]
-##     list2env(data,globalenv())
-##     fit <- fit.xbcf(Owidth,y,w,x,2)
-##     ## saveRDS(fit,paste0("Results/xbcf_dgp2_",i,".rds"))
-## }
+dgp <- readRDS("Data/DGP2.rds")
+for (i in s)
+{
+    print(paste0("Simulation ",i," for DGP 2"))
+    data <- dgp[[i]]
+    list2env(data,globalenv())
+    fit <- fit.general(Owidth(abs(x)),y,w,x)
+    ## saveRDS(fit,paste0("Results/xbcf_dgp2_",i,".rds"))
+}
+h <- Owidth(abs(x))
+pred <- sapply(fit, function(i) mean(colMeans(i$tau.adj)))
+plot(h,pred,"b")
+nbots <- avg.nbot(h,y,w,x)
+nbots <- unlist(nbots)
+Error <- sqrt((sapply(fit,function(i) mean(colMeans(i$tau.adj)))-data$ate)^2)
+plot(nbots,Error,xlab="median nbots")
+p2 <- recordPlot()
 ## DGP3
-## dgp <- readRDS("Data/DGP3.rds")
-## data <- dgp[[s]]
-## list2env(data,globalenv())
-## for (i in s)
-## {
-##     print(paste0("Simulation ",i," for DGP 3"))
-##     data <- dgp[[i]]
-##     list2env(data,globalenv())
-##     fit <- fit.xbcf(Owidth,y,w,x,8)
-##     ## saveRDS(fit,paste0("Results/xbcf_dgp3_",i,".rds"))
-## }
+dgp <- readRDS("Data/DGP3.rds")
+for (i in s)
+{
+    print(paste0("Simulation ",i," for DGP 3"))
+    data <- dgp[[i]]
+    list2env(data,globalenv())
+    fit <- fit.general(Owidth(abs(x)),y,w,x)
+    ## saveRDS(fit,paste0("Results/xbcf_dgp3_",i,".rds"))
+}
+h <- Owidth(abs(x))
+pred <- sapply(fit, function(i) mean(colMeans(i$tau.adj)))
+plot(h,pred,"b")
+nbots <- avg.nbot(h,y,w,x)
+nbots <- unlist(nbots)
+Error <- sqrt((sapply(fit,function(i) mean(colMeans(i$tau.adj)))-data$ate)^2)
+plot(apply(nbots,2,median),Error,xlab="median nbots")
+p3 <- recordPlot()
+####
+cowplot::plot_grid(plotlist=list(p1a,p1b,p2,p3),nrow=2,ncol=2)
 ####
 stopImplicitCluster()
 ####
@@ -135,10 +170,10 @@ stopImplicitCluster()
 ## plot(Owidth,colMeans(nbots),type="b")
 ## par(mfrow=c(1,1))
 ####
-a <- fit$pred
-a <- sapply(a,function(x) colMeans(x$tau.adj))
-colnames(a) <- fit$Owidth
-boxplot(a)
-abline(h=data$ate,lty=1)
-mean(fit$ate.post)
-quantile(fit$ate.post,c(0.025,0.975))
+## a <- fit$pred
+## a <- sapply(a,function(x) colMeans(x$tau.adj))
+## colnames(a) <- fit$Owidth
+## boxplot(a)
+## abline(h=data$ate,lty=1)
+## mean(fit$ate.post)
+## quantile(fit$ate.post,c(0.025,0.975))

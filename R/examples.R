@@ -74,13 +74,13 @@ avg.nbot <- function(Owidth,y,w,x)
         {
             fit <- XBCF.rd(y, w, x, c, Owidth = Owidth[i], Omin = Omin, Opct = Opct,
                            num_trees_mod = 1, num_trees_con = 1,
-                           num_cutpoints = n, num_sweeps = 100,
+                           num_cutpoints = n, num_sweeps = 500,
                            burnin = 0, Nmin = Nmin,
                            p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
                            tau_con = 2*var(y),
                            tau_mod = 0.5*var(y), parallel=F)
             trees <- jsonlite::parse_json(fit$tree_json_mod)$trees
-            IQR(nbot.sweeps(trees,100,1))
+            median(nbot.sweeps(trees,500,1))
         }
 }
 nbot.par <- function(Owidth,y,w,x)
@@ -89,13 +89,13 @@ nbot.par <- function(Owidth,y,w,x)
         {
             fit <- XBCF.rd(y, w, x, c, Owidth = Owidth[i], Omin = Omin, Opct = Opct,
                            num_trees_mod = 1, num_trees_con = 1,
-                           num_cutpoints = n, num_sweeps = 100,
+                           num_cutpoints = n, num_sweeps = 1000,
                            burnin = 0, Nmin = Nmin,
                            p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
                            tau_con = 2*var(y),
                            tau_mod = 0.5*var(y), parallel=F)
             trees <- jsonlite::parse_json(fit$tree_json_mod)$trees
-            nbot.sweeps(trees,100,1)
+            nbot.sweeps(trees,1000,1)
         }
 }
 findOwidth <- function(Owidth,y,w,x)
@@ -211,7 +211,7 @@ png("Figures/good_tree_1.png")
 plot.trees(w,x,root4,0.36)
 dev.off()
 ## Fit
-n <- 500
+n <- 5000
 x <- rnorm(n,0,0.25)
 w <- rnorm(n,0,0.25)
 z <- x>=0
@@ -220,11 +220,11 @@ tau.fun <- function(W, X) return( sin(mu.fun(W, X)) +1) # make sure the treatmen
 y <- mu.fun(w, x) + tau.fun(w, x)*z + rnorm(n, 0, 0.2)
 ####
 c             <- 0
-Owidth        <- seq(0.01,0.5,0.01)
-Omin          <- 10
-Opct          <- 0.95
+Owidth        <- quantile(abs(x),seq(0.05,0.5,0.05))
+Omin          <- as.integer(0.03*n)
+Opct          <- 0.9
 m             <- 10
-Nmin          <- 20
+Nmin          <- as.integer(0.02*n)
 num_sweeps    <- 100
 burnin        <- 10
 p_categorical <- 0
@@ -234,13 +234,17 @@ num_cutpoints <- n
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
 fit <- fit.general(Owidth,y,w,x)
+pred <- sapply(fit, function(i) mean(colMeans(i$tau.adj)))
 Error <- (sapply(fit, function(i) mean(colMeans(i$tau.adj)))-mean(tau.fun(w,0)))^2
+Error <- sqrt(Error)
+nbots <- avg.nbot(Owidth,y,w,x)
+nbots <- unlist(nbots)
 png("Figures/error.png")
 plot(Owidth,Error,"b",xlab="h")
 dev.off()
 stopImplicitCluster()
 ## Good Owidth
-fit <- XBCF.rd(y, w, x, c=0, Owidth = 0.03, Omin = 10, Opct = 0.95,
+fit <- XBCF.rd(y, w, x, c=0, Owidth = Owidth[9], Omin = 10, Opct = 0.95,
                num_trees_mod = 10, num_trees_con = 10,
                num_cutpoints = n, num_sweeps = 100,
                burnin = 10, Nmin = 20,
@@ -263,7 +267,7 @@ dev.off()
 ###
 nbots <- nbot.par(Owidth,y,w,x)
 nbots <- do.call("rbind",nbots)
-plot(Owidth,sapply(apply(nbots,1,table),length))
+plot(apply(nbots,1,median),Error,xlab="Median nbot")
 #### Maybe counting depths is better than IQR?
 ###
 ## ## Example data: w and x related
