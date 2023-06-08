@@ -122,18 +122,21 @@ fit.general <- function(h,y,w,x)
             predict.XBCFrd(fit,w,rep(0,n))
         }
 }
-fit.xbcf <- function(Owidth,y,w,x)
+fit.xbcf <- function(y,w,x)
 {
     t0 <- Sys.time()
-    h <- findOwidth(Owidth,y,w,x)
-    while(length(h)==0) h <- findOwidth(Owidth,y,w,x)
-    fit <- fit.general(h,y,w,x)
-    pred <- lapply(1:length(h), function(x) fit[[x]]$tau.adj)
-    pred <- do.call("cbind",pred)
-    post <- colMeans(pred,na.rm=T)
+    h <- quantile(abs(x),0.15)
+    fit <- XBCF.rd(y, w, x, c, Owidth = h, Omin = Omin, Opct = Opct,
+                   num_trees_mod = m, num_trees_con = m,
+                   num_cutpoints = n, num_sweeps = num_sweeps,
+                   burnin = burnin, Nmin = Nmin,
+                   p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
+                   tau_con = 2*var(y)/m,
+                   tau_mod = 0.5*var(y)/m, parallel=F)
+    pred <- predict.XBCFrd(fit,w,rep(0,n))
+    post <- colMeans(pred$tau.adj,na.rm=T)
     t1 <- Sys.time()
     dt <- difftime(t1,t0)
-    print(paste0("Selected ",length(h)," out of ",length(Owidth)," values provided for Owidth"))
     print(paste0("Elapsed time: ",round(dt,2)," seconds"))
     return(list(ate.post=post,pred=fit,Owidth=h,time=dt))
 }
@@ -220,54 +223,63 @@ tau.fun <- function(W, X) return( sin(mu.fun(W, X)) +1) # make sure the treatmen
 y <- mu.fun(w, x) + tau.fun(w, x)*z + rnorm(n, 0, 0.2)
 ####
 c             <- 0
-Owidth        <- quantile(abs(x),seq(0.05,0.5,0.05))
+Owidth        <- quantile(abs(x),seq(0.05,0.5,0.01))
 Omin          <- as.integer(0.03*n)
 Opct          <- 0.9
 m             <- 10
 Nmin          <- as.integer(0.02*n)
-num_sweeps    <- 100
-burnin        <- 10
+num_sweeps    <- 70
+burnin        <- 20
 p_categorical <- 0
 num_cutpoints <- n
 ## Error
-### Parallelization
-no_cores <- detectCores() - 1
-registerDoParallel(no_cores)
-fit <- fit.general(Owidth,y,w,x)
-pred <- sapply(fit, function(i) mean(colMeans(i$tau.adj)))
-Error <- (sapply(fit, function(i) mean(colMeans(i$tau.adj)))-mean(tau.fun(w,0)))^2
-Error <- sqrt(Error)
-nbots <- avg.nbot(Owidth,y,w,x)
-nbots <- unlist(nbots)
-png("Figures/error.png")
-plot(Owidth,Error,"b",xlab="h")
-dev.off()
-stopImplicitCluster()
-## Good Owidth
-fit <- XBCF.rd(y, w, x, c=0, Owidth = Owidth[9], Omin = 10, Opct = 0.95,
-               num_trees_mod = 10, num_trees_con = 10,
-               num_cutpoints = n, num_sweeps = 100,
-               burnin = 10, Nmin = 20,
-               p_categorical_con = 0, p_categorical_mod = 0,
-               tau_con = 2*var(y)/10,
-               tau_mod = 0.5*var(y)/10, parallel=F,
-               random_seed=0)
-tau <- predict.XBCFrd(fit,w,rep(0,n))
-mean((colMeans(tau$tau.adj) - mean(tau.fun(w,0)))^2)
-tau <- predict.XBCFrd(fit,w,x)
-###
+## ### Parallelization
+## no_cores <- detectCores() - 1
+## registerDoParallel(no_cores)
+## ###
+fit <- fit.xbcf(y,w,x)
+(mean(fit$ate.post)-mean(tau.fun(w,0)))^2
+pred <- predict.XBCFrd(fit$pred,w,x)
 png("Figures/good_owidth.png")
-plot(sort(x),tau$tau.adj.mean[order(x)],col="blue",
-     xlab = "x", ylab=expression(tau(w,x)),type="p",
-     ylim = range(tau$tau.adj.mean,tau.fun(w,x)))
-lines(sort(x),tau.fun(w,x)[order(x)])
-abline(v=-0.1,lty=2)
-abline(v=0.1,lty=2)
+matplot(sort(x),cbind(pred$tau.adj.mean,tau.fun(w,x))[order(x),],type=c("p","l"),pch=1,lty=1,col=c("blue","black"),ylab=expression(tau(w,x)),xlab="X")
+abline(v=fit$Owidth,lty=2)
+abline(v=-fit$Owidth,lty=2)
+abline(v=0,lty=3)
 dev.off()
 ###
-nbots <- nbot.par(Owidth,y,w,x)
-nbots <- do.call("rbind",nbots)
-plot(apply(nbots,1,median),Error,xlab="Median nbot")
+## Error <- (sapply(fit, function(i) mean(colMeans(i$tau.adj)))-mean(tau.fun(w,0)))^2
+## Error <- sqrt(Error)
+## nbots <- avg.nbot(Owidth,y,w,x)
+## nbots <- unlist(nbots)
+## png("Figures/error.png")
+## plot(Owidth,Error,"b",xlab="h")
+## dev.off()
+## stopImplicitCluster()
+## ## Good Owidth
+## fit <- XBCF.rd(y, w, x, c=0, Owidth = Owidth[9], Omin = 10, Opct = 0.95,
+##                num_trees_mod = 10, num_trees_con = 10,
+##                num_cutpoints = n, num_sweeps = 100,
+##                burnin = 10, Nmin = 20,
+##                p_categorical_con = 0, p_categorical_mod = 0,
+##                tau_con = 2*var(y)/10,
+##                tau_mod = 0.5*var(y)/10, parallel=F,
+##                random_seed=0)
+## tau <- predict.XBCFrd(fit,w,rep(0,n))
+## mean((colMeans(tau$tau.adj) - mean(tau.fun(w,0)))^2)
+## tau <- predict.XBCFrd(fit,w,x)
+## ###
+## png("Figures/good_owidth.png")
+## plot(sort(x),tau$tau.adj.mean[order(x)],col="blue",
+##      xlab = "x", ylab=expression(tau(w,x)),type="p",
+##      ylim = range(tau$tau.adj.mean,tau.fun(w,x)))
+## lines(sort(x),tau.fun(w,x)[order(x)])
+## abline(v=-0.1,lty=2)
+## abline(v=0.1,lty=2)
+## dev.off()
+## ###
+## nbots <- nbot.par(Owidth,y,w,x)
+## nbots <- do.call("rbind",nbots)
+## plot(apply(nbots,1,median),Error,xlab="Median nbot")
 #### Maybe counting depths is better than IQR?
 ###
 ## ## Example data: w and x related

@@ -55,7 +55,7 @@ fit.general <- function(h,y,w,x)
 fit.xbcf <- function(y,w,x)
 {
     t0 <- Sys.time()
-    h <- quantile(abs(x),0.11)
+    h <- quantile(abs(x),0.15)
     fit <- XBCF.rd(y, w, x, c, Owidth = h, Omin = Omin, Opct = Opct,
                            num_trees_mod = m, num_trees_con = m,
                            num_cutpoints = n, num_sweeps = num_sweeps,

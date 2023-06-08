@@ -74,7 +74,7 @@ fit.xbcf <- function(Owidth,y,w,x)
 }
 ####
 c             <- 0
-Owidth        <- function(x) quantile(x,seq(0.05,0.5,0.05))
+Owidth        <- function(x) quantile(x,seq(0.05,0.5,0.01))
 Omin          <- as.integer(0.03*n)
 Opct          <- 0.9
 m             <- 10
@@ -137,7 +137,7 @@ plot(h,pred,"b")
 nbots <- avg.nbot(h,y,w,x)
 nbots <- unlist(nbots)
 Error <- sqrt((sapply(fit,function(i) mean(colMeans(i$tau.adj)))-data$ate)^2)
-plot(nbots,Error,xlab="median nbots")
+matplot(h,cbind(nbots,Error),type="b",pch=19,lty=1)
 p2 <- recordPlot()
 ## DGP3
 dgp <- readRDS("Data/DGP3.rds")
