@@ -125,14 +125,14 @@ fit.general <- function(h,y,w,x)
 fit.xbcf <- function(y,w,x)
 {
     t0 <- Sys.time()
-    h <- quantile(abs(x),0.15)
+    h <- quantile(abs(x),0.125)
     fit <- XBCF.rd(y, w, x, c, Owidth = h, Omin = Omin, Opct = Opct,
                    num_trees_mod = m, num_trees_con = m,
                    num_cutpoints = n, num_sweeps = num_sweeps,
                    burnin = burnin, Nmin = Nmin,
                    p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
-                   tau_con = 2*var(y)/m,
-                   tau_mod = 0.5*var(y)/m, parallel=F)
+                   tau_con = 0.5*var(y)/m,
+                   tau_mod = 2*var(y)/m, parallel=F)
     pred <- predict.XBCFrd(fit,w,rep(0,n))
     post <- colMeans(pred$tau.adj,na.rm=T)
     t1 <- Sys.time()
@@ -238,6 +238,7 @@ num_cutpoints <- n
 ## registerDoParallel(no_cores)
 ## ###
 fit <- fit.xbcf(y,w,x)
+quantile(fit$ate.post,0.975)-quantile(fit$ate.post,0.025)
 (mean(fit$ate.post)-mean(tau.fun(w,0)))^2
 pred <- predict.XBCFrd(fit$pred,w,x)
 png("Figures/good_owidth.png")
