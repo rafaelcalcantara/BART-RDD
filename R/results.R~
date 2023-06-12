@@ -1,0 +1,4 @@
+setwd("~/Documents/Git/XBCF-RDD")
+xbcf <- readRDS("xbcf_simulations_1.rds")
+kr <- readRDS("kr_simulations_1.rds")
+cgs <- readRDS("cgs_simulations_1.rds")

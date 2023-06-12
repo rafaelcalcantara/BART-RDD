@@ -80,5 +80,59 @@ fit.dgp <- function(s,dgp)
     }
 }
 fit.dgp(s,dgp)
+## DGP4
+dgp <- readRDS("Data/DGP4.rds")
+fit.dgp <- function(s,dgp)
+{
+    foreach(i=1:s,.multicombine=T) %dopar%
+    {
+        data <- dgp[[i]]
+        list2env(data,globalenv())
+        w1 <- fourier_basis(matrix(x),4)
+        w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
+        ## Estimation
+        t0 <- Sys.time()
+        fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
+        t1 <- Sys.time()
+        saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp4_",i,".rds"))
+    }
+}
+fit.dgp(s,dgp)
+## DGP5
+dgp <- readRDS("Data/DGP5.rds")
+fit.dgp <- function(s,dgp)
+{
+    foreach(i=1:s,.multicombine=T) %dopar%
+    {
+        data <- dgp[[i]]
+        list2env(data,globalenv())
+        w1 <- fourier_basis(matrix(x),4)
+        w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
+        ## Estimation
+        t0 <- Sys.time()
+        fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
+        t1 <- Sys.time()
+        saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp5_",i,".rds"))
+    }
+}
+fit.dgp(s,dgp)
+## DGP6
+dgp <- readRDS("Data/DGP6.rds")
+fit.dgp <- function(s,dgp)
+{
+    foreach(i=1:s,.multicombine=T) %dopar%
+    {
+        data <- dgp[[i]]
+        list2env(data,globalenv())
+        w1 <- fourier_basis(matrix(x),4)
+        w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
+        ## Estimation
+        t0 <- Sys.time()
+        fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
+        t1 <- Sys.time()
+        saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp6_",i,".rds"))
+    }
+}
+fit.dgp(s,dgp)
 ####
 stopImplicitCluster()

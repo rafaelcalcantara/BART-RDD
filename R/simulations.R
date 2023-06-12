@@ -1,5 +1,4 @@
-## Master script for simulations with DGPs from the other papers
-## The order in the time vectors generated is DGP1, DGP3, DGP2
+## Master script for simulations
 rm(list=ls())
 n <- 500
 p <- 10
@@ -11,9 +10,9 @@ if (Sys.info()["sysname"] == "Linux")
     ## XBCF-RDD simulations
     source("R/simulations_xbcf.R")
     gc()
-    ## ## KR simulations
-    ## source("R/simulations_kr.R")
-    ## gc()
+    ## KR simulations
+    source("R/simulations_kr.R")
+    gc()
 } else
 {
     setwd("~/Git/XBCF-RDD/")

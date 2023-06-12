@@ -161,5 +161,107 @@ fit.dgp <- function(s,dgp)
     }
 }
 fit.dgp(s,dgp)
+## DGP4
+dgp <- readRDS("Data/DGP4.rds")
+fit.dgp <- function(s,dgp)
+{
+  foreach(i=1:s,.multicombine=T,.packages = "bayesrdd",.export=c("burn","nsamples","P","mz","mztau","lamstmean0_","lamstsd0_","s2mean0_","s2sd0_","nudgp","nuval")) %do%
+    {
+      print(paste0("Simulation ",i," for DGP4"))
+      data <- dgp[[i]]
+      list2env(data,globalenv())
+      t0 <- Sys.time()
+      fit  <- bayesrddest(y = y,
+                          z = x,
+                          W = w,
+                          mw = rep(5,10), ## as per help file
+                          tau = c,
+                          p = P,
+                          mz = mz,
+                          mztau = mztau,
+                          beta0_ = matrix(0,nrow=24),
+                          lamstmean0_ = lamstmean0_,
+                          lamstsd0_ = lamstsd0_,
+                          d = rep(1,length(lamstsd0_)),
+                          s2mean0_ = s2mean0_,
+                          s2sd0_ = s2sd0_,
+                          distribution = "t",
+                          nuval = nuval,
+                          hetero = FALSE,
+                          n0=burn,
+                          m=nsamples)
+      t1 <- Sys.time()
+      saveRDS(list(fit=fit,time=t1-t0),paste0("Results/cgs_dgp4_",i,".rds"))
+    }
+}
+fit.dgp(s,dgp)
+## DGP5
+dgp <- readRDS("Data/DGP5.rds")
+fit.dgp <- function(s,dgp)
+{
+  foreach(i=1:s,.multicombine=T,.packages = "bayesrdd",.export=c("burn","nsamples","P","mz","mztau","lamstmean0_","lamstsd0_","s2mean0_","s2sd0_","nudgp","nuval")) %do%
+    {
+      print(paste0("Simulation ",i," for DGP5"))
+      data <- dgp[[i]]
+      list2env(data,globalenv())
+      t0 <- Sys.time()
+      fit  <- bayesrddest(y = y,
+                          z = x,
+                          W = w,
+                          mw = rep(5,10), ## as per help file
+                          tau = c,
+                          p = P,
+                          mz = mz,
+                          mztau = mztau,
+                          beta0_ = matrix(0,nrow=24),
+                          lamstmean0_ = lamstmean0_,
+                          lamstsd0_ = lamstsd0_,
+                          d = rep(1,length(lamstsd0_)),
+                          s2mean0_ = s2mean0_,
+                          s2sd0_ = s2sd0_,
+                          distribution = "t",
+                          nuval = nuval,
+                          hetero = FALSE,
+                          n0=burn,
+                          m=nsamples)
+      t1 <- Sys.time()
+      saveRDS(list(fit=fit,time=t1-t0),paste0("Results/cgs_dgp5_",i,".rds"))
+    }
+}
+fit.dgp(s,dgp)
+## DGP6
+dgp <- readRDS("Data/DGP6.rds")
+fit.dgp <- function(s,dgp)
+{
+  foreach(i=1:s,.multicombine=T,.packages = "bayesrdd",.export=c("burn","nsamples","P","mz","mztau","lamstmean0_","lamstsd0_","s2mean0_","s2sd0_","nudgp","nuval")) %do%
+    {
+      print(paste0("Simulation ",i," for DGP6"))
+      data <- dgp[[i]]
+      list2env(data,globalenv())
+      t0 <- Sys.time()
+      fit  <- bayesrddest(y = y,
+                          z = x,
+                          W = w,
+                          mw = rep(5,10), ## as per help file
+                          tau = c,
+                          p = P,
+                          mz = mz,
+                          mztau = mztau,
+                          beta0_ = matrix(0,nrow=24),
+                          lamstmean0_ = lamstmean0_,
+                          lamstsd0_ = lamstsd0_,
+                          d = rep(1,length(lamstsd0_)),
+                          s2mean0_ = s2mean0_,
+                          s2sd0_ = s2sd0_,
+                          distribution = "t",
+                          nuval = nuval,
+                          hetero = FALSE,
+                          n0=burn,
+                          m=nsamples)
+      t1 <- Sys.time()
+      saveRDS(list(fit=fit,time=t1-t0),paste0("Results/cgs_dgp6_",i,".rds"))
+    }
+}
+fit.dgp(s,dgp)
 ####
 stopImplicitCluster()

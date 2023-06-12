@@ -82,6 +82,79 @@ dgp.kr <- function(n,p=200)
     tau.x <- tau(x,w,a)
     return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
 }
+### 4) W and X independent, interact in tau
+dgp4.fun <- function(n,p)
+{
+    x <- 2*rbeta(n,2,4)-1
+    z <- x >= 0
+    w <- matrix(rnorm(n*p,0,0.5),n,p)
+    mu <- function(x,w)
+    {
+        1/(1+exp(-5*x)) + rowMeans(w)
+    }
+    tau <- function(x,w)
+    {
+        1 + 0.5*x*rowMeans(cos(w)) + sin(rowSums(w))
+    }
+    y <- mu(x,w) + z*tau(x,w) + rnorm(n)
+    ate <- mean(tau(0,w))
+    tau.x <- tau(x,w)
+    return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
+}
+### 5) W and X dependent, don't interact in tau
+dgp5.fun <- function(n,p)
+{
+    x <- 2*rbeta(n,2,4)-1
+    z <- x >= 0
+    w1 <- matrix(rnorm(n*6,0,0.5),n,6)
+    w2 <- 0.5*x + rnorm(n,0,0.5)
+    w3 <- x^2 - 0.1*x + rnorm(n,0,0.5)
+    w4 <- sin(x) + rnorm(n,0,0.5)
+    w5 <- x^4 + 0.2*x^2 - x + rnorm(n,0,0.5)
+    w <- cbind(w1,w2)
+    w <- cbind(w,w3)
+    w <- cbind(w,w4)
+    w <- cbind(w,w5)
+    mu <- function(x,w)
+    {
+        1/(1+exp(-5*x)) + rowMeans(w)
+    }
+    tau <- function(x,w)
+    {
+        1 + x + sin(rowSums(w))
+    }
+    y <- mu(x,w) + z*tau(x,w) + rnorm(n)
+    ate <- mean(tau(0,w))
+    tau.x <- tau(x,w)
+    return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
+}
+### 6) W and X dependent, interact in tau
+dgp6.fun <- function(n,p)
+{
+    x <- 2*rbeta(n,2,4)-1
+    z <- x >= 0
+    w1 <- matrix(rnorm(n*6,0,0.5),n,6)
+    w2 <- 0.5*x + rnorm(n,0,0.5)
+    w3 <- x^2 - 0.1*x + rnorm(n,0,0.5)
+    w4 <- sin(x) + rnorm(n,0,0.5)
+    w5 <- x^4 + 0.2*x^2 - x + rnorm(n,0,0.5)
+    w <- cbind(w1,w2)
+    w <- cbind(w,w3)
+    w <- cbind(w,w4)
+    w <- cbind(w,w5)
+    mu <- function(x,w)
+    {
+        1/(1+exp(-5*x)) + rowMeans(w)
+    }
+    tau <- function(x,w)
+    {
+        1 + 0.5*x*rowMeans(cos(w)) + sin(rowSums(w)) + 0.7*(w[,1]>=0) - 0.5*(w[,2]<0 & w[,3]>=0.1)
+    }
+    y <- mu(x,w) + z*tau(x,w) + rnorm(n)
+    ate <- mean(tau(0,w))
+    tau.x <- tau(x,w)
+    return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
+}
 ## DGP1
 dgp1 <- vector("list",s)
 for (i in 1:s) dgp1[[i]] <- dgp.cgs(n,p)
@@ -94,3 +167,15 @@ saveRDS(dgp2,"Data/DGP2.rds")
 dgp3 <- vector("list",s)
 for (i in 1:s) dgp3[[i]] <- dgp.kr(n,p)
 saveRDS(dgp3,"Data/DGP3.rds")
+## DGP4
+dgp4 <- vector("list",s)
+for (i in 1:s) dgp4[[i]] <- dgp4.fun(n,p)
+saveRDS(dgp4,"Data/DGP4.rds")
+## DGP5
+dgp5 <- vector("list",s)
+for (i in 1:s) dgp5[[i]] <- dgp5.fun(n,p)
+saveRDS(dgp5,"Data/DGP5.rds")
+## DGP6
+dgp6 <- vector("list",s)
+for (i in 1:s) dgp6[[i]] <- dgp6.fun(n,p)
+saveRDS(dgp6,"Data/DGP6.rds")
