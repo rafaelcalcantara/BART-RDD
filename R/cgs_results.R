@@ -50,6 +50,8 @@ ate6 <- sapply(dgp,function(x) x$ate) ## Heterogeneous ATE
 ### Obtain ATE posterior
 ate.sum6 <- t(sapply(results, function(x) c(mean(x$fit$atem),quantile(x$fit$atem,c(0.025,0.975)))))
 ####
+saveRDS(list(ate.sum1a,ate.sum1b,ate.sum2,ate.sum3,ate.sum4,ate.sum5,ate.sum6),"Tables/cgs_simulations.rds")
+####
 res.mat <- cbind(c(mean((ate.sum1a[,1]-0.04)^2),mean(ate.sum1a[,2]<=0.04 & 0.04<=ate.sum1a[,3]),mean(ate.sum1a[,3]-ate.sum1a[,2])),
                  c(mean((ate.sum1b[,1]-0.04)^2),mean(ate.sum1b[,2]<=0.04 & 0.04<=ate.sum1b[,3]),mean(ate.sum1b[,3]-ate.sum1b[,2])),
                  c(mean((ate.sum2[,1]-1)^2),mean(ate.sum2[,2]<=1 & 1<=ate.sum2[,3]),mean(ate.sum2[,3]-ate.sum2[,2])),
