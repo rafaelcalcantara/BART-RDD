@@ -10,92 +10,97 @@ library(HighDimRD)
 ### Parallelization
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
-## DGP1a
-dgp <- readRDS("Data/DGP1.rds")
-fit.dgp <- function(s,dgp)
-{
-    foreach(i=1:s,.multicombine=T) %dopar%
-    {
-        data <- dgp[[i]]
-        list2env(data,globalenv())
-        w1 <- fourier_basis(matrix(x),4)
-        ## Estimation
-        t0 <- Sys.time()
-        fit  <- HighDim_rd(y,x,w1,tpc="CV" ,rd="robust")
-        t1 <- Sys.time()
-        saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp1a_",i,".rds"))
-    }
-}
-fit.dgp(s,dgp)
-## DGP1b
-fit.dgp <- function(s,dgp)
-{
-    foreach(i=1:s,.multicombine=T) %dopar%
-    {
-        data <- dgp[[i]]
-        list2env(data,globalenv())
-        w1 <- fourier_basis(matrix(x),4)
-        w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
-        ## Estimation
-        t0 <- Sys.time()
-        fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
-        t1 <- Sys.time()
-        saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp1b_",i,".rds"))
-    }
-}
-fit.dgp(s,dgp)
-## DGP2
-dgp <- readRDS("Data/DGP2.rds")
-fit.dgp <- function(s,dgp)
-{
-    foreach(i=1:s,.multicombine=T) %dopar%
-    {
-        data <- dgp[[i]]
-        list2env(data,globalenv())
-        w1 <- fourier_basis(matrix(x),4)
-        w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
-        ## Estimation
-        t0 <- Sys.time()
-        fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
-        t1 <- Sys.time()
-        saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp2_",i,".rds"))
-    }
-}
-fit.dgp(s,dgp)
-## DGP3
-dgp <- readRDS("Data/DGP3.rds")
-fit.dgp <- function(s,dgp)
-{
-    foreach(i=1:s,.multicombine=T) %dopar%
-    {
-        data <- dgp[[i]]
-        list2env(data,globalenv())
-        w1 <- fourier_basis(matrix(x),4)
-        w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
-        ## Estimation
-        t0 <- Sys.time()
-        fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
-        t1 <- Sys.time()
-        saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp3_",i,".rds"))
-    }
-}
-fit.dgp(s,dgp)
+## ## DGP1a
+## dgp <- readRDS("Data/DGP1.rds")
+## fit.dgp <- function(s,dgp)
+## {
+##     foreach(i=1:s,.multicombine=T) %dopar%
+##         {
+##             print(paste0("Simulation ",i," for DGP 1a"))
+##             data <- dgp[[i]]
+##             list2env(data,globalenv())
+##             w1 <- fourier_basis(matrix(x),4)
+##             ## Estimation
+##             t0 <- Sys.time()
+##             fit  <- HighDim_rd(y,x,w1,tpc="CV" ,rd="robust")
+##             t1 <- Sys.time()
+##             saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp1a_",i,".rds"))
+##         }
+## }
+## fit.dgp(s,dgp)
+## ## DGP1b
+## fit.dgp <- function(s,dgp)
+## {
+##     foreach(i=1:s,.multicombine=T) %dopar%
+##         {
+##             print(paste0("Simulation ",i," for DGP 1b"))
+##             data <- dgp[[i]]
+##             list2env(data,globalenv())
+##             w1 <- fourier_basis(matrix(x),4)
+##             w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
+##             ## Estimation
+##             t0 <- Sys.time()
+##             fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
+##             t1 <- Sys.time()
+##             saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp1b_",i,".rds"))
+##         }
+## }
+## fit.dgp(s,dgp)
+## ## DGP2
+## dgp <- readRDS("Data/DGP2.rds")
+## fit.dgp <- function(s,dgp)
+## {
+##     foreach(i=1:s,.multicombine=T) %dopar%
+##         {
+##             print(paste0("Simulation ",i," for DGP 2"))
+##             data <- dgp[[i]]
+##             list2env(data,globalenv())
+##             w1 <- fourier_basis(matrix(x),4)
+##             w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
+##             ## Estimation
+##             t0 <- Sys.time()
+##             fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
+##             t1 <- Sys.time()
+##             saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp2_",i,".rds"))
+##         }
+## }
+## fit.dgp(s,dgp)
+## ## DGP3
+## dgp <- readRDS("Data/DGP3.rds")
+## fit.dgp <- function(s,dgp)
+## {
+##     foreach(i=1:s,.multicombine=T) %dopar%
+##         {
+##             print(paste0("Simulation ",i," for DGP 3"))
+##             data <- dgp[[i]]
+##             list2env(data,globalenv())
+##             w1 <- fourier_basis(matrix(x),4)
+##             w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
+##             ## Estimation
+##             t0 <- Sys.time()
+##             fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
+##             t1 <- Sys.time()
+##             saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp3_",i,".rds"))
+##         }
+## }
+## fit.dgp(s,dgp)
 ## DGP4
 dgp <- readRDS("Data/DGP4.rds")
 fit.dgp <- function(s,dgp)
 {
     foreach(i=1:s,.multicombine=T) %dopar%
-    {
-        data <- dgp[[i]]
-        list2env(data,globalenv())
-        w1 <- fourier_basis(matrix(x),4)
-        w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
-        ## Estimation
-        t0 <- Sys.time()
-        fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
-        t1 <- Sys.time()
-        saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp4_",i,".rds"))
-    }
+        {
+            print(paste0("Simulation ",i," for DGP 4"))
+            data <- dgp[[i]]
+            list2env(data,globalenv())
+            w1 <- fourier_basis(matrix(x),4)
+            w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
+            ## Estimation
+            t0 <- Sys.time()
+            fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
+            t1 <- Sys.time()
+            saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp4_",i,".rds"))
+        }
 }
 fit.dgp(s,dgp)
 ## DGP5
@@ -103,17 +108,18 @@ dgp <- readRDS("Data/DGP5.rds")
 fit.dgp <- function(s,dgp)
 {
     foreach(i=1:s,.multicombine=T) %dopar%
-    {
-        data <- dgp[[i]]
-        list2env(data,globalenv())
-        w1 <- fourier_basis(matrix(x),4)
-        w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
-        ## Estimation
-        t0 <- Sys.time()
-        fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
-        t1 <- Sys.time()
-        saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp5_",i,".rds"))
-    }
+        {
+            print(paste0("Simulation ",i," for DGP 5"))
+            data <- dgp[[i]]
+            list2env(data,globalenv())
+            w1 <- fourier_basis(matrix(x),4)
+            w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
+            ## Estimation
+            t0 <- Sys.time()
+            fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
+            t1 <- Sys.time()
+            saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp5_",i,".rds"))
+        }
 }
 fit.dgp(s,dgp)
 ## DGP6
@@ -121,17 +127,18 @@ dgp <- readRDS("Data/DGP6.rds")
 fit.dgp <- function(s,dgp)
 {
     foreach(i=1:s,.multicombine=T) %dopar%
-    {
-        data <- dgp[[i]]
-        list2env(data,globalenv())
-        w1 <- fourier_basis(matrix(x),4)
-        w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
-        ## Estimation
-        t0 <- Sys.time()
-        fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
-        t1 <- Sys.time()
-        saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp6_",i,".rds"))
-    }
+        {
+            print(paste0("Simulation ",i," for DGP 6"))
+            data <- dgp[[i]]
+            list2env(data,globalenv())
+            w1 <- fourier_basis(matrix(x),4)
+            w_HighDim <- cbind(w,interaction_terms(w),w1,interaction_terms(w1))
+            ## Estimation
+            t0 <- Sys.time()
+            fit  <- HighDim_rd(y,x,w_HighDim,tpc="CV" ,rd="robust")
+            t1 <- Sys.time()
+            saveRDS(list(fit=fit,time=t1-t0),paste0("Results/kr_dgp6_",i,".rds"))
+        }
 }
 fit.dgp(s,dgp)
 ####
