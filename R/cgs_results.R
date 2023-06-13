@@ -1,8 +1,9 @@
-library(XBART)
+## library(XBART)
 library(parallel)
 library(foreach)
 library(doParallel)
-setwd("~/Documents/Git/XBCF-RDD/")
+setwd("~/Git/XBCF-RDD/")
+s <- 1000
 ### Function to read results files
 readFiles <- function(s,dgp,file)
 {
