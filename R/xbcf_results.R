@@ -15,6 +15,7 @@ no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
 ## DGP1a
 results <- readFiles(s,"1a","xbcf")
+ate1 <- 0.04
 ### Obtain ATE posterior
 ate.post1a <- t(sapply(results,function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
 ## DGP1b
@@ -23,6 +24,7 @@ results <- readFiles(s,"1b","xbcf")
 ate.post1b <- t(sapply(results,function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
 ## DGP2
 results <- readFiles(s,"2","xbcf")
+ate2 <- 1
 ### Obtain ATE posterior
 ate.post2 <- t(sapply(results,function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
 ## DGP3
