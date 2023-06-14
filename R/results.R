@@ -56,13 +56,13 @@ boxplot(tau~Est+DGP,data=box.pre, col = cols, axes=F,
         ylab = expression(tau), xlab = "DGP")
 axis(2)
 axis(1, at=c(2,6,10,14), labels = c("1(a)","1(b)","2","3"))
-legend("topleft",c("CGS","KR","XBCF"),fill=cols, cex=0.6, horiz=T)
+legend("topleft",c("CGS","KR","XBCF"),fill=cols, cex=0.6, ncol=2)
 boxplot(tau~Est+DGP,data=box.new, col = cols, axes=F,
         at = c(1:3,5:7,9:11),
         ylab = expression(tau), xlab = "DGP")
 axis(2)
 axis(1, at=c(2,6,10), labels = c("4","5","6"))
-legend("topleft",c("CGS","KR","XBCF"),fill=cols, cex=0.6, horiz=T)
+legend("topleft",c("CGS","KR","XBCF"),fill=cols, cex=0.6, ncol=2)
 par(mfrow=c(1,1))
 dev.off()
 ## Plot of bias and variance
