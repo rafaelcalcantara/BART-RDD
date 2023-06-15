@@ -139,7 +139,7 @@ c             <- 0
 Omin          <- as.integer(0.03*n)
 Opct          <- 0.9
 m             <- 10
-Nmin          <- as.integer(0.02*n)
+Nmin          <- 10
 num_sweeps    <- 50
 burnin        <- 20
 p_categorical <- 0

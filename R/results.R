@@ -49,21 +49,21 @@ box.pre <- subset(box,DGP %in% c("1(a)","1(b)","2","3"))
 box.new <- subset(box,DGP %in% c("4","5","6"))
 ###
 cols <- rainbow(3,s=0.5)
-png("Figures/point_estimates.png")
-par(mfrow=c(1,2))
+png("Figures/point_estimates_1.png")
 boxplot(tau~Est+DGP,data=box.pre, col = cols, axes=F,
         at = c(1:3,5:7,9:11,13:15),
         ylab = expression(tau), xlab = "DGP")
 axis(2)
 axis(1, at=c(2,6,10,14), labels = c("1(a)","1(b)","2","3"))
 legend("topleft",c("CGS","KR","XBCF"),fill=cols, cex=0.6, ncol=2)
+dev.off()
+png("Figures/point_estimates_2.png")
 boxplot(tau~Est+DGP,data=box.new, col = cols, axes=F,
         at = c(1:3,5:7,9:11),
         ylab = expression(tau), xlab = "DGP")
 axis(2)
 axis(1, at=c(2,6,10), labels = c("4","5","6"))
 legend("topleft",c("CGS","KR","XBCF"),fill=cols, cex=0.6, ncol=2)
-par(mfrow=c(1,1))
 dev.off()
 ## Plot of bias and variance
 dgp1 <- readRDS("Data/DGP1.rds")
@@ -107,15 +107,15 @@ bv[19,3:4] <- c(mean(cgs[[5]][,1]-ate4)^2,var(cgs[[5]][,1]))
 bv[20,3:4] <- c(mean(cgs[[6]][,1]-ate5)^2,var(cgs[[6]][,1]))
 bv[21,3:4] <- c(mean(cgs[[7]][,1]-ate6)^2,var(cgs[[7]][,1]))
 ###
-png("Figures/bias_variance.png")
-par(mfrow=c(1,2))
+png("Figures/bias_variance_1.png")
 barplot(bv$Bias~bv$Est+bv$DGP,beside=T,col=cols,
         xlab="DGP",ylab="Squared Bias")
 legend(x="topleft",legend=c("CGS","KR","XBCF"),fill=cols,
        cex=0.6, ncol=2)
+dev.off()
+png("Figures/bias_variance_2.png")
 barplot(bv$Var~bv$Est+bv$DGP,beside=T,col=cols,
         xlab="DGP",ylab="Variance")
 legend(x="topleft",legend=c("CGS","KR","XBCF"),fill=cols,
        cex=0.6, ncol=2)
-par(mfrow=c(1,1))
 dev.off()
