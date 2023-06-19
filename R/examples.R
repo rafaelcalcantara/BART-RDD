@@ -223,26 +223,42 @@ tau.fun <- function(W, X) return( sin(mu.fun(W, X)) +1) # make sure the treatmen
 y <- mu.fun(w, x) + tau.fun(w, x)*z + rnorm(n, 0, 0.2)
 ####
 c             <- 0
-Owidth        <- quantile(abs(x),seq(0.05,0.5,0.01))
+Owidth        <- quantile(abs(x),seq(0.01,1,0.01))
 Omin          <- as.integer(0.03*n)
 Opct          <- 0.9
 m             <- 10
-Nmin          <- as.integer(0.02*n)
+Nmin          <- 10
 num_sweeps    <- 70
 burnin        <- 20
 p_categorical <- 0
 num_cutpoints <- n
 ## Error
 ## ### Parallelization
-## no_cores <- detectCores() - 1
-## registerDoParallel(no_cores)
-## ###
+no_cores <- detectCores() - 1
+registerDoParallel(no_cores)
+###
+fit <- fit.general(Owidth,y,w,x)
+stopImplicitCluster()
+###
+pred <- sapply(fit,function(i) colMeans(i$tau.adj)[(burnin+1):num_sweeps])
+tau.var <- apply(pred,2,var)
+tau.hat <- apply(pred,2,function(i) c(mean(i),quantile(i,c(0.025,0.975))))
+tau.hat <- t(tau.hat)
+Error <- (tau.hat[,1]-mean(tau.fun(w,0)))^2
+###
+png("Figures/example_error.png")
+plot(Owidth[1:75],Error[1:75],type="b",lty=1,pch=19,col="blue",cex=0.75,xlab="h",ylab="Squared error")
+dev.off()
+png("Figures/example_variance.png")
+plot(Owidth,tau.var,type="l",ylab="Posterior variance",xlab="h")
+dev.off()
+###
 fit <- fit.xbcf(y,w,x)
 quantile(fit$ate.post,0.975)-quantile(fit$ate.post,0.025)
 (mean(fit$ate.post)-mean(tau.fun(w,0)))^2
 pred <- predict.XBCFrd(fit$pred,w,x)
 png("Figures/good_owidth.png")
-matplot(sort(x),cbind(pred$tau.adj.mean,tau.fun(w,x))[order(x),],type=c("p","l"),pch=1,lty=1,col=c("blue","black"),ylab=expression(tau(w,x)),xlab="X")
+matplot(sort(x),cbind(rowMeans(pred$tau.adj[,(burnin+1):num_sweeps]),tau.fun(w,x))[order(x),],type=c("p","l"),pch=1,lty=1,col=c("blue","black"),ylab=expression(tau(w,x)),xlab="X")
 abline(v=fit$Owidth,lty=2)
 abline(v=-fit$Owidth,lty=2)
 abline(v=0,lty=3)

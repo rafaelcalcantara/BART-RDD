@@ -4,6 +4,9 @@ library(foreach)
 library(doParallel)
 setwd("~/Documents/Git/XBCF-RDD/")
 s <- 1000
+num_sweeps <- 50
+burnin     <- 20
+sample     <- (burnin+1):num_sweeps
 ### Function to read results files
 readFiles <- function(s,dgp,file)
 {
@@ -17,40 +20,40 @@ registerDoParallel(no_cores)
 results <- readFiles(s,"1a","xbcf")
 ate1 <- 0.04
 ### Obtain ATE posterior
-ate.post1a <- t(sapply(results,function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.post1a <- t(sapply(results,function(x) c(mean(x$ate.post[sample]),quantile(x$ate.post[sample],c(0.025,0.975)))))
 ## DGP1b
 results <- readFiles(s,"1b","xbcf")
 ### Obtain ATE posterior
-ate.post1b <- t(sapply(results,function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.post1b <- t(sapply(results,function(x) c(mean(x$ate.post[sample]),quantile(x$ate.post[sample],c(0.025,0.975)))))
 ## DGP2
 results <- readFiles(s,"2","xbcf")
 ate2 <- 1
 ### Obtain ATE posterior
-ate.post2 <- t(sapply(results,function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.post2 <- t(sapply(results,function(x) c(mean(x$ate.post[sample]),quantile(x$ate.post[sample],c(0.025,0.975)))))
 ## DGP3
 dgp <- readRDS("Data/DGP3.rds")
 results <- readFiles(s,"3","xbcf")
 ate3 <- sapply(dgp,function(x) x$ate) ## Heterogeneous ATE
 ### Obtain ATE posterior
-ate.post3 <- t(sapply(results,function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.post3 <- t(sapply(results,function(x) c(mean(x$ate.post[sample]),quantile(x$ate.post[sample],c(0.025,0.975)))))
 ## DGP4
 dgp <- readRDS("Data/DGP4.rds")
 results <- readFiles(s,"4","xbcf")
 ate4 <- sapply(dgp,function(x) x$ate) ## Heterogeneous ATE
 ### Obtain ATE posterior
-ate.post4 <- t(sapply(results,function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.post4 <- t(sapply(results,function(x) c(mean(x$ate.post[sample]),quantile(x$ate.post[sample],c(0.025,0.975)))))
 ## DGP5
 dgp <- readRDS("Data/DGP5.rds")
 results <- readFiles(s,"5","xbcf")
 ate5 <- sapply(dgp,function(x) x$ate) ## Heterogeneous ATE
 ### Obtain ATE posterior
-ate.post5 <- t(sapply(results,function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.post5 <- t(sapply(results,function(x) c(mean(x$ate.post[sample]),quantile(x$ate.post[sample],c(0.025,0.975)))))
 ## DGP6
 dgp <- readRDS("Data/DGP6.rds")
 results <- readFiles(s,"6","xbcf")
 ate6 <- sapply(dgp,function(x) x$ate) ## Heterogeneous ATE
 ### Obtain ATE posterior
-ate.post6 <- t(sapply(results,function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.post6 <- t(sapply(results,function(x) c(mean(x$ate.post[sample]),quantile(x$ate.post[sample],c(0.025,0.975)))))
 ####
 saveRDS(list(ate.post1a,ate.post1b,ate.post2,ate.post3,ate.post4,ate.post5,ate.post6),"Tables/xbcf_simulations.rds")
 ####
