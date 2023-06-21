@@ -7,29 +7,29 @@ library(XBART)
 library(rdrobust)
 ###
 setwd("~/Documents/Git/XBCF-RDD/")
-data <- foreign::read.dta("Data/CKT_2023_SIM--CostSharing.dta")
+data <- readRDS("Application/pollution.rds")
+data <- data[data$T>=-30 & data$T<=30,]
 c <- 0
-y <- data$op_n_per
-x <- data$week
-w <- data[c("sh_male", "h_inc_per", "sh_tpe", "b_year")]
+y <- data$pm10
+x <- data$T
+w <- data[c("wind_speed","rain","temp","rh")]
 n <- length(y)
 ## Plot data
-l0 <- loess(y~x,data=data.frame(y=y[x<c],x=x[x<c]))
-l0 <- predict(l0,se=T)
+l0 <- loess(y~x,data=data.frame(y=y[x<=c],x=x[x<=c]))
+l0 <- predict(l0,newdata=-30:0,se=T)
 l0 <- data.frame(Est=l0$fit, LI=l0$fit-1.96*l0$se.fit,
                  UI=l0$fit+1.96*l0$se.fit)
-l0 <- l0[order(x[x<c]),]
 l1 <- loess(y~x,data=data.frame(y=y[x>=c],x=x[x>=c]))
-l1 <- predict(l1,se=T)
+l1 <- predict(l1,newdata=0:30,se=T)
 l1 <- data.frame(Est=l1$fit, LI=l1$fit-1.96*l1$se.fit,
                  UI=l1$fit+1.96*l1$se.fit)
-l1 <- l1[order(x[x>=c]),]
 ###
-plot(x,y,pch=21,bg="azure",cex=0.5,
-     xlab="Weeks from third birthday",
-     ylab="Number of visits per 10.000")
-matlines(x[x<c],l0,col="black",lty=1,lwd=c(1.5,1,1))
-matlines(x[x>=c],l1,col="black",lty=1,lwd=c(1.5,1,1))
+matplot(-31:30,rbind(l0,l1),type="n",
+     xlab="Days before automation",
+     ylab=expression(PM[10]))
+boxplot(y~x)
+matlines(-30:-0,l0,col="black",lty=1,lwd=c(1.5,1,1))
+matlines(0:30,l1,col="black",lty=1,lwd=c(1.5,1,1))
 abline(v=c,lty=2)
 ## RDRobust estimation
 cct1 <- rdrobust(y,x,c)
@@ -45,7 +45,8 @@ fit.xbcf <- function(y,w,x)
                            burnin = burnin, Nmin = Nmin,
                            p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
                            tau_con = 2*var(y)/m,
-                           tau_mod = 0.5*var(y)/m, parallel=F)
+                   tau_mod = 0.5*var(y)/m, parallel=T,
+                   nthread = no_cores)
     pred <- predict.XBCFrd(fit,w,rep(0,n))
     post <- colMeans(pred$tau.adj,na.rm=T)
     t1 <- Sys.time()
@@ -62,6 +63,10 @@ num_sweeps    <- 120
 burnin        <- 20
 p_categorical <- 1
 num_cutpoints <- n
+###
+### Parallelization
+no_cores <- detectCores() - 1
+registerDoParallel(no_cores)
 ###
 xbcf1 <- fit.xbcf(y,NULL,x)
 ate.post1 <- xbcf1$ate.post
