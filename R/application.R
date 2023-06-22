@@ -7,35 +7,39 @@ library(XBART)
 library(rdrobust)
 ###
 setwd("~/Documents/Git/XBCF-RDD/")
-data <- readRDS("Application/pollution.rds")
-data <- data[data$T>=-30 & data$T<=30,]
-c <- 0
-y <- data$pm10
-x <- data$T
-w <- data[c("wind_speed","rain","temp","rh")]
-n <- length(y)
+data <- readRDS("Application/search.rds")
+list2env(data,globalenv())
+## RDRobust estimation
+cct1 <- rdrobust(y,x,c,masspoints="off")
+cct2 <- rdrobust(y,x,c,covs=w,masspoints="off")
+##
+x.lim <- 50
+sample <- -x.lim<=x & x<=x.lim
+n <- sum(sample)
+y <- y[sample]
+x0 <- x[sample]
+x <- x0 + runif(n,-0.5,0.5)
+w <- w[sample,]
 ## Plot data
-l0 <- loess(y~x,data=data.frame(y=y[x<=c],x=x[x<=c]))
-l0 <- predict(l0,newdata=-30:0,se=T)
+x.pred0 <- seq(-x.lim,-0.01,0.01)
+x.pred1 <- seq(0,x.lim,0.01)
+l0 <- loess(y~x,data=data.frame(y=y[x<c],x=x[x<c]))
+l0 <- predict(l0,newdata=x.pred0,se=T)
 l0 <- data.frame(Est=l0$fit, LI=l0$fit-1.96*l0$se.fit,
                  UI=l0$fit+1.96*l0$se.fit)
 l1 <- loess(y~x,data=data.frame(y=y[x>=c],x=x[x>=c]))
-l1 <- predict(l1,newdata=0:30,se=T)
+l1 <- predict(l1,newdata=x.pred1,se=T)
 l1 <- data.frame(Est=l1$fit, LI=l1$fit-1.96*l1$se.fit,
                  UI=l1$fit+1.96*l1$se.fit)
 ###
-matplot(-31:30,rbind(l0,l1),type="n",
+matplot(seq(-x.lim,x.lim,0.01),rbind(l0,l1),type="n",
      xlab="Days before automation",
      ylab=expression(PM[10]))
-boxplot(y~x)
-matlines(-30:-0,l0,col="black",lty=1,lwd=c(1.5,1,1))
-matlines(0:30,l1,col="black",lty=1,lwd=c(1.5,1,1))
+matlines(x.pred0,l0,col="black",lty=1,lwd=c(1.5,1,1))
+matlines(x.pred1,l1,col="black",lty=1,lwd=c(1.5,1,1))
 abline(v=c,lty=2)
-## RDRobust estimation
-cct1 <- rdrobust(y,x,c)
-cct2 <- rdrobust(y,x,c,covs=w)
 ## XBCF estimation
-fit.xbcf <- function(y,w,x)
+fit.xbcf <- function(y,w,x,p_cat)
 {
     t0 <- Sys.time()
     h <- quantile(abs(x),0.125)
@@ -43,7 +47,7 @@ fit.xbcf <- function(y,w,x)
                            num_trees_mod = m, num_trees_con = m,
                            num_cutpoints = n, num_sweeps = num_sweeps,
                            burnin = burnin, Nmin = Nmin,
-                           p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
+                           p_categorical_con = p_cat, p_categorical_mod = p_cat,
                            tau_con = 2*var(y)/m,
                    tau_mod = 0.5*var(y)/m, parallel=T,
                    nthread = no_cores)
@@ -55,22 +59,24 @@ fit.xbcf <- function(y,w,x)
     return(list(ate.post=post,pred=fit,Owidth=h,time=dt))
 }
 ###
+sample        <- c-50<=x & x<=c+50
+n             <- sum(sample)
 Omin          <- as.integer(0.03*n)
 Opct          <- 0.9
 m             <- 10
 Nmin          <- 10
 num_sweeps    <- 120
 burnin        <- 20
-p_categorical <- 1
+p_categorical <- ncol(w)-1
 num_cutpoints <- n
 ###
 ### Parallelization
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
 ###
-xbcf1 <- fit.xbcf(y,NULL,x)
+xbcf1 <- fit.xbcf(y[sample],NULL,x[sample],0)
 ate.post1 <- xbcf1$ate.post
-xbcf2 <- fit.xbcf(y,w,x)
+xbcf2 <- fit.xbcf(y[sample],w[sample,],x[sample],p_categorical)
 ate.post2 <- xbcf2$ate.post
 ## Comparing estimates
 p <- data.frame(Method = c("CCT1","CCT2","XBCF1","XBCF2"),
