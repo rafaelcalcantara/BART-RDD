@@ -4,54 +4,7 @@ library(foreach)
 library(doParallel)
 devtools::install_github("rafaelcalcantara/XBART@XBCF-RDD")
 library(XBART)
-### Functions to find good Owidth values
-## params <- function(x)
-## {
-##     if (is.null(x$theta)) c(params(x$left),params(x$right))
-##     else x$theta
-## }
-## nbot <- function(t) length(params(t))
-## nbot.trees <- function(t,m) sapply(0:(m-1),function(y) nbot(t[[as.character(y)]]))
-## nbot.sweeps <- function(t,num_sweeps,m) sapply(1:num_sweeps, function(y) nbot.trees(t[[y]],m))
-## avg.nbot <- function(Owidth,y,w,x)
-## {
-##     foreach(i=1:length(Owidth),.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
-##         {
-##             fit <- XBCF.rd(y, w, x, c, Owidth = Owidth[i], Omin = Omin, Opct = Opct,
-##                            num_trees_mod = 1, num_trees_con = 1,
-##                            num_cutpoints = n, num_sweeps = 100,
-##                            burnin = burnin, Nmin = Nmin,
-##                            p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
-##                            tau_con = 2*var(y),
-##                            tau_mod = 0.5*var(y), parallel=F)
-##             trees <- jsonlite::parse_json(fit$tree_json_mod)$trees
-##             median(nbot.sweeps(trees,100,1))
-##         }
-## }
-## findOwidth <- function(Owidth,y,w,x,t)
-## {
-##     nbots <- sapply(1:5,function(a) unlist(avg.nbot(Owidth,y,w,x)))
-##     nbots <- t(nbots)
-##     nbots <- apply(nbots,2,function(x) sum(x>t))
-##     nbots <- nbots/5
-##     ## nbots <- unlist(avg.nbot(Owidth,y,w,x))
-##     nbots <- rbinom(length(Owidth),1,nbots)
-##     return(Owidth[as.logical(nbots)])
-## }
-## fit.general <- function(h,y,w,x)
-## {
-##     foreach(i=1:length(h),.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
-##         {
-##             fit <- XBCF.rd(y, w, x, c, Owidth = h[i], Omin = Omin, Opct = Opct,
-##                            num_trees_mod = m, num_trees_con = m,
-##                            num_cutpoints = n, num_sweeps = num_sweeps,
-##                            burnin = burnin, Nmin = Nmin,
-##                            p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
-##                            tau_con = 2*var(y)/m,
-##                            tau_mod = 0.5*var(y)/m, parallel=F)
-##             predict.XBCFrd(fit,w,rep(0,n))
-##         }
-## }
+###
 fit.xbcf <- function(y,w,x)
 {
     t0 <- Sys.time()
@@ -70,72 +23,116 @@ fit.xbcf <- function(y,w,x)
     print(paste0("Elapsed time: ",round(dt,2)," seconds"))
     return(list(ate.post=post,pred=fit,Owidth=h,time=dt))
 }
-fit.1a <- function(s,data)
+fit.1a <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
             print(paste0("Simulation ",i," for DGP 1a"))
             fit <- fit.xbcf(data[[i]]$y,NULL,data[[i]]$x)
-            saveRDS(fit,paste0("Results/xbcf_dgp1a_",i,".rds"))
+            saveRDS(fit,paste0("Results/xbcf_1a_",p,"_",i,".rds"))
         }
 }
-fit.1b <- function(s,data)
+fit.1b <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
             print(paste0("Simulation ",i," for DGP 1b"))
             fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x)
-            saveRDS(fit,paste0("Results/xbcf_dgp1b_",i,".rds"))
+            saveRDS(fit,paste0("Results/xbcf_1b_",p,"_",i,".rds"))
         }
 }
-fit.2 <- function(s,data)
+fit.2a <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 2"))
-            fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x)
-            saveRDS(fit,paste0("Results/xbcf_dgp2_",i,".rds"))
+            print(paste0("Simulation ",i," for DGP 2a"))
+            fit <- fit.xbcf(data[[i]]$y,NULL,data[[i]]$x)
+            saveRDS(fit,paste0("Results/xbcf_2a_",p,"_",i,".rds"))
         }
 }
-fit.3 <- function(s,data)
+fit.2b <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 3"))
+            print(paste0("Simulation ",i," for DGP 2b"))
             fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x)
-            saveRDS(fit,paste0("Results/xbcf_dgp3_",i,".rds"))
+            saveRDS(fit,paste0("Results/xbcf_2b_",p,"_",i,".rds"))
         }
 }
-fit.4 <- function(s,data)
+fit.3a <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 4"))
-            fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x)
-            saveRDS(fit,paste0("Results/xbcf_dgp4_",i,".rds"))
+            print(paste0("Simulation ",i," for DGP 3a"))
+            fit <- fit.xbcf(data[[i]]$y,NULL,data[[i]]$x)
+            saveRDS(fit,paste0("Results/xbcf_3a_",p,"_",i,".rds"))
         }
 }
-fit.5 <- function(s,data)
+fit.3b <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 5"))
+            print(paste0("Simulation ",i," for DGP 3b"))
             fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x)
-            saveRDS(fit,paste0("Results/xbcf_dgp5_",i,".rds"))
+            saveRDS(fit,paste0("Results/xbcf_3b_",p,"_",i,".rds"))
         }
 }
-fit.6 <- function(s,data)
+fit.4a <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 6"))
+            print(paste0("Simulation ",i," for DGP 4a"))
+            fit <- fit.xbcf(data[[i]]$y,NULL,data[[i]]$x)
+            saveRDS(fit,paste0("Results/xbcf_4a_",p,"_",i,".rds"))
+        }
+}
+fit.4b <- function(s,p,data)
+{
+    foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+        {
+            print(paste0("Simulation ",i," for DGP 4b"))
             fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x)
-            saveRDS(fit,paste0("Results/xbcf_dgp6_",i,".rds"))
+            saveRDS(fit,paste0("Results/xbcf_4b_",p,"_",i,".rds"))
+        }
+}
+fit.5a <- function(s,p,data)
+{
+    foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+        {
+            print(paste0("Simulation ",i," for DGP 5a"))
+            fit <- fit.xbcf(data[[i]]$y,NULL,data[[i]]$x)
+            saveRDS(fit,paste0("Results/xbcf_5a_",p,"_",i,".rds"))
+        }
+}
+fit.5b <- function(s,p,data)
+{
+    foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+        {
+            print(paste0("Simulation ",i," for DGP 5b"))
+            fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x)
+            saveRDS(fit,paste0("Results/xbcf_5b_",p,"_",i,".rds"))
+        }
+}
+fit.6a <- function(s,p,data)
+{
+    foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+        {
+            print(paste0("Simulation ",i," for DGP 6a"))
+            fit <- fit.xbcf(data[[i]]$y,NULL,data[[i]]$x)
+            saveRDS(fit,paste0("Results/xbcf_6a_",p,"_",i,".rds"))
+        }
+}
+fit.6b <- function(s,p,data)
+{
+    foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+        {
+            print(paste0("Simulation ",i," for DGP 6b"))
+            fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x)
+            saveRDS(fit,paste0("Results/xbcf_6b_",p,"_",i,".rds"))
         }
 }
 ####
 c             <- 0
-## Owidth        <- function(x) quantile(x,seq(0.05,0.5,0.05))
 Omin          <- as.integer(0.03*n)
 Opct          <- 0.9
 m             <- 10
@@ -147,25 +144,47 @@ num_cutpoints <- n
 ### Parallelization
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
-## DGP1a
-dgp <- readRDS("Data/DGP1.rds")
-fit.1a(s,dgp)
-## DGP1b
-fit.1b(s,dgp)
+## DGP1
+for (p in c(4,6,10))
+{
+    dgp <- readRDS(paste0("Data/DGP1_",p,".rds"))
+    fit.1a(s,p,dgp)
+    fit.1b(s,p,dgp)
+}
 ## DGP2
-dgp <- readRDS("Data/DGP2.rds")
-fit.2(s,dgp)
+for (p in c(4,6,10))
+{
+    dgp <- readRDS(paste0("Data/DGP2_",p,".rds"))
+    fit.2a(s,p,dgp)
+    fit.2b(s,p,dgp)
+}
 ## DGP3
-dgp <- readRDS("Data/DGP3.rds")
-fit.3(s,dgp)
+for (p in c(4,6,10))
+{
+    dgp <- readRDS(paste0("Data/DGP3_",p,".rds"))
+    fit.3a(s,p,dgp)
+    fit.3b(s,p,dgp)
+}
 ## DGP4
-dgp <- readRDS("Data/DGP4.rds")
-fit.4(s,dgp)
+for (p in c(4,6,10))
+{
+    dgp <- readRDS(paste0("Data/DGP4_",p,".rds"))
+    fit.4a(s,p,dgp)
+    fit.4b(s,p,dgp)
+}
 ## DGP5
-dgp <- readRDS("Data/DGP5.rds")
-fit.5(s,dgp)
+for (p in c(4,6,10))
+{
+    dgp <- readRDS(paste0("Data/DGP5_",p,".rds"))
+    fit.5a(s,p,dgp)
+    fit.5b(s,p,dgp)
+}
 ## DGP6
-dgp <- readRDS("Data/DGP6.rds")
-fit.6(s,dgp)
+for (p in c(4,6,10))
+{
+    dgp <- readRDS(paste0("Data/DGP6_",p,".rds"))
+    fit.6a(s,p,dgp)
+    fit.6b(s,p,dgp)
+}
 ####
 stopImplicitCluster()

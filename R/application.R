@@ -5,24 +5,23 @@ library(doParallel)
 devtools::install_github("rafaelcalcantara/XBART@XBCF-RDD")
 library(XBART)
 library(rdrobust)
+library(rpart)
+library(rpart.plot)
 ###
 setwd("~/Documents/Git/XBCF-RDD/")
-data <- readRDS("Application/search.rds")
-list2env(data,globalenv())
-## RDRobust estimation
-cct1 <- rdrobust(y,x,c,masspoints="off")
-cct2 <- rdrobust(y,x,c,covs=w,masspoints="off")
-##
-x.lim <- 50
-sample <- -x.lim<=x & x<=x.lim
-n <- sum(sample)
-y <- y[sample]
-x0 <- x[sample]
-x <- x0 + runif(n,-0.5,0.5)
-w <- w[sample,]
+## data <- readRDS("Application/cost_sharing.rds")
+## list2env(data,globalenv())
+data <- read.csv("Application/gpa.csv")
+y <- data$nextGPA
+x <- data$X
+w <- data[,4:11]
+c <- 0
+### Original data is children-level information, here it is
+#### aggregated per distance to the cutoff, so variables are
+#### averages for children t days away from the cutoff
 ## Plot data
-x.pred0 <- seq(-x.lim,-0.01,0.01)
-x.pred1 <- seq(0,x.lim,0.01)
+x.pred0 <- seq(min(x),-1,0.1)
+x.pred1 <- seq(0,max(x),0.1)
 l0 <- loess(y~x,data=data.frame(y=y[x<c],x=x[x<c]))
 l0 <- predict(l0,newdata=x.pred0,se=T)
 l0 <- data.frame(Est=l0$fit, LI=l0$fit-1.96*l0$se.fit,
@@ -32,17 +31,20 @@ l1 <- predict(l1,newdata=x.pred1,se=T)
 l1 <- data.frame(Est=l1$fit, LI=l1$fit-1.96*l1$se.fit,
                  UI=l1$fit+1.96*l1$se.fit)
 ###
-matplot(seq(-x.lim,x.lim,0.01),rbind(l0,l1),type="n",
-     xlab="Days before automation",
-     ylab=expression(PM[10]))
+plot(x,y,type="p",pch=21,bg="azure",cex=0.5,
+     ylab="2nd Year GPA",
+     xlab="1st Year GPA")
 matlines(x.pred0,l0,col="black",lty=1,lwd=c(1.5,1,1))
 matlines(x.pred1,l1,col="black",lty=1,lwd=c(1.5,1,1))
 abline(v=c,lty=2)
+## RDRobust estimation
+cct1 <- rdrobust(y,x,c,all=T)
+cct2 <- rdrobust(y,x,c,covs=w)
 ## XBCF estimation
 fit.xbcf <- function(y,w,x,p_cat)
 {
     t0 <- Sys.time()
-    h <- quantile(abs(x),0.125)
+    h <- quantile(abs(x),0.125,na.rm=T)
     fit <- XBCF.rd(y, w, x, c, Owidth = h, Omin = Omin, Opct = Opct,
                            num_trees_mod = m, num_trees_con = m,
                            num_cutpoints = n, num_sweeps = num_sweeps,
@@ -59,7 +61,7 @@ fit.xbcf <- function(y,w,x,p_cat)
     return(list(ate.post=post,pred=fit,Owidth=h,time=dt))
 }
 ###
-sample        <- c-50<=x & x<=c+50
+sample        <- -0.3<=x & x<=0.3
 n             <- sum(sample)
 Omin          <- as.integer(0.03*n)
 Opct          <- 0.9
@@ -67,7 +69,7 @@ m             <- 10
 Nmin          <- 10
 num_sweeps    <- 120
 burnin        <- 20
-p_categorical <- ncol(w)-1
+p_categorical <- ncol(w)
 num_cutpoints <- n
 ###
 ### Parallelization
@@ -78,6 +80,8 @@ xbcf1 <- fit.xbcf(y[sample],NULL,x[sample],0)
 ate.post1 <- xbcf1$ate.post
 xbcf2 <- fit.xbcf(y[sample],w[sample,],x[sample],p_categorical)
 ate.post2 <- xbcf2$ate.post
+###
+stopImplicitCluster()
 ## Comparing estimates
 p <- data.frame(Method = c("CCT1","CCT2","XBCF1","XBCF2"),
                 Est = c(cct1$coef[1],cct2$coef[1],
@@ -98,6 +102,12 @@ segments(x0=p$Position,y0=p$LI,y1=p$UI,col=cols,lwd=1.5)
 segments(x0=p$Position-0.05,x1=p$Position+0.05,y0=p$LI,col=cols,lwd=1.5)
 segments(x0=p$Position-0.05,x1=p$Position+0.05,y0=p$UI,col=cols,lwd=1.5)
 points(x=p$Position,y=p$Est,col=cols,pch=19)
-legend("topleft",legend=c("Yes","No"),cex=0.7,
+legend("topright",legend=c("Yes","No"),cex=0.7,
        col=c(cols[2],cols[1]),lty=1,lwd=1.5,pch=19,
        title="Includes covariates",horiz=T)
+## Heterogeneous effects
+### Covariates are: share of male children, household income per capita, share of children born in Taipei, and birth year
+pred <- predict.XBCFrd(xbcf2$pred,w[sample,],x[sample])
+pred <- pred$tau.adj[,(burnin+1):num_sweeps]
+cart <- rpart(y~.,data.frame(y=rowMeans(pred),w[sample,]),control=rpart.control(cp=0.01))
+rpart.plot(cart)
