@@ -27,7 +27,7 @@ fit.1a <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 1a"))
+            print(paste0("XBCF: Simulation ",i," for DGP 1a, ",p," covariates"))
             fit <- fit.xbcf(data[[i]]$y,NULL,data[[i]]$x)
             saveRDS(fit,paste0("Results/xbcf_1a_",p,"_",i,".rds"))
         }
@@ -36,7 +36,7 @@ fit.1b <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 1b"))
+            print(paste0("XBCF: Simulation ",i," for DGP 1b, ",p," covariates"))
             fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x)
             saveRDS(fit,paste0("Results/xbcf_1b_",p,"_",i,".rds"))
         }
@@ -45,7 +45,7 @@ fit.2a <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 2a"))
+            print(paste0("XBCF: Simulation ",i," for DGP 2a, ",p," covariates"))
             fit <- fit.xbcf(data[[i]]$y,NULL,data[[i]]$x)
             saveRDS(fit,paste0("Results/xbcf_2a_",p,"_",i,".rds"))
         }
@@ -54,7 +54,7 @@ fit.2b <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 2b"))
+            print(paste0("XBCF: Simulation ",i," for DGP 2b, ",p," covariates"))
             fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x)
             saveRDS(fit,paste0("Results/xbcf_2b_",p,"_",i,".rds"))
         }
@@ -63,7 +63,7 @@ fit.3a <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 3a"))
+            print(paste0("XBCF: Simulation ",i," for DGP 3a, ",p," covariates"))
             fit <- fit.xbcf(data[[i]]$y,NULL,data[[i]]$x)
             saveRDS(fit,paste0("Results/xbcf_3a_",p,"_",i,".rds"))
         }
@@ -72,7 +72,7 @@ fit.3b <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 3b"))
+            print(paste0("XBCF: Simulation ",i," for DGP 3b, ",p," covariates"))
             fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x)
             saveRDS(fit,paste0("Results/xbcf_3b_",p,"_",i,".rds"))
         }
@@ -81,7 +81,7 @@ fit.4a <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 4a"))
+            print(paste0("XBCF: Simulation ",i," for DGP 4a, ",p," covariates"))
             fit <- fit.xbcf(data[[i]]$y,NULL,data[[i]]$x)
             saveRDS(fit,paste0("Results/xbcf_4a_",p,"_",i,".rds"))
         }
@@ -90,7 +90,7 @@ fit.4b <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 4b"))
+            print(paste0("XBCF: Simulation ",i," for DGP 4b, ",p," covariates"))
             fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x)
             saveRDS(fit,paste0("Results/xbcf_4b_",p,"_",i,".rds"))
         }
@@ -99,7 +99,7 @@ fit.5a <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 5a"))
+            print(paste0("XBCF: Simulation ",i," for DGP 5a, ",p," covariates"))
             fit <- fit.xbcf(data[[i]]$y,NULL,data[[i]]$x)
             saveRDS(fit,paste0("Results/xbcf_5a_",p,"_",i,".rds"))
         }
@@ -108,7 +108,7 @@ fit.5b <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 5b"))
+            print(paste0("XBCF: Simulation ",i," for DGP 5b, ",p," covariates"))
             fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x)
             saveRDS(fit,paste0("Results/xbcf_5b_",p,"_",i,".rds"))
         }
@@ -117,7 +117,7 @@ fit.6a <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 6a"))
+            print(paste0("XBCF: Simulation ",i," for DGP 6a, ",p," covariates"))
             fit <- fit.xbcf(data[[i]]$y,NULL,data[[i]]$x)
             saveRDS(fit,paste0("Results/xbcf_6a_",p,"_",i,".rds"))
         }
@@ -126,7 +126,7 @@ fit.6b <- function(s,p,data)
 {
     foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            print(paste0("Simulation ",i," for DGP 6b"))
+            print(paste0("XBCF: Simulation ",i," for DGP 6b, ",p," covariates"))
             fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x)
             saveRDS(fit,paste0("Results/xbcf_6b_",p,"_",i,".rds"))
         }
