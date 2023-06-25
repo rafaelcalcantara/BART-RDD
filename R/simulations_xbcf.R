@@ -17,11 +17,13 @@ fit.xbcf <- function(y,w,x)
                            tau_con = 2*var(y)/m,
                            tau_mod = 0.5*var(y)/m, parallel=F)
     pred <- predict.XBCFrd(fit,w,rep(0,n))
-    post <- colMeans(pred$tau.adj,na.rm=T)
+    post <- pred$tau.adj
+    ind.post <- predict.XBCFrd(fit,w,x)
+    ind.post <- pred$tau.adj
     t1 <- Sys.time()
     dt <- difftime(t1,t0)
     print(paste0("Elapsed time: ",round(dt,2)," seconds"))
-    return(list(ate.post=post,pred=fit,Owidth=h,time=dt))
+    return(list(ate.post=post,ind.post=ind.post,Owidth=h,time=dt))
 }
 fit.1a <- function(s,p,data)
 {
