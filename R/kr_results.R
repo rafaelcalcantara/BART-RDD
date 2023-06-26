@@ -5,71 +5,411 @@ library(doParallel)
 setwd("~/Documents/Git/XBCF-RDD/")
 s <- 1000
 ### Function to read results files
-readFiles <- function(s,dgp,file)
+### Function to read results files
+readFiles <- function(s,dgp,file,p,ab)
 {
-    foreach(x=1:s,.multicombine=T) %dopar%
-        readRDS(paste0("Results/",file,"_dgp",dgp,"_",x,".rds"))
+    foreach(x=1:s,.multicombine=T) %do%
+        readRDS(paste0("Results/",file,"_",dgp,ab,"_",p,"_",x,".rds"))
 }
 #### Parallelization
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
-## DGP1a
-results <- readFiles(s,"1a","kr")
-### Obtain ATE posterior
-ate.sum1a <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
-## DGP1b
-results <- readFiles(s,"1b","kr")
-### Obtain ATE posterior
-ate.sum1b <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
-## DGP2
-results <- readFiles(s,"2","kr")
-### Obtain ATE posterior
-ate.sum2 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
-## DGP3
-dgp <- readRDS("Data/DGP3.rds")
-results <- readFiles(s,"3","kr")
-ate3 <- sapply(dgp,function(x) x$ate) ## Heterogeneous ATE
-### Obtain ATE posterior
-ate.sum3 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
-## DGP4
-dgp <- readRDS("Data/DGP4.rds")
-results <- readFiles(s,"4","kr")
-ate4 <- sapply(dgp,function(x) x$ate) ## Heterogeneous ATE
-### Obtain ATE posterior
-ate.sum4 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
-## DGP5
-dgp <- readRDS("Data/DGP5.rds")
-results <- readFiles(s,"5","kr")
-ate5 <- sapply(dgp,function(x) x$ate) ## Heterogeneous ATE
-### Obtain ATE posterior
-ate.sum5 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
-## DGP6
-dgp <- readRDS("Data/DGP6.rds")
-results <- readFiles(s,"6","kr")
-ate6 <- sapply(dgp,function(x) x$ate) ## Heterogeneous ATE
-### Obtain ATE posterior
-ate.sum6 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
-####
-saveRDS(list(ate.sum1a,ate.sum1b,ate.sum2,ate.sum3,ate.sum4,ate.sum5,ate.sum6),"Tables/kr_simulations.rds")
-####
-res.mat <- cbind(c(mean((ate.sum1a[,1]-0.04)^2),mean(ate.sum1a[,2]<=0.04 & 0.04<=ate.sum1a[,3]),mean(ate.sum1a[,3]-ate.sum1a[,2])),
-                 c(mean((ate.sum1b[,1]-0.04)^2),mean(ate.sum1b[,2]<=0.04 & 0.04<=ate.sum1b[,3]),mean(ate.sum1b[,3]-ate.sum1b[,2])),
-                 c(mean((ate.sum2[,1]-1)^2),mean(ate.sum2[,2]<=1 & 1<=ate.sum2[,3]),mean(ate.sum2[,3]-ate.sum2[,2])),
-                 c(mean((ate.sum3[,1]-ate3)^2),mean(ate.sum3[,2]<=ate3 & ate3<=ate.sum3[,3]),mean(ate.sum3[,3]-ate.sum3[,2])))
-colnames(res.mat) <- c("DGP1a","DGP1b","DGP2","DGP3")
-rownames(res.mat) <- c("MSE","Coverage","Int. Length")
-res.mat
-saveRDS(res.mat,"Results/kr_simulations_1.rds")
-write.csv(res.mat,"Tables/kr_simulations_1.csv")
-####
-res.mat <- cbind(c(mean((ate.sum4[,1]-ate4[1:s])^2),mean(ate.sum4[,2]<=ate4[1:s] & ate4[1:s]<=ate.sum4[,3]),mean(ate.sum4[,3]-ate.sum4[,2])),
-                 c(mean((ate.sum5[,1]-ate5[1:s])^2),mean(ate.sum5[,2]<=ate5[1:s] & ate5[1:s]<=ate.sum5[,3]),mean(ate.sum5[,3]-ate.sum5[,2])),
-                 c(mean((ate.sum6[,1]-ate6[1:s])^2),mean(ate.sum6[,2]<=ate6[1:s] & ate6[1:s]<=ate.sum6[,3]),mean(ate.sum6[,3]-ate.sum6[,2])))
-colnames(res.mat) <- c("DGP4","DGP5","DGP6")
-rownames(res.mat) <- c("MSE","Coverage","Int. Length")
-res.mat
-saveRDS(res.mat,"Results/kr_simulations_2.rds")
-write.csv(res.mat,"Tables/kr_simulations_2.csv")
+## P=4
+### DGP1a
+results <- readFiles(s,"1","kr",4,"a")
+#### Obtain ATE posterior
+ate.sum.1a.4 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP1b
+results <- readFiles(s,"1","kr",4,"b")
+#### Obtain ATE posterior
+ate.sum.1b.4 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP2a
+results <- readFiles(s,"2","kr",4,"a")
+#### Obtain ATE posterior
+ate.sum.2a.4 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP2b
+results <- readFiles(s,"2","kr",4,"b")
+#### Obtain ATE posterior
+ate.sum.2b.4 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP3a
+results <- readFiles(s,"3","kr",4,"a")
+#### Obtain ATE posterior
+ate.sum.3a.4 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP3b
+results <- readFiles(s,"3","kr",4,"b")
+#### Obtain ATE posterior
+ate.sum.3b.4 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP4a
+results <- readFiles(s,"4","kr",4,"a")
+#### Obtain ATE posterior
+ate.sum.4a.4 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP4b
+results <- readFiles(s,"4","kr",4,"b")
+#### Obtain ATE posterior
+ate.sum.4b.4 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP5a
+results <- readFiles(s,"5","kr",4,"a")
+#### Obtain ATE posterior
+ate.sum.5a.4 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP5b
+results <- readFiles(s,"5","kr",4,"b")
+#### Obtain ATE posterior
+ate.sum.5b.4 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP6a
+results <- readFiles(s,"6","kr",4,"a")
+#### Obtain ATE posterior
+ate.sum.6a.4 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP6b
+results <- readFiles(s,"6","kr",4,"b")
+#### Obtain ATE posterior
+ate.sum.6b.4 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### Read data and save true ATE
+data <- readRDS("Data/DGP1_4.rds")
+ate1 <- sapply(data,function(x) x$ate)
+data <- readRDS("Data/DGP2_4.rds")
+ate2 <- sapply(data,function(x) x$ate)
+data <- readRDS("Data/DGP3_4.rds")
+ate3 <- sapply(data,function(x) x$ate)
+data <- readRDS("Data/DGP4_4.rds")
+ate4 <- sapply(data,function(x) x$ate)
+data <- readRDS("Data/DGP5_4.rds")
+ate5 <- sapply(data,function(x) x$ate)
+data <- readRDS("Data/DGP6_4.rds")
+ate6 <- sapply(data,function(x) x$ate)
+### Store results
+res.mat.1.4 <- matrix(NA,7,7)
+res.mat.2.4 <- matrix(NA,7,7)
+res.mat.1.4[1,] <- res.mat.2.4[1,] <- c("","","Controls","MSE","Variance","Coverage","Size")
+res.mat.1.4[2,] <- res.mat.2.4[2,] <- c("KR","DGP 1","","","","","")
+res.mat.1.4[4,] <- res.mat.2.4[4,] <- c("KR","DGP 2","","","","","")
+res.mat.1.4[6,] <- res.mat.2.4[6,] <- c("KR","DGP 3","","","","","")
+res.mat.1.4[2:7,3] <- res.mat.2.4[2:7,3] <- c("No","Yes")
+#### MSE
+##### Table 1
+res.mat.1.4[2,4] <- round(mean((ate.sum.1a.4[,1]-ate1)^2),3)
+res.mat.1.4[3,4] <- round(mean((ate.sum.1b.4[,1]-ate1)^2),3)
+res.mat.1.4[4,4] <- round(mean((ate.sum.2a.4[,1]-ate2)^2),3)
+res.mat.1.4[5,4] <- round(mean((ate.sum.2b.4[,1]-ate2)^2),3)
+res.mat.1.4[6,4] <- round(mean((ate.sum.3a.4[,1]-ate3)^2),3)
+res.mat.1.4[7,4] <- round(mean((ate.sum.3b.4[,1]-ate3)^2),3)
+##### Table 2
+res.mat.2.4[2,4] <- round(mean((ate.sum.4a.4[,1]-ate4)^2),3)
+res.mat.2.4[3,4] <- round(mean((ate.sum.4b.4[,1]-ate4)^2),3)
+res.mat.2.4[4,4] <- round(mean((ate.sum.5a.4[,1]-ate5)^2),3)
+res.mat.2.4[5,4] <- round(mean((ate.sum.5b.4[,1]-ate5)^2),3)
+res.mat.2.4[6,4] <- round(mean((ate.sum.6a.4[,1]-ate6)^2),3)
+res.mat.2.4[7,4] <- round(mean((ate.sum.6b.4[,1]-ate6)^2),3)
+#### Variance
+##### Table 1
+res.mat.1.4[2,5] <- round(var(ate.sum.1a.4[,1]),3)
+res.mat.1.4[3,5] <- round(var(ate.sum.1b.4[,1]),3)
+res.mat.1.4[4,5] <- round(var(ate.sum.2a.4[,1]),3)
+res.mat.1.4[5,5] <- round(var(ate.sum.2b.4[,1]),3)
+res.mat.1.4[6,5] <- round(var(ate.sum.3a.4[,1]),3)
+res.mat.1.4[7,5] <- round(var(ate.sum.3b.4[,1]),3)
+##### Table 2
+res.mat.2.4[2,5] <- round(var(ate.sum.4a.4[,1]),3)
+res.mat.2.4[3,5] <- round(var(ate.sum.4b.4[,1]),3)
+res.mat.2.4[4,5] <- round(var(ate.sum.5a.4[,1]),3)
+res.mat.2.4[5,5] <- round(var(ate.sum.5b.4[,1]),3)
+res.mat.2.4[6,5] <- round(var(ate.sum.6a.4[,1]),3)
+res.mat.2.4[7,5] <- round(var(ate.sum.6b.4[,1]),3)
+#### Coverage
+##### Table 1
+res.mat.1.4[2,6] <- 100*mean(ate.sum.1a.4[,2]<=ate1 & ate1<=ate.sum.1a.4[,3])
+res.mat.1.4[3,6] <- 100*mean(ate.sum.1b.4[,2]<=ate1 & ate1<=ate.sum.1b.4[,3])
+res.mat.1.4[4,6] <- 100*mean(ate.sum.2a.4[,2]<=ate2 & ate2<=ate.sum.2a.4[,3])
+res.mat.1.4[5,6] <- 100*mean(ate.sum.2b.4[,2]<=ate2 & ate2<=ate.sum.2b.4[,3])
+res.mat.1.4[6,6] <- 100*mean(ate.sum.3a.4[,2]<=ate3 & ate3<=ate.sum.3a.4[,3])
+res.mat.1.4[7,6] <- 100*mean(ate.sum.3b.4[,2]<=ate3 & ate3<=ate.sum.3b.4[,3])
+##### Table 2
+res.mat.2.4[2,6] <- 100*mean(ate.sum.4a.4[,2]<=ate4 & ate4<=ate.sum.4a.4[,3])
+res.mat.2.4[3,6] <- 100*mean(ate.sum.4b.4[,2]<=ate4 & ate4<=ate.sum.4b.4[,3])
+res.mat.2.4[4,6] <- 100*mean(ate.sum.5a.4[,2]<=ate5 & ate5<=ate.sum.5a.4[,3])
+res.mat.2.4[5,6] <- 100*mean(ate.sum.5b.4[,2]<=ate5 & ate5<=ate.sum.5b.4[,3])
+res.mat.2.4[6,6] <- 100*mean(ate.sum.6a.4[,2]<=ate6 & ate6<=ate.sum.6a.4[,3])
+res.mat.2.4[7,6] <- 100*mean(ate.sum.6b.4[,2]<=ate6 & ate6<=ate.sum.6b.4[,3])
+#### Size
+##### Table 1
+res.mat.1.4[2,7] <- round(mean(-ate.sum.1a.4[,2]+ate.sum.1a.4[,3]),2)
+res.mat.1.4[3,7] <- round(mean(-ate.sum.1b.4[,2]+ate.sum.1b.4[,3]),2)
+res.mat.1.4[4,7] <- round(mean(-ate.sum.2a.4[,2]+ate.sum.2a.4[,3]),2)
+res.mat.1.4[5,7] <- round(mean(-ate.sum.2b.4[,2]+ate.sum.2b.4[,3]),2)
+res.mat.1.4[6,7] <- round(mean(-ate.sum.3a.4[,2]+ate.sum.3a.4[,3]),2)
+res.mat.1.4[7,7] <- round(mean(-ate.sum.3b.4[,2]+ate.sum.3b.4[,3]),2)
+##### Table 2
+res.mat.2.4[2,7] <- round(mean(-ate.sum.4a.4[,2]+ate.sum.4a.4[,3]),2)
+res.mat.2.4[3,7] <- round(mean(-ate.sum.4b.4[,2]+ate.sum.4b.4[,3]),2)
+res.mat.2.4[4,7] <- round(mean(-ate.sum.5a.4[,2]+ate.sum.5a.4[,3]),2)
+res.mat.2.4[5,7] <- round(mean(-ate.sum.5b.4[,2]+ate.sum.5b.4[,3]),2)
+res.mat.2.4[6,7] <- round(mean(-ate.sum.6a.4[,2]+ate.sum.6a.4[,3]),2)
+res.mat.2.4[7,7] <- round(mean(-ate.sum.6b.4[,2]+ate.sum.6b.4[,3]),2)
+## P=6
+### DGP1a
+results <- readFiles(s,"1","kr",6,"a")
+#### Obtain ATE posterior
+ate.sum.1a.6 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP1b
+results <- readFiles(s,"1","kr",6,"b")
+#### Obtain ATE posterior
+ate.sum.1b.6 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP2a
+results <- readFiles(s,"2","kr",6,"a")
+#### Obtain ATE posterior
+ate.sum.2a.6 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP2b
+results <- readFiles(s,"2","kr",6,"b")
+#### Obtain ATE posterior
+ate.sum.2b.6 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP3a
+results <- readFiles(s,"3","kr",6,"a")
+#### Obtain ATE posterior
+ate.sum.3a.6 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP3b
+results <- readFiles(s,"3","kr",6,"b")
+#### Obtain ATE posterior
+ate.sum.3b.6 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP4a
+results <- readFiles(s,"4","kr",6,"a")
+#### Obtain ATE posterior
+ate.sum.4a.6 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP4b
+results <- readFiles(s,"4","kr",6,"b")
+#### Obtain ATE posterior
+ate.sum.4b.6 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP5a
+results <- readFiles(s,"5","kr",6,"a")
+#### Obtain ATE posterior
+ate.sum.5a.6 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP5b
+results <- readFiles(s,"5","kr",6,"b")
+#### Obtain ATE posterior
+ate.sum.5b.6 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP6a
+results <- readFiles(s,"6","kr",6,"a")
+#### Obtain ATE posterior
+ate.sum.6a.6 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP6b
+results <- readFiles(s,"6","kr",6,"b")
+#### Obtain ATE posterior
+ate.sum.6b.6 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### Read data and save true ATE
+data <- readRDS("Data/DGP1_6.rds")
+ate1 <- sapply(data,function(x) x$ate)
+data <- readRDS("Data/DGP2_6.rds")
+ate2 <- sapply(data,function(x) x$ate)
+data <- readRDS("Data/DGP3_6.rds")
+ate3 <- sapply(data,function(x) x$ate)
+data <- readRDS("Data/DGP4_6.rds")
+ate4 <- sapply(data,function(x) x$ate)
+data <- readRDS("Data/DGP5_6.rds")
+ate5 <- sapply(data,function(x) x$ate)
+data <- readRDS("Data/DGP6_6.rds")
+ate6 <- sapply(data,function(x) x$ate)
+### Store results
+res.mat.1.6 <- matrix(NA,7,7)
+res.mat.2.6 <- matrix(NA,7,7)
+res.mat.1.6[1,] <- res.mat.2.6[1,] <- c("","","Controls","MSE","Variance","Coverage","Size")
+res.mat.1.6[2,] <- res.mat.2.6[2,] <- c("KR","DGP 1","","","","","")
+res.mat.1.6[4,] <- res.mat.2.6[4,] <- c("KR","DGP 2","","","","","")
+res.mat.1.6[6,] <- res.mat.2.6[6,] <- c("KR","DGP 3","","","","","")
+res.mat.1.6[2:7,3] <- res.mat.2.6[2:7,3] <- c("No","Yes")
+#### MSE
+##### Table 1
+res.mat.1.6[2,4] <- round(mean((ate.sum.1a.6[,1]-ate1)^2),3)
+res.mat.1.6[3,4] <- round(mean((ate.sum.1b.6[,1]-ate1)^2),3)
+res.mat.1.6[4,4] <- round(mean((ate.sum.2a.6[,1]-ate2)^2),3)
+res.mat.1.6[5,4] <- round(mean((ate.sum.2b.6[,1]-ate2)^2),3)
+res.mat.1.6[6,4] <- round(mean((ate.sum.3a.6[,1]-ate3)^2),3)
+res.mat.1.6[7,4] <- round(mean((ate.sum.3b.6[,1]-ate3)^2),3)
+##### Table 2
+res.mat.2.6[2,4] <- round(mean((ate.sum.4a.6[,1]-ate4)^2),3)
+res.mat.2.6[3,4] <- round(mean((ate.sum.4b.6[,1]-ate4)^2),3)
+res.mat.2.6[4,4] <- round(mean((ate.sum.5a.6[,1]-ate5)^2),3)
+res.mat.2.6[5,4] <- round(mean((ate.sum.5b.6[,1]-ate5)^2),3)
+res.mat.2.6[6,4] <- round(mean((ate.sum.6a.6[,1]-ate6)^2),3)
+res.mat.2.6[7,4] <- round(mean((ate.sum.6b.6[,1]-ate6)^2),3)
+#### Variance
+##### Table 1
+res.mat.1.6[2,5] <- round(var(ate.sum.1a.6[,1]),3)
+res.mat.1.6[3,5] <- round(var(ate.sum.1b.6[,1]),3)
+res.mat.1.6[4,5] <- round(var(ate.sum.2a.6[,1]),3)
+res.mat.1.6[5,5] <- round(var(ate.sum.2b.6[,1]),3)
+res.mat.1.6[6,5] <- round(var(ate.sum.3a.6[,1]),3)
+res.mat.1.6[7,5] <- round(var(ate.sum.3b.6[,1]),3)
+##### Table 2
+res.mat.2.6[2,5] <- round(var(ate.sum.4a.6[,1]),3)
+res.mat.2.6[3,5] <- round(var(ate.sum.4b.6[,1]),3)
+res.mat.2.6[4,5] <- round(var(ate.sum.5a.6[,1]),3)
+res.mat.2.6[5,5] <- round(var(ate.sum.5b.6[,1]),3)
+res.mat.2.6[6,5] <- round(var(ate.sum.6a.6[,1]),3)
+res.mat.2.6[7,5] <- round(var(ate.sum.6b.6[,1]),3)
+#### Coverage
+##### Table 1
+res.mat.1.6[2,6] <- 100*mean(ate.sum.1a.6[,2]<=ate1 & ate1<=ate.sum.1a.6[,3])
+res.mat.1.6[3,6] <- 100*mean(ate.sum.1b.6[,2]<=ate1 & ate1<=ate.sum.1b.6[,3])
+res.mat.1.6[4,6] <- 100*mean(ate.sum.2a.6[,2]<=ate2 & ate2<=ate.sum.2a.6[,3])
+res.mat.1.6[5,6] <- 100*mean(ate.sum.2b.6[,2]<=ate2 & ate2<=ate.sum.2b.6[,3])
+res.mat.1.6[6,6] <- 100*mean(ate.sum.3a.6[,2]<=ate3 & ate3<=ate.sum.3a.6[,3])
+res.mat.1.6[7,6] <- 100*mean(ate.sum.3b.6[,2]<=ate3 & ate3<=ate.sum.3b.6[,3])
+##### Table 2
+res.mat.2.6[2,6] <- 100*mean(ate.sum.4a.6[,2]<=ate4 & ate4<=ate.sum.4a.6[,3])
+res.mat.2.6[3,6] <- 100*mean(ate.sum.4b.6[,2]<=ate4 & ate4<=ate.sum.4b.6[,3])
+res.mat.2.6[4,6] <- 100*mean(ate.sum.5a.6[,2]<=ate5 & ate5<=ate.sum.5a.6[,3])
+res.mat.2.6[5,6] <- 100*mean(ate.sum.5b.6[,2]<=ate5 & ate5<=ate.sum.5b.6[,3])
+res.mat.2.6[6,6] <- 100*mean(ate.sum.6a.6[,2]<=ate6 & ate6<=ate.sum.6a.6[,3])
+res.mat.2.6[7,6] <- 100*mean(ate.sum.6b.6[,2]<=ate6 & ate6<=ate.sum.6b.6[,3])
+#### Size
+##### Table 1
+res.mat.1.6[2,7] <- round(mean(-ate.sum.1a.6[,2]+ate.sum.1a.6[,3]),2)
+res.mat.1.6[3,7] <- round(mean(-ate.sum.1b.6[,2]+ate.sum.1b.6[,3]),2)
+res.mat.1.6[4,7] <- round(mean(-ate.sum.2a.6[,2]+ate.sum.2a.6[,3]),2)
+res.mat.1.6[5,7] <- round(mean(-ate.sum.2b.6[,2]+ate.sum.2b.6[,3]),2)
+res.mat.1.6[6,7] <- round(mean(-ate.sum.3a.6[,2]+ate.sum.3a.6[,3]),2)
+res.mat.1.6[7,7] <- round(mean(-ate.sum.3b.6[,2]+ate.sum.3b.6[,3]),2)
+##### Table 2
+res.mat.2.6[2,7] <- round(mean(-ate.sum.4a.6[,2]+ate.sum.4a.6[,3]),2)
+res.mat.2.6[3,7] <- round(mean(-ate.sum.4b.6[,2]+ate.sum.4b.6[,3]),2)
+res.mat.2.6[4,7] <- round(mean(-ate.sum.5a.6[,2]+ate.sum.5a.6[,3]),2)
+res.mat.2.6[5,7] <- round(mean(-ate.sum.5b.6[,2]+ate.sum.5b.6[,3]),2)
+res.mat.2.6[6,7] <- round(mean(-ate.sum.6a.6[,2]+ate.sum.6a.6[,3]),2)
+res.mat.2.6[7,7] <- round(mean(-ate.sum.6b.6[,2]+ate.sum.6b.6[,3]),2)
+## P=10
+### DGP1a
+results <- readFiles(s,"1","kr",10,"a")
+#### Obtain ATE posterior
+ate.sum.1a.10 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP1b
+results <- readFiles(s,"1","kr",10,"b")
+#### Obtain ATE posterior
+ate.sum.1b.10 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP2a
+results <- readFiles(s,"2","kr",10,"a")
+#### Obtain ATE posterior
+ate.sum.2a.10 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP2b
+results <- readFiles(s,"2","kr",10,"b")
+#### Obtain ATE posterior
+ate.sum.2b.10 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP3a
+results <- readFiles(s,"3","kr",10,"a")
+#### Obtain ATE posterior
+ate.sum.3a.10 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP3b
+results <- readFiles(s,"3","kr",10,"b")
+#### Obtain ATE posterior
+ate.sum.3b.10 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP4a
+results <- readFiles(s,"4","kr",10,"a")
+#### Obtain ATE posterior
+ate.sum.4a.10 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP4b
+results <- readFiles(s,"4","kr",10,"b")
+#### Obtain ATE posterior
+ate.sum.4b.10 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP5a
+results <- readFiles(s,"5","kr",10,"a")
+#### Obtain ATE posterior
+ate.sum.5a.10 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP5b
+results <- readFiles(s,"5","kr",10,"b")
+#### Obtain ATE posterior
+ate.sum.5b.10 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP6a
+results <- readFiles(s,"6","kr",10,"a")
+#### Obtain ATE posterior
+ate.sum.6a.10 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### DGP6b
+results <- readFiles(s,"6","kr",10,"b")
+#### Obtain ATE posterior
+ate.sum.6b.10 <- t(sapply(results, function(x) c(x$fit$rd[["Estimate"]][,"tau.bc"],x$fit$rd[["ci"]]["Robust",])))
+### Read data and save true ATE
+data <- readRDS("Data/DGP1_10.rds")
+ate1 <- sapply(data,function(x) x$ate)
+data <- readRDS("Data/DGP2_10.rds")
+ate2 <- sapply(data,function(x) x$ate)
+data <- readRDS("Data/DGP3_10.rds")
+ate3 <- sapply(data,function(x) x$ate)
+data <- readRDS("Data/DGP4_10.rds")
+ate4 <- sapply(data,function(x) x$ate)
+data <- readRDS("Data/DGP5_10.rds")
+ate5 <- sapply(data,function(x) x$ate)
+data <- readRDS("Data/DGP6_10.rds")
+ate6 <- sapply(data,function(x) x$ate)
+### Store results
+res.mat.1.10 <- matrix(NA,7,7)
+res.mat.2.10 <- matrix(NA,7,7)
+res.mat.1.10[1,] <- res.mat.2.10[1,] <- c("","","Controls","MSE","Variance","Coverage","Size")
+res.mat.1.10[2,] <- c("KR","DGP 1","","","","","")
+res.mat.2.10[2,] <- c("KR","DGP 4","","","","","")
+res.mat.1.10[4,] <- c("KR","DGP 2","","","","","")
+res.mat.2.10[4,] <- c("KR","DGP 5","","","","","")
+res.mat.1.10[6,] <- c("KR","DGP 3","","","","","")
+res.mat.2.10[6,] <- c("KR","DGP 6","","","","","")
+res.mat.1.10[2:7,3] <- res.mat.2.10[2:7,3] <- c("No","Yes")
+#### MSE
+##### Table 1
+res.mat.1.10[2,4] <- round(mean((ate.sum.1a.10[,1]-ate1)^2),3)
+res.mat.1.10[3,4] <- round(mean((ate.sum.1b.10[,1]-ate1)^2),3)
+res.mat.1.10[4,4] <- round(mean((ate.sum.2a.10[,1]-ate2)^2),3)
+res.mat.1.10[5,4] <- round(mean((ate.sum.2b.10[,1]-ate2)^2),3)
+res.mat.1.10[6,4] <- round(mean((ate.sum.3a.10[,1]-ate3)^2),3)
+res.mat.1.10[7,4] <- round(mean((ate.sum.3b.10[,1]-ate3)^2),3)
+##### Table 2
+res.mat.2.10[2,4] <- round(mean((ate.sum.4a.10[,1]-ate4)^2),3)
+res.mat.2.10[3,4] <- round(mean((ate.sum.4b.10[,1]-ate4)^2),3)
+res.mat.2.10[4,4] <- round(mean((ate.sum.5a.10[,1]-ate5)^2),3)
+res.mat.2.10[5,4] <- round(mean((ate.sum.5b.10[,1]-ate5)^2),3)
+res.mat.2.10[6,4] <- round(mean((ate.sum.6a.10[,1]-ate6)^2),3)
+res.mat.2.10[7,4] <- round(mean((ate.sum.6b.10[,1]-ate6)^2),3)
+#### Variance
+##### Table 1
+res.mat.1.10[2,5] <- round(var(ate.sum.1a.10[,1]),3)
+res.mat.1.10[3,5] <- round(var(ate.sum.1b.10[,1]),3)
+res.mat.1.10[4,5] <- round(var(ate.sum.2a.10[,1]),3)
+res.mat.1.10[5,5] <- round(var(ate.sum.2b.10[,1]),3)
+res.mat.1.10[6,5] <- round(var(ate.sum.3a.10[,1]),3)
+res.mat.1.10[7,5] <- round(var(ate.sum.3b.10[,1]),3)
+##### Table 2
+res.mat.2.10[2,5] <- round(var(ate.sum.4a.10[,1]),3)
+res.mat.2.10[3,5] <- round(var(ate.sum.4b.10[,1]),3)
+res.mat.2.10[4,5] <- round(var(ate.sum.5a.10[,1]),3)
+res.mat.2.10[5,5] <- round(var(ate.sum.5b.10[,1]),3)
+res.mat.2.10[6,5] <- round(var(ate.sum.6a.10[,1]),3)
+res.mat.2.10[7,5] <- round(var(ate.sum.6b.10[,1]),3)
+#### Coverage
+##### Table 1
+res.mat.1.10[2,6] <- 100*mean(ate.sum.1a.10[,2]<=ate1 & ate1<=ate.sum.1a.10[,3])
+res.mat.1.10[3,6] <- 100*mean(ate.sum.1b.10[,2]<=ate1 & ate1<=ate.sum.1b.10[,3])
+res.mat.1.10[4,6] <- 100*mean(ate.sum.2a.10[,2]<=ate2 & ate2<=ate.sum.2a.10[,3])
+res.mat.1.10[5,6] <- 100*mean(ate.sum.2b.10[,2]<=ate2 & ate2<=ate.sum.2b.10[,3])
+res.mat.1.10[6,6] <- 100*mean(ate.sum.3a.10[,2]<=ate3 & ate3<=ate.sum.3a.10[,3])
+res.mat.1.10[7,6] <- 100*mean(ate.sum.3b.10[,2]<=ate3 & ate3<=ate.sum.3b.10[,3])
+##### Table 2
+res.mat.2.10[2,6] <- 100*mean(ate.sum.4a.10[,2]<=ate4 & ate4<=ate.sum.4a.10[,3])
+res.mat.2.10[3,6] <- 100*mean(ate.sum.4b.10[,2]<=ate4 & ate4<=ate.sum.4b.10[,3])
+res.mat.2.10[4,6] <- 100*mean(ate.sum.5a.10[,2]<=ate5 & ate5<=ate.sum.5a.10[,3])
+res.mat.2.10[5,6] <- 100*mean(ate.sum.5b.10[,2]<=ate5 & ate5<=ate.sum.5b.10[,3])
+res.mat.2.10[6,6] <- 100*mean(ate.sum.6a.10[,2]<=ate6 & ate6<=ate.sum.6a.10[,3])
+res.mat.2.10[7,6] <- 100*mean(ate.sum.6b.10[,2]<=ate6 & ate6<=ate.sum.6b.10[,3])
+#### Size
+##### Table 1
+res.mat.1.10[2,7] <- round(mean(-ate.sum.1a.10[,2]+ate.sum.1a.10[,3]),2)
+res.mat.1.10[3,7] <- round(mean(-ate.sum.1b.10[,2]+ate.sum.1b.10[,3]),2)
+res.mat.1.10[4,7] <- round(mean(-ate.sum.2a.10[,2]+ate.sum.2a.10[,3]),2)
+res.mat.1.10[5,7] <- round(mean(-ate.sum.2b.10[,2]+ate.sum.2b.10[,3]),2)
+res.mat.1.10[6,7] <- round(mean(-ate.sum.3a.10[,2]+ate.sum.3a.10[,3]),2)
+res.mat.1.10[7,7] <- round(mean(-ate.sum.3b.10[,2]+ate.sum.3b.10[,3]),2)
+##### Table 2
+res.mat.2.10[2,7] <- round(mean(-ate.sum.4a.10[,2]+ate.sum.4a.10[,3]),2)
+res.mat.2.10[3,7] <- round(mean(-ate.sum.4b.10[,2]+ate.sum.4b.10[,3]),2)
+res.mat.2.10[4,7] <- round(mean(-ate.sum.5a.10[,2]+ate.sum.5a.10[,3]),2)
+res.mat.2.10[5,7] <- round(mean(-ate.sum.5b.10[,2]+ate.sum.5b.10[,3]),2)
+res.mat.2.10[6,7] <- round(mean(-ate.sum.6a.10[,2]+ate.sum.6a.10[,3]),2)
+res.mat.2.10[7,7] <- round(mean(-ate.sum.6b.10[,2]+ate.sum.6b.10[,3]),2)
+###
+rm(data,results,no_cores,readFiles,ate1,ate2,ate3,ate4,ate5,ate6)
+save.image("Tables/kr_results.RData")
 ####
 stopImplicitCluster()
 ####
