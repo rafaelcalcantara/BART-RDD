@@ -23,7 +23,7 @@ sample <- -0.3<=x & x<=0.3 ## For XBCF and loess plot
 #### averages for children t days away from the cutoff
 ## Plot data
 png("Figures/gpa_data.png")
-plot(x,y,pch=21,bg="azure",cex=0.5)
+plot(x,y,pch=21,bg="azure",cex=0.5,xlab="1st Year GPA",ylab="2nd Year GPA")
 dev.off()
 ###
 l0 <- loess(y~x,data=data.frame(y=y[x<c & sample],x=x[x<c & sample]))
