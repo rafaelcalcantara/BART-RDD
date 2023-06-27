@@ -10,258 +10,80 @@ nsamples <- 500
 ### Parallelization
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
-## DGP1a
-P = c(.70,.30)
-mz = c(3, 3)
-mztau = c(3, 2)
-lamstmean0_ = c(1,1)
-lamstsd0_ = 5*c(1,1)
-s2mean0_ = .3
-s2sd0_ = 1
-nudgp = 3
-nuval = 3
-dgp <- readRDS("Data/DGP1.rds")
-fit.dgp <- function(s,dgp)
+###
+for (j in 1:6)
 {
-  foreach(i=1:s,.multicombine=T,.packages = "bayesrdd",.export=c("burn","nsamples","P","mz","mztau","lamstmean0_","lamstsd0_","s2mean0_","s2sd0_","nudgp","nuval")) %do%
+  for (i in c(4,6,10))
+  {
+    dgp <- readRDS(paste0("Data/DGP",j,"_",i,".rds"))
+    fit.dgp <- function(s,p,dgp,ab)
     {
-      print(paste0("Simulation ",i," for DGP1a"))
-      data <- dgp[[i]]
-      list2env(data,globalenv())
-      t0 <- Sys.time()
-      fit  <- bayesrddest(y = y,
-                          z = x,
-                          tau = c,
-                          p = P,
-                          mz = mz,
-                          mztau = mztau,
-                          beta0_ = rep(0,4),
-                          lamstmean0_ = lamstmean0_,
-                          lamstsd0_ = lamstsd0_,
-                          d = c(1,1),
-                          s2mean0_ = s2mean0_,
-                          s2sd0_ = s2sd0_,
-                          distribution = "t",
-                          nuval = nuval,
-                          hetero = FALSE,
-                          n0=burn,
-                          m=nsamples)
-      t1 <- Sys.time()
-      saveRDS(list(fit=fit,time=t1-t0),paste0("Results/cgs_dgp1a_",i,".rds"))
+      foreach(i=1:s,.multicombine=T,.packages = "bayesrdd",.export=c("burn","nsamples")) %do%
+        {
+          P = c(.70,.30)
+          mz = c(3,3)
+          mztau = c(5,5)
+          s2mean0_ = .3
+          s2sd0_ = 1
+          nudgp = 3
+          nuval = 3
+          print(paste0("Simulation ",i," for DGP1",ab,", ",p," covariates"))
+          data <- dgp[[i]]
+          list2env(data,globalenv())
+          t0 <- Sys.time()
+          if (ab=="a")
+          {
+            lamstmean0_ = rep(1,2)
+            lamstsd0_ = 5*rep(1,2)
+            fit  <- bayesrddest(y = y,
+                                z = x,
+                                tau = c,
+                                p = P,
+                                mz = mz,
+                                mztau = mztau,
+                                beta0_ = rep(0,4),
+                                lamstmean0_ = lamstmean0_,
+                                lamstsd0_ = lamstsd0_,
+                                d = rep(1,2),
+                                s2mean0_ = s2mean0_,
+                                s2sd0_ = s2sd0_,
+                                distribution = "gaussian",
+                                nuval = nuval,
+                                hetero = FALSE,
+                                n0=burn,
+                                m=nsamples)
+          } else
+          {
+            lamstmean0_ = rep(1,p+2)
+            lamstsd0_ = 5*rep(1,p+2)
+            fit  <- bayesrddest(y = y,
+                                z = x,
+                                W = w,
+                                mw = rep(5,p), ## as per help file
+                                tau = c,
+                                p = P,
+                                mz = mz,
+                                mztau = mztau,
+                                beta0_ = rep(0,4+2*p),
+                                lamstmean0_ = lamstmean0_,
+                                lamstsd0_ = lamstsd0_,
+                                d = rep(1,p+2),
+                                s2mean0_ = s2mean0_,
+                                s2sd0_ = s2sd0_,
+                                distribution = "gaussian",
+                                nuval = nuval,
+                                hetero = FALSE,
+                                n0=burn,
+                                m=nsamples)
+          }
+          t1 <- Sys.time()
+          dt <- difftime(t1,t0)
+          saveRDS(list(ate.post=fit$atem,time=dt),paste0("Results/cgs",j,"_",ab,"_",p,"_",i,".rds"))
+        }
     }
+    fit.dgp(s,i,dgp,"a")
+    ## fit.dgp(s,i,dgp,"b")
+  }
 }
-fit.dgp(s,dgp)
-## DGP1b
-P = c(.70,.30)
-mz = c(3, 3)
-mztau = c(3, 2)
-lamstmean0_ = rep(1,12)
-lamstsd0_ = 5*rep(1,12)
-s2mean0_ = .3
-s2sd0_ = 1
-nudgp = 3
-nuval = 3
-fit.dgp <- function(s,dgp)
-{
-  foreach(i=1:s,.multicombine=T,.packages = "bayesrdd",.export=c("burn","nsamples","P","mz","mztau","lamstmean0_","lamstsd0_","s2mean0_","s2sd0_","nudgp","nuval")) %do%
-    {
-      print(paste0("Simulation ",i," for DGP1b"))
-      data <- dgp[[i]]
-      list2env(data,globalenv())
-      t0 <- Sys.time()
-      fit  <- bayesrddest(y = y,
-                          z = x,
-                          W = w,
-                          mw = rep(5,10), ## as per help file
-                          tau = c,
-                          p = P,
-                          mz = mz,
-                          mztau = mztau,
-                          beta0_ = matrix(0,nrow=24),
-                          lamstmean0_ = lamstmean0_,
-                          lamstsd0_ = lamstsd0_,
-                          d = rep(1,length(lamstsd0_)),
-                          s2mean0_ = s2mean0_,
-                          s2sd0_ = s2sd0_,
-                          distribution = "t",
-                          nuval = nuval,
-                          hetero = FALSE,
-                          n0=burn,
-                          m=nsamples)
-      t1 <- Sys.time()
-      saveRDS(list(fit=fit,time=t1-t0),paste0("Results/cgs_dgp1b_",i,".rds"))
-    }
-}
-fit.dgp(s,dgp)
-## DGP2
-dgp <- readRDS("Data/DGP2.rds")
-fit.dgp <- function(s,dgp)
-{
-  foreach(i=1:s,.multicombine=T,.packages = "bayesrdd",.export=c("burn","nsamples","P","mz","mztau","lamstmean0_","lamstsd0_","s2mean0_","s2sd0_","nudgp","nuval")) %do%
-    {
-      print(paste0("Simulation ",i," for DGP2"))
-      data <- dgp[[i]]
-      list2env(data,globalenv())
-      t0 <- Sys.time()
-      fit  <- bayesrddest(y = y,
-                          z = x,
-                          W = w,
-                          mw = rep(5,10), ## as per help file
-                          tau = c,
-                          p = P,
-                          mz = mz,
-                          mztau = mztau,
-                          beta0_ = matrix(0,nrow=24),
-                          lamstmean0_ = lamstmean0_,
-                          lamstsd0_ = lamstsd0_,
-                          d = rep(1,length(lamstsd0_)),
-                          s2mean0_ = s2mean0_,
-                          s2sd0_ = s2sd0_,
-                          distribution = "gaussian",
-                          nuval = nuval,
-                          hetero = FALSE,
-                          n0=burn,
-                          m=nsamples)
-      t1 <- Sys.time()
-      saveRDS(list(fit=fit,time=t1-t0),paste0("Results/cgs_dgp2_",i,".rds"))
-    }
-}
-fit.dgp(s,dgp)
-## DGP3
-dgp <- readRDS("Data/DGP3.rds")
-fit.dgp <- function(s,dgp)
-{
-  foreach(i=1:s,.multicombine=T,.packages = "bayesrdd",.export=c("burn","nsamples","P","mz","mztau","lamstmean0_","lamstsd0_","s2mean0_","s2sd0_","nudgp","nuval")) %do%
-    {
-      print(paste0("Simulation ",i," for DGP3"))
-      data <- dgp[[i]]
-      list2env(data,globalenv())
-      t0 <- Sys.time()
-      fit  <- bayesrddest(y = y,
-                          z = x,
-                          W = w,
-                          mw = rep(5,10), ## as per help file
-                          tau = c,
-                          p = P,
-                          mz = mz,
-                          mztau = mztau,
-                          beta0_ = matrix(0,nrow=24),
-                          lamstmean0_ = lamstmean0_,
-                          lamstsd0_ = lamstsd0_,
-                          d = rep(1,length(lamstsd0_)),
-                          s2mean0_ = s2mean0_,
-                          s2sd0_ = s2sd0_,
-                          distribution = "gaussian",
-                          nuval = nuval,
-                          hetero = FALSE,
-                          n0=burn,
-                          m=nsamples)
-      t1 <- Sys.time()
-      saveRDS(list(fit=fit,time=t1-t0),paste0("Results/cgs_dgp3_",i,".rds"))
-    }
-}
-fit.dgp(s,dgp)
-## DGP4
-dgp <- readRDS("Data/DGP4.rds")
-fit.dgp <- function(s,dgp)
-{
-  foreach(i=1:s,.multicombine=T,.packages = "bayesrdd",.export=c("burn","nsamples","P","mz","mztau","lamstmean0_","lamstsd0_","s2mean0_","s2sd0_","nudgp","nuval")) %do%
-    {
-      print(paste0("Simulation ",i," for DGP4"))
-      data <- dgp[[i]]
-      list2env(data,globalenv())
-      t0 <- Sys.time()
-      fit  <- bayesrddest(y = y,
-                          z = x,
-                          W = w,
-                          mw = rep(5,10), ## as per help file
-                          tau = c,
-                          p = P,
-                          mz = mz,
-                          mztau = mztau,
-                          beta0_ = matrix(0,nrow=24),
-                          lamstmean0_ = lamstmean0_,
-                          lamstsd0_ = lamstsd0_,
-                          d = rep(1,length(lamstsd0_)),
-                          s2mean0_ = s2mean0_,
-                          s2sd0_ = s2sd0_,
-                          distribution = "gaussian",
-                          nuval = nuval,
-                          hetero = FALSE,
-                          n0=burn,
-                          m=nsamples)
-      t1 <- Sys.time()
-      saveRDS(list(fit=fit,time=t1-t0),paste0("Results/cgs_dgp4_",i,".rds"))
-    }
-}
-fit.dgp(s,dgp)
-## DGP5
-dgp <- readRDS("Data/DGP5.rds")
-fit.dgp <- function(s,dgp)
-{
-  foreach(i=1:s,.multicombine=T,.packages = "bayesrdd",.export=c("burn","nsamples","P","mz","mztau","lamstmean0_","lamstsd0_","s2mean0_","s2sd0_","nudgp","nuval")) %do%
-    {
-      print(paste0("Simulation ",i," for DGP5"))
-      data <- dgp[[i]]
-      list2env(data,globalenv())
-      t0 <- Sys.time()
-      fit  <- bayesrddest(y = y,
-                          z = x,
-                          W = w,
-                          mw = rep(5,10), ## as per help file
-                          tau = c,
-                          p = P,
-                          mz = mz,
-                          mztau = mztau,
-                          beta0_ = matrix(0,nrow=24),
-                          lamstmean0_ = lamstmean0_,
-                          lamstsd0_ = lamstsd0_,
-                          d = rep(1,length(lamstsd0_)),
-                          s2mean0_ = s2mean0_,
-                          s2sd0_ = s2sd0_,
-                          distribution = "gaussian",
-                          nuval = nuval,
-                          hetero = FALSE,
-                          n0=burn,
-                          m=nsamples)
-      t1 <- Sys.time()
-      saveRDS(list(fit=fit,time=t1-t0),paste0("Results/cgs_dgp5_",i,".rds"))
-    }
-}
-fit.dgp(s,dgp)
-## DGP6
-dgp <- readRDS("Data/DGP6.rds")
-fit.dgp <- function(s,dgp)
-{
-  foreach(i=1:s,.multicombine=T,.packages = "bayesrdd",.export=c("burn","nsamples","P","mz","mztau","lamstmean0_","lamstsd0_","s2mean0_","s2sd0_","nudgp","nuval")) %do%
-    {
-      print(paste0("Simulation ",i," for DGP6"))
-      data <- dgp[[i]]
-      list2env(data,globalenv())
-      t0 <- Sys.time()
-      fit  <- bayesrddest(y = y,
-                          z = x,
-                          W = w,
-                          mw = rep(5,10), ## as per help file
-                          tau = c,
-                          p = P,
-                          mz = mz,
-                          mztau = mztau,
-                          beta0_ = matrix(0,nrow=24),
-                          lamstmean0_ = lamstmean0_,
-                          lamstsd0_ = lamstsd0_,
-                          d = rep(1,length(lamstsd0_)),
-                          s2mean0_ = s2mean0_,
-                          s2sd0_ = s2sd0_,
-                          distribution = "gaussian",
-                          nuval = nuval,
-                          hetero = FALSE,
-                          n0=burn,
-                          m=nsamples)
-      t1 <- Sys.time()
-      saveRDS(list(fit=fit,time=t1-t0),paste0("Results/cgs_dgp6_",i,".rds"))
-    }
-}
-fit.dgp(s,dgp)
 ####
 stopImplicitCluster()

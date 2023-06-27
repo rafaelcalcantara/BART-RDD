@@ -9,7 +9,6 @@ if (Sys.info()[1]=="Linux")
 set.seed(0)
 s <- 1000
 n <- 500
-p <- 10
 ## DGP functions
 ### 1) CGS
 dgp.cgs <- function(n,p)
