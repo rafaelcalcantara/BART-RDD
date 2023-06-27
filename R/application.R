@@ -31,12 +31,14 @@ l1 <- predict(l1,se=T)
 l1 <- data.frame(Est=l1$fit, LI=l1$fit-1.96*l1$se.fit,
                  UI=l1$fit+1.96*l1$se.fit)
 ###
+png("Figures/gpa.png")
 matplot(x[sample],rbind(l0,l1),type="n",
         ylab="2nd Year GPA",
         xlab="1st Year GPA")
 matlines(sort(x[x<c & sample]),l0[order(x[x<c & sample]),],col="black",lty=1,lwd=c(1.5,1,1))
 matlines(sort(x[x>=c & sample]),l1[order(x[x>=c & sample]),],col="black",lty=1,lwd=c(1.5,1,1))
 abline(v=c,lty=2)
+dev.off()
 ## RDRobust estimation
 cct1 <- rdrobust(y,x,c,all=T)
 cct2 <- rdrobust(y,x,c,covs=w,all=T)
