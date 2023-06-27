@@ -22,6 +22,10 @@ sample <- -0.3<=x & x<=0.3 ## For XBCF and loess plot
 #### aggregated per distance to the cutoff, so variables are
 #### averages for children t days away from the cutoff
 ## Plot data
+png("Figures/gpa_data.png")
+plot(x,y,pch=21,bg="azure",cex=0.5)
+dev.off()
+###
 l0 <- loess(y~x,data=data.frame(y=y[x<c & sample],x=x[x<c & sample]))
 l0 <- predict(l0,se=T)
 l0 <- data.frame(Est=l0$fit, LI=l0$fit-1.96*l0$se.fit,
