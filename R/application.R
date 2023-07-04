@@ -246,21 +246,28 @@ sapply(by(pred,s2,colMeans),function(i) c(mean(i),quantile(i,c(0.025,0.975))))
 sapply(by(pred,s3,colMeans),function(i) c(mean(i),quantile(i,c(0.025,0.975))))
 sapply(by(pred,s4,colMeans),function(i) c(mean(i),quantile(i,c(0.025,0.975))))
 ### Grade pct < 35 seems to be the only one making a big difference
-p <- sapply(by(pred,s1,colMeans),function(i) c(mean(i),quantile(i,c(0.025,0.975))))
-p <- cbind(c(mean(colMeans(pred)),quantile(colMeans(pred),c(0.025,0.975))),p)
-p <- t(p)
-####
 png("Figures/cate_posterior.png")
 plot(density(colMeans(pred[s1,])),
      xlab="CATE Posterior Distribution",
      ylab="", main="",col="red",axes=F)
 axis(1)
 axis(2)
-lines(density(colMeans(pred[s1==F,])),col="blue")
+lines(density(colMeans(pred[!s1,])),col="blue")
+polygon(density(colMeans(pred[s1,])),col=rgb(1,0,0,0.25))
+polygon(density(colMeans(pred[!s1,])),col=rgb(0,0,1,0.25))
 legend("topleft",col=c("red","blue"),lty=1,
        legend=c("Above 35","Below 35"),
        title="High School\nGrade Percentile",cex=0.75)
 abline(v=0,lty=2)
+dev.off()
+###
+png("Figures/cate_difference.png")
+plot(density(colMeans(pred[!s1,])-colMeans(pred[s1,])),
+     xlab=expression(hat(tau)[L]-hat(tau)[H]),
+     ylab="",main="",
+     col=rgb(0.33, 0.53, 0.55))
+polygon(density(colMeans(pred[!s1,])-colMeans(pred[s1,])),
+        col=rgb(0.33, 0.53, 0.55,alpha=0.5))
 dev.off()
 ###
 stopImplicitCluster()
