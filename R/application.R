@@ -248,8 +248,7 @@ sapply(by(pred,s4,colMeans),function(i) c(mean(i),quantile(i,c(0.025,0.975))))
 ### Grade pct < 35 seems to be the only one making a big difference
 png("Figures/cate_posterior.png")
 plot(density(colMeans(pred[s1,])),
-     xlab="CATE Posterior Distribution",
-     ylab="", main="",col="red",axes=F)
+     xlab="", ylab="", main="",col="red",axes=F)
 axis(1)
 axis(2)
 lines(density(colMeans(pred[!s1,])),col="blue")
@@ -263,9 +262,7 @@ dev.off()
 ###
 png("Figures/cate_difference.png")
 plot(density(colMeans(pred[!s1,])-colMeans(pred[s1,])),
-     xlab=expression(hat(tau)[L]-hat(tau)[H]),
-     ylab="",main="",
-     col=rgb(0.33, 0.53, 0.55))
+     xlab="",ylab="",main="",col=rgb(0.33, 0.53, 0.55))
 polygon(density(colMeans(pred[!s1,])-colMeans(pred[s1,])),
         col=rgb(0.33, 0.53, 0.55,alpha=0.5))
 dev.off()
