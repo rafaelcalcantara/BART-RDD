@@ -59,7 +59,7 @@ fit.xbcf <- function(h,y,w,x,p_cat)
                    tau_mod = 0.5*var(y)/m, parallel=T,
                    nthread = no_cores)
     pred <- predict.XBCFrd(fit,w,rep(0,n))
-    post <- colMeans(pred$tau.adj,na.rm=T)
+    post <- colMeans(pred$tau.adj[,(burnin+1):num_sweeps],na.rm=T)
     t1 <- Sys.time()
     dt <- difftime(t1,t0)
     print(paste0("Elapsed time: ",round(dt,2)," seconds"))
@@ -77,13 +77,12 @@ p_categorical <- ncol(w)
 num_cutpoints <- n
 ###
 ### Parallelization
-## no_cores <- detectCores() - 1
-no_cores <- 1
+no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
 ###
-xbcf1 <- fit.xbcf(quantile(abs(x),0.125,na.rm=T),y[sample],NULL,x[sample],0)
+xbcf1 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],NULL,x[sample],0)
 ate.post1 <- xbcf1$ate.post
-xbcf2 <- fit.xbcf(quantile(abs(x),0.125,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
+xbcf2 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
 ate.post2 <- xbcf2$ate.post
 ## Comparing estimates
 r1 <- paste(round(quantile(ate.post1,c(.025,.975)),2),collapse=",")
@@ -111,12 +110,6 @@ results[5,] <- c("","Yes",round(cct2$coef[1],2),
                  sum(cct2$N_h))
 print(xtable(results,caption="RD Estimates",label="tab:gpa.res"),
       include.rownames=F,include.colnames=F)
-## Heterogeneous effects
-### Covariates are: share of male children, household income per capita, share of children born in Taipei, and birth year
-pred <- predict.XBCFrd(xbcf2$pred,w[sample,],x[sample])
-pred <- pred$tau.adj[,(burnin+1):num_sweeps]
-cart <- rpart(y~.,data.frame(y=rowMeans(pred),w[sample,]),control=rpart.control(cp=0.01))
-rpart.plot(cart)
 ## Robustness
 ### Different windows
 xbcf3 <- fit.xbcf(quantile(abs(x[sample]),0.1,na.rm=T),y[sample],NULL,x[sample],0)
@@ -167,9 +160,9 @@ n             <- sum(sample)
 n3            <- n
 Omin          <- as.integer(0.03*n)
 num_cutpoints <- n
-xbcf3 <- fit.xbcf(quantile(abs(x[sample]),0.1,na.rm=T),y[sample],NULL,x[sample],0)
+xbcf3 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],NULL,x[sample],0)
 ate.post3 <- xbcf3$ate.post
-xbcf4 <- fit.xbcf(quantile(abs(x[sample]),0.1,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
+xbcf4 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
 ate.post4 <- xbcf4$ate.post
 ####
 sample        <- -0.5<=x & x<=0.5
@@ -177,9 +170,9 @@ n             <- sum(sample)
 n5            <- n
 Omin          <- as.integer(0.03*n)
 num_cutpoints <- n
-xbcf5 <- fit.xbcf(quantile(abs(x[sample]),0.15,na.rm=T),y[sample],NULL,x[sample],0)
+xbcf5 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],NULL,x[sample],0)
 ate.post5 <- xbcf5$ate.post
-xbcf6 <- fit.xbcf(quantile(abs(x[sample]),0.15,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
+xbcf6 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
 ate.post6 <- xbcf6$ate.post
 ####
 sample        <- -0.1<=x & x<=0.1
@@ -187,9 +180,9 @@ n             <- sum(sample)
 n7            <- n
 Omin          <- as.integer(0.03*n)
 num_cutpoints <- n
-xbcf7 <- fit.xbcf(quantile(abs(x[sample]),0.2,na.rm=T),y[sample],NULL,x[sample],0)
+xbcf7 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],NULL,x[sample],0)
 ate.post7 <- xbcf7$ate.post
-xbcf8 <- fit.xbcf(quantile(abs(x[sample]),0.2,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
+xbcf8 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
 ate.post8 <- xbcf8$ate.post
 ###
 r3 <- paste(round(quantile(ate.post3,c(.025,.975)),3),collapse=",")
@@ -221,28 +214,53 @@ robustness[7,] <- c("Yes",round(mean(ate.post8),2),
                     round(xbcf8$Owidth,2),n7)
 print(xtable(robustness,caption="XBCF Estimates - Robustness to sample choice",label="tab:gpa.robust.n"),
       include.rownames=F,include.colnames=F)
+## Heterogeneous effects
+num_sweeps <- 1020
+sample        <- -0.3<=x & x<=0.3
+n             <- sum(sample)
+Omin          <- as.integer(0.03*n)
+num_cutpoints <- n
+xbcf.het <- fit.xbcf(quantile(abs(x[sample]),0.2,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
+pred <- predict.XBCFrd(xbcf.het$pred,w[sample,],rep(0,sum(sample)))
+pred <- pred$tau.adj[,(burnin+1):num_sweeps]
+summary(colMeans(pred))
+xbcf.het$pred$importance_treatment
+cart <- rpart(y~.,data.frame(y=rowMeans(pred),w[sample,]))
+### Plotting
+png("Figures/cart_tau.png")
+rpart.plot(cart)
+dev.off()
+### Subgroups
+s1 <- w[sample,]$hsgrade_pct >= 35
+s2 <- w[sample,]$hsgrade_pct >= 35 & w[sample,]$totcredits_year1 >= 4.8
+s3 <- w[sample,]$hsgrade_pct < 35 & w[sample,]$totcredits_year1 >= 4.8
+s4 <- w[sample,]$hsgrade_pct >= 35 & w[sample,]$totcredits_year1 < 4.8
+s5 <- w[sample,]$hsgrade_pct < 35 & w[sample,]$totcredits_year1 < 4.8
+s6 <- w[sample,]$hsgrade_pct >= 35 & w[sample,]$male==1
+s7 <- w[sample,]$hsgrade_pct < 35 & w[sample,]$male==1
+s6 <- w[sample,]$hsgrade_pct >= 35 & w[sample,]$male==0
+s7 <- w[sample,]$hsgrade_pct < 35 & w[sample,]$male==0
+###
+sapply(by(pred,s1,colMeans),function(i) c(mean(i),quantile(i,c(0.025,0.975))))
+sapply(by(pred,s2,colMeans),function(i) c(mean(i),quantile(i,c(0.025,0.975))))
+sapply(by(pred,s3,colMeans),function(i) c(mean(i),quantile(i,c(0.025,0.975))))
+sapply(by(pred,s4,colMeans),function(i) c(mean(i),quantile(i,c(0.025,0.975))))
+### Grade pct < 35 seems to be the only one making a big difference
+p <- sapply(by(pred,s1,colMeans),function(i) c(mean(i),quantile(i,c(0.025,0.975))))
+p <- cbind(c(mean(colMeans(pred)),quantile(colMeans(pred),c(0.025,0.975))),p)
+p <- t(p)
+####
+png("Figures/cate_posterior.png")
+plot(density(colMeans(pred[s1,])),
+     xlab="CATE Posterior Distribution",
+     ylab="", main="",col="red",axes=F)
+axis(1)
+axis(2)
+lines(density(colMeans(pred[s1==F,])),col="blue")
+legend("topleft",col=c("red","blue"),lty=1,
+       legend=c("Above 35","Below 35"),
+       title="High School\nGrade Percentile",cex=0.75)
+abline(v=0,lty=2)
+dev.off()
 ###
 stopImplicitCluster()
-#### Old
-## p <- data.frame(Method = c("CCT1","CCT2","XBCF1","XBCF2"),
-##                 Est = c(cct1$coef[1],cct2$coef[1],
-##                         mean(ate.post1),mean(ate.post2)),
-##                 LI = c(cct1$ci[1,1],cct2$ci[1,1],
-##                        quantile(ate.post1,0.025),
-##                        quantile(ate.post2,0.025)),
-##                 UI = c(cct1$ci[1,2],cct2$ci[1,2],
-##                        quantile(ate.post1,0.975),
-##                        quantile(ate.post2,0.975)),
-##                 Position = c(1,3,5,7))
-## p1 <- reshape(p,direction="long",idvar=c("Method","Position"),varying=c("Est","LI","UI"),times=c("Est","LI","UI"),v.name="value")
-## cols <- c("firebrick","dodgerblue")
-## plot(p1$Position,p1$value,"n",xlab="",ylab="",axes=F)
-## axis(2)
-## axis(1,at=c(1,2,6,8),labels=c("","CCT","XBCF",""))
-## segments(x0=p$Position,y0=p$LI,y1=p$UI,col=cols,lwd=1.5)
-## segments(x0=p$Position-0.05,x1=p$Position+0.05,y0=p$LI,col=cols,lwd=1.5)
-## segments(x0=p$Position-0.05,x1=p$Position+0.05,y0=p$UI,col=cols,lwd=1.5)
-## points(x=p$Position,y=p$Est,col=cols,pch=19)
-## legend("topright",legend=c("Yes","No"),cex=0.7,
-##        col=c(cols[2],cols[1]),lty=1,lwd=1.5,pch=19,
-##        title="Includes covariates",horiz=T)
