@@ -260,11 +260,11 @@ legend("topleft",col=c("red","blue"),lty=1,
 abline(v=0,lty=2)
 dev.off()
 ###
+den <- density(colMeans(pred[!s1,])-colMeans(pred[s1,]))
 png("Figures/cate_difference.png")
-plot(density(colMeans(pred[!s1,])-colMeans(pred[s1,])),
-     xlab="",ylab="",main="",col=rgb(0.33, 0.53, 0.55))
-polygon(density(colMeans(pred[!s1,])-colMeans(pred[s1,])),
-        col=rgb(0.33, 0.53, 0.55,alpha=0.5))
+plot(den,bty="n",xlab=expression(Delta),ylab="Density",main="")
+polygon(c(den$x[den$x>=0],0),c(den$y[den$x>=0],0),col="black",
+        density=25,angle=45)
 dev.off()
 ###
 stopImplicitCluster()
