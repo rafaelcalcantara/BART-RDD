@@ -38,7 +38,9 @@ temp <- function(tree,w,x,x0,y0,x1,y1)
 }
 plot.trees <- function(w,x,tree,Owidth)
 {
-    plot(x,w,"p",cex=0.75)
+    plot(x,w,"n")
+    points(x[x>=0],w[x>=0],pch=24,cex=0.6,bg="gray50")
+    points(x[x<0],w[x<0],pch=21,cex=0.6,bg="gray50")
     temp(tree,w,x,par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4])
     abline(v=-Owidth,lty=2)
     abline(v=Owidth,lty=2)
