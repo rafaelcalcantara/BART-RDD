@@ -20,11 +20,12 @@ fit.xbcf <- function(y,w,x,z)
     pred <- predict.XBCFdiscrete(fit,cbind(rep(0,n),w),
                                  cbind(rep(0,n),w),z,
                                  pihat=z,burnin=burnin)
+    ind.post <- pred$tau.adj[,(burnin+1):num_sweeps]
     post <- colMeans(pred$tau.adj[,(burnin+1):num_sweeps])
     t1 <- Sys.time()
     dt <- difftime(t1,t0)
     print(paste0("Elapsed time: ",round(dt,2)," seconds"))
-    return(list(ate.post=post,time=dt))
+    return(list(ate.post=post,cate=ind.post,time=dt))
 }
 fit.1a <- function(s,p,data)
 {
@@ -134,6 +135,15 @@ fit.6b <- function(s,p,data)
             saveRDS(fit,paste0("Results/bcf_6b_",p,"_",i,".rds"))
         }
 }
+fit.7 <- function(s,data)
+{
+    foreach(i=1:s,.multicombine=T,.export=c("p","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+        {
+            print(paste0("BCF: Simulation ",i," for DGP 6b, ",p," covariates"))
+            fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x,data[[i]]$z)
+            saveRDS(fit,paste0("Results/bcf_7_",i,".rds"))
+        }
+}
 ####
 m             <- 10
 Nmin          <- 10
@@ -144,47 +154,50 @@ num_cutpoints <- n
 ### Parallelization
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
-## DGP1
-for (p in c(4,6,10))
-{
-    dgp <- readRDS(paste0("Data/DGP1_",p,".rds"))
-    fit.1a(s,p,dgp)
-    fit.1b(s,p,dgp)
-}
-## DGP2
-for (p in c(4,6,10))
-{
-    dgp <- readRDS(paste0("Data/DGP2_",p,".rds"))
-    fit.2a(s,p,dgp)
-    fit.2b(s,p,dgp)
-}
-## DGP3
-for (p in c(4,6,10))
-{
-    dgp <- readRDS(paste0("Data/DGP3_",p,".rds"))
-    fit.3a(s,p,dgp)
-    fit.3b(s,p,dgp)
-}
-## DGP4
-for (p in c(4,6,10))
-{
-    dgp <- readRDS(paste0("Data/DGP4_",p,".rds"))
-    fit.4a(s,p,dgp)
-    fit.4b(s,p,dgp)
-}
-## DGP5
-for (p in c(4,6,10))
-{
-    dgp <- readRDS(paste0("Data/DGP5_",p,".rds"))
-    fit.5a(s,p,dgp)
-    fit.5b(s,p,dgp)
-}
-## DGP6
-for (p in c(4,6,10))
-{
-    dgp <- readRDS(paste0("Data/DGP6_",p,".rds"))
-    fit.6a(s,p,dgp)
-    fit.6b(s,p,dgp)
-}
+## ## DGP1
+## for (p in c(4,6,10))
+## {
+##     dgp <- readRDS(paste0("Data/DGP1_",p,".rds"))
+##     fit.1a(s,p,dgp)
+##     fit.1b(s,p,dgp)
+## }
+## ## DGP2
+## for (p in c(4,6,10))
+## {
+##     dgp <- readRDS(paste0("Data/DGP2_",p,".rds"))
+##     fit.2a(s,p,dgp)
+##     fit.2b(s,p,dgp)
+## }
+## ## DGP3
+## for (p in c(4,6,10))
+## {
+##     dgp <- readRDS(paste0("Data/DGP3_",p,".rds"))
+##     fit.3a(s,p,dgp)
+##     fit.3b(s,p,dgp)
+## }
+## ## DGP4
+## for (p in c(4,6,10))
+## {
+##     dgp <- readRDS(paste0("Data/DGP4_",p,".rds"))
+##     fit.4a(s,p,dgp)
+##     fit.4b(s,p,dgp)
+## }
+## ## DGP5
+## for (p in c(4,6,10))
+## {
+##     dgp <- readRDS(paste0("Data/DGP5_",p,".rds"))
+##     fit.5a(s,p,dgp)
+##     fit.5b(s,p,dgp)
+## }
+## ## DGP6
+## for (p in c(4,6,10))
+## {
+##     dgp <- readRDS(paste0("Data/DGP6_",p,".rds"))
+##     fit.6a(s,p,dgp)
+##     fit.6b(s,p,dgp)
+## }
+## DGP7
+dgp <- readRDS("Data/DGP7.rds")
+fit.7(s,dgp)
 ####
 stopImplicitCluster()

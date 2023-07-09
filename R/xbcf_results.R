@@ -13,6 +13,11 @@ readFiles <- function(s,dgp,file,p,ab)
     foreach(x=1:s,.multicombine=T) %do%
         readRDS(paste0("Results/",file,"_",dgp,ab,"_",p,"_",x,".rds"))
 }
+readFiles2 <- function(s,dgp,file)
+{
+    foreach(x=1:s,.multicombine=T) %do%
+        readRDS(paste0("Results/",file,"_",dgp,"_",x,".rds"))
+}
 #### Parallelization
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
@@ -20,63 +25,69 @@ registerDoParallel(no_cores)
 ### DGP1a
 results <- readFiles(s,"1","xbcf",4,"a")
 #### Obtain ATE posterior
-ate.sum.1a.4 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.1a.4 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP1b
 results <- readFiles(s,"1","xbcf",4,"b")
 #### Obtain ATE posterior
-ate.sum.1b.4 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.1b.4 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP2a
 results <- readFiles(s,"2","xbcf",4,"a")
 #### Obtain ATE posterior
-ate.sum.2a.4 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.2a.4 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP2b
 results <- readFiles(s,"2","xbcf",4,"b")
 #### Obtain ATE posterior
-ate.sum.2b.4 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.2b.4 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP3a
 results <- readFiles(s,"3","xbcf",4,"a")
 #### Obtain ATE posterior
-ate.sum.3a.4 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.3a.4 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP3b
 results <- readFiles(s,"3","xbcf",4,"b")
 #### Obtain ATE posterior
-ate.sum.3b.4 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.3b.4 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP4a
 results <- readFiles(s,"4","xbcf",4,"a")
 #### Obtain ATE posterior
-ate.sum.4a.4 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.4a.4 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP4b
 results <- readFiles(s,"4","xbcf",4,"b")
 #### Obtain ATE posterior
-ate.sum.4b.4 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.4b.4 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP5a
 results <- readFiles(s,"5","xbcf",4,"a")
 #### Obtain ATE posterior
-ate.sum.5a.4 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.5a.4 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP5b
 results <- readFiles(s,"5","xbcf",4,"b")
 #### Obtain ATE posterior
-ate.sum.5b.4 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.5b.4 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP6a
 results <- readFiles(s,"6","xbcf",4,"a")
 #### Obtain ATE posterior
-ate.sum.6a.4 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.6a.4 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP6b
 results <- readFiles(s,"6","xbcf",4,"b")
 #### Obtain ATE posterior
-ate.sum.6b.4 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.6b.4 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### Read data and save true ATE
 data <- readRDS("Data/DGP1_4.rds")
+data <- data[1:s]
 ate1 <- sapply(data,function(x) x$ate)
 data <- readRDS("Data/DGP2_4.rds")
+data <- data[1:s]
 ate2 <- sapply(data,function(x) x$ate)
 data <- readRDS("Data/DGP3_4.rds")
+data <- data[1:s]
 ate3 <- sapply(data,function(x) x$ate)
 data <- readRDS("Data/DGP4_4.rds")
+data <- data[1:s]
 ate4 <- sapply(data,function(x) x$ate)
 data <- readRDS("Data/DGP5_4.rds")
+data <- data[1:s]
 ate5 <- sapply(data,function(x) x$ate)
 data <- readRDS("Data/DGP6_4.rds")
+data <- data[1:s]
 ate6 <- sapply(data,function(x) x$ate)
 ### Store results
 res.mat.1.4 <- matrix(NA,7,7)
@@ -150,63 +161,69 @@ res.mat.2.4[7,7] <- round(mean(-ate.sum.6b.4[,2]+ate.sum.6b.4[,3]),2)
 ### DGP1a
 results <- readFiles(s,"1","xbcf",6,"a")
 #### Obtain ATE posterior
-ate.sum.1a.6 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.1a.6 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP1b
 results <- readFiles(s,"1","xbcf",6,"b")
 #### Obtain ATE posterior
-ate.sum.1b.6 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.1b.6 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP2a
 results <- readFiles(s,"2","xbcf",6,"a")
 #### Obtain ATE posterior
-ate.sum.2a.6 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.2a.6 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP2b
 results <- readFiles(s,"2","xbcf",6,"b")
 #### Obtain ATE posterior
-ate.sum.2b.6 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.2b.6 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP3a
 results <- readFiles(s,"3","xbcf",6,"a")
 #### Obtain ATE posterior
-ate.sum.3a.6 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.3a.6 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP3b
 results <- readFiles(s,"3","xbcf",6,"b")
 #### Obtain ATE posterior
-ate.sum.3b.6 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.3b.6 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP4a
 results <- readFiles(s,"4","xbcf",6,"a")
 #### Obtain ATE posterior
-ate.sum.4a.6 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.4a.6 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP4b
 results <- readFiles(s,"4","xbcf",6,"b")
 #### Obtain ATE posterior
-ate.sum.4b.6 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.4b.6 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP5a
 results <- readFiles(s,"5","xbcf",6,"a")
 #### Obtain ATE posterior
-ate.sum.5a.6 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.5a.6 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP5b
 results <- readFiles(s,"5","xbcf",6,"b")
 #### Obtain ATE posterior
-ate.sum.5b.6 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.5b.6 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP6a
 results <- readFiles(s,"6","xbcf",6,"a")
 #### Obtain ATE posterior
-ate.sum.6a.6 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.6a.6 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP6b
 results <- readFiles(s,"6","xbcf",6,"b")
 #### Obtain ATE posterior
-ate.sum.6b.6 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.6b.6 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### Read data and save true ATE
 data <- readRDS("Data/DGP1_6.rds")
+data <- data[1:s]
 ate1 <- sapply(data,function(x) x$ate)
 data <- readRDS("Data/DGP2_6.rds")
+data <- data[1:s]
 ate2 <- sapply(data,function(x) x$ate)
 data <- readRDS("Data/DGP3_6.rds")
+data <- data[1:s]
 ate3 <- sapply(data,function(x) x$ate)
 data <- readRDS("Data/DGP4_6.rds")
+data <- data[1:s]
 ate4 <- sapply(data,function(x) x$ate)
 data <- readRDS("Data/DGP5_6.rds")
+data <- data[1:s]
 ate5 <- sapply(data,function(x) x$ate)
 data <- readRDS("Data/DGP6_6.rds")
+data <- data[1:s]
 ate6 <- sapply(data,function(x) x$ate)
 ### Store results
 res.mat.1.6 <- matrix(NA,7,7)
@@ -280,63 +297,69 @@ res.mat.2.6[7,7] <- round(mean(-ate.sum.6b.6[,2]+ate.sum.6b.6[,3]),2)
 ### DGP1a
 results <- readFiles(s,"1","xbcf",10,"a")
 #### Obtain ATE posterior
-ate.sum.1a.10 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.1a.10 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP1b
 results <- readFiles(s,"1","xbcf",10,"b")
 #### Obtain ATE posterior
-ate.sum.1b.10 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.1b.10 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP2a
 results <- readFiles(s,"2","xbcf",10,"a")
 #### Obtain ATE posterior
-ate.sum.2a.10 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.2a.10 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP2b
 results <- readFiles(s,"2","xbcf",10,"b")
 #### Obtain ATE posterior
-ate.sum.2b.10 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.2b.10 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP3a
 results <- readFiles(s,"3","xbcf",10,"a")
 #### Obtain ATE posterior
-ate.sum.3a.10 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.3a.10 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP3b
 results <- readFiles(s,"3","xbcf",10,"b")
 #### Obtain ATE posterior
-ate.sum.3b.10 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.3b.10 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP4a
 results <- readFiles(s,"4","xbcf",10,"a")
 #### Obtain ATE posterior
-ate.sum.4a.10 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.4a.10 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP4b
 results <- readFiles(s,"4","xbcf",10,"b")
 #### Obtain ATE posterior
-ate.sum.4b.10 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.4b.10 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP5a
 results <- readFiles(s,"5","xbcf",10,"a")
 #### Obtain ATE posterior
-ate.sum.5a.10 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.5a.10 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP5b
 results <- readFiles(s,"5","xbcf",10,"b")
 #### Obtain ATE posterior
-ate.sum.5b.10 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.5b.10 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP6a
 results <- readFiles(s,"6","xbcf",10,"a")
 #### Obtain ATE posterior
-ate.sum.6a.10 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.6a.10 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### DGP6b
 results <- readFiles(s,"6","xbcf",10,"b")
 #### Obtain ATE posterior
-ate.sum.6b.10 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+ate.sum.6b.10 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 ### Read data and save true ATE
 data <- readRDS("Data/DGP1_10.rds")
+data <- data[1:s]
 ate1 <- sapply(data,function(x) x$ate)
 data <- readRDS("Data/DGP2_10.rds")
+data <- data[1:s]
 ate2 <- sapply(data,function(x) x$ate)
 data <- readRDS("Data/DGP3_10.rds")
+data <- data[1:s]
 ate3 <- sapply(data,function(x) x$ate)
 data <- readRDS("Data/DGP4_10.rds")
+data <- data[1:s]
 ate4 <- sapply(data,function(x) x$ate)
 data <- readRDS("Data/DGP5_10.rds")
+data <- data[1:s]
 ate5 <- sapply(data,function(x) x$ate)
 data <- readRDS("Data/DGP6_10.rds")
+data <- data[1:s]
 ate6 <- sapply(data,function(x) x$ate)
 ### Store results
 res.mat.1.10 <- matrix(NA,7,7)
@@ -409,6 +432,24 @@ res.mat.2.10[4,7] <- round(mean(-ate.sum.5a.10[,2]+ate.sum.5a.10[,3]),2)
 res.mat.2.10[5,7] <- round(mean(-ate.sum.5b.10[,2]+ate.sum.5b.10[,3]),2)
 res.mat.2.10[6,7] <- round(mean(-ate.sum.6a.10[,2]+ate.sum.6a.10[,3]),2)
 res.mat.2.10[7,7] <- round(mean(-ate.sum.6b.10[,2]+ate.sum.6b.10[,3]),2)
+## Heterogeneous effects
+### Read data and save true ATE and CATE
+data <- readRDS("Data/DGP7.rds")
+ate7 <- sapply(data,function(x) x$ate)
+ate7 <- ate7[1:s]
+### Obtain ATE and CATE posterior
+results <- readFiles2(s,"7","xbcf")
+ate.sum.7 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
+cate.sum.7 <- lapply(results, function(i) t(apply(i$ate.post,1,function(x) c(mean(x),quantile(x,c(0.025,0.975))))))
+### Table results
+res.mat.het <- matrix("",3,7)
+res.mat.het[1,] <- c("","","ATE","","","CATE","")
+res.mat.het[2,] <- c("","","MSE","Coverage","","MSE","Coverage")
+res.mat.het[3,1] <- "XBCF"
+res.mat.het[3,3] <- round(mean((ate.sum.7[,1]-ate7)^2),2)
+res.mat.het[3,4] <- mean(ate.sum.7[,2]<=ate7 & ate7<=ate.sum.7[,3])
+res.mat.het[3,6] <- round(mean(mapply(function(x,y) mean((x[,1]-y$cate)^2),cate.sum.7,data[1:s])),2)
+res.mat.het[3,7] <- round(mean(mapply(function(x,y) mean(x[,2]<=y$cate & y$cate<=x[,3]),cate.sum.7,data[1:s])),2)
 ###
 rm(data,results,no_cores,readFiles,ate1,ate2,ate3,ate4,ate5,ate6)
 save.image("Tables/xbcf_results.RData")

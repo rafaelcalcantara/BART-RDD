@@ -13,6 +13,11 @@ readFiles <- function(s,dgp,file,p,ab)
     foreach(x=1:s,.multicombine=T) %do%
         readRDS(paste0("Results/",file,"_",dgp,ab,"_",p,"_",x,".rds"))
 }
+readFiles2 <- function(s,dgp,file)
+{
+    foreach(x=1:s,.multicombine=T) %do%
+        readRDS(paste0("Results/",file,"_",dgp,"_",x,".rds"))
+}
 #### Parallelization
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
@@ -409,6 +414,24 @@ res.mat.2.10[4,7] <- round(mean(-ate.sum.5a.10[,2]+ate.sum.5a.10[,3]),2)
 res.mat.2.10[5,7] <- round(mean(-ate.sum.5b.10[,2]+ate.sum.5b.10[,3]),2)
 res.mat.2.10[6,7] <- round(mean(-ate.sum.6a.10[,2]+ate.sum.6a.10[,3]),2)
 res.mat.2.10[7,7] <- round(mean(-ate.sum.6b.10[,2]+ate.sum.6b.10[,3]),2)
+## Heterogeneous effects
+### Read data and save true ATE and CATE
+data <- readRDS("Data/DGP7.rds")
+ate7 <- sapply(data,function(x) x$ate)
+ate7 <- ate7[1:s]
+### Obtain ATE and CATE posterior
+results <- readFiles2(s,"7","bcf")
+ate.sum.7 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
+cate.sum.7 <- lapply(results, function(i) t(apply(i$cate,1,function(x) c(mean(x),quantile(x,c(0.025,0.975))))))
+### Table results
+res.mat.het <- matrix("",3,7)
+res.mat.het[1,] <- c("","","ATE","","","CATE","")
+res.mat.het[2,] <- c("","","MSE","Coverage","","MSE","Coverage")
+res.mat.het[3,1] <- "BCF"
+res.mat.het[3,3] <- round(mean((ate.sum.7[,1]-ate7)^2),2)
+res.mat.het[3,4] <- mean(ate.sum.7[,2]<=ate7 & ate7<=ate.sum.7[,3])
+res.mat.het[3,6] <- round(mean(mapply(function(x,y) mean((x[,1]-y$cate)^2),cate.sum.7,data[1:s])),2)
+res.mat.het[3,7] <- round(mean(mapply(function(x,y) mean(x[,2]<=y$cate & y$cate<=x[,3]),cate.sum.7,data[1:s])),2)
 ###
 rm(data,results,no_cores,readFiles,ate1,ate2,ate3,ate4,ate5,ate6)
 save.image("Tables/bcf_results.RData")

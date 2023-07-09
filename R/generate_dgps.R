@@ -164,6 +164,19 @@ dgp6.fun <- function(n,p)
     tau.x <- tau(x,w)
     return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
 }
+## 7) CATE simulations
+dgp.het <- function(n)
+{
+    x <- 2*rbeta(n,2,4)-1
+    z <- x>=0
+    w <- matrix(rnorm(n*2,0,0.25),n,2)
+    mu <- function(x,w) 1 + x + abs(w[,1]-1) + 0.5*w[,2]
+    tau <- function(x,w) 1 + exp(x)*w[,2] + w[,1]
+    y <- mu(x,w) + tau(x,w)*z + rnorm(n)
+    tau.zero <- tau(0,w)
+    ate <- mean(tau.zero)
+    return(list(y=y,x=x,z=z,w=w,ate=ate,cate=tau.zero))
+}
 ## DGP1
 for (P in c(4,6,10))
 {
@@ -206,3 +219,7 @@ for (P in c(0,2,6))
     for (i in 1:s) dgp[[i]] <- dgp6.fun(n,P)
     saveRDS(dgp,paste0("Data/DGP6_",P+4,".rds"))
 }
+## DGP7
+dgp <- vector("list",s)
+for (i in 1:s) dgp[[i]] <- dgp.het(n)
+saveRDS(dgp,"Data/DGP7.rds")

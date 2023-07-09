@@ -6,24 +6,24 @@ s <- 1000 # samples
 if (Sys.info()["sysname"] == "Linux")
 {
     setwd("~/Documents/Git/XBCF-RDD/")
-    ## ## XBCF-RDD simulations
-    ## source("R/simulations_xbcf.R")
-    ## gc()
+    ## XBCF-RDD simulations
+    source("R/simulations_xbcf.R")
+    gc()
     ## ## KR simulations
     ## source("R/simulations_kr.R")
     ## gc()
     ## ## CCT simulations
     ## source("R/simulations_cct.R")
     ## gc()
-    ## ## XBART simulations
-    ## source("R/simulations_bart.R")
-    ## gc()
-    ## XBART2 simulations
-    source("R/simulations_bart2.R")
+    ## XBART simulations
+    source("R/simulations_bart.R")
     gc()
-    ## ## Regular XBCF simulations
-    ## source("R/simulations_bcf.R")
+    ## ## XBART2 simulations
+    ## source("R/simulations_bart2.R")
     ## gc()
+    ## Regular XBCF simulations
+    source("R/simulations_bcf.R")
+    gc()
 } else
 {
     setwd("~/Git/XBCF-RDD/")

@@ -10,16 +10,17 @@ fit.xbcf <- function(y,w,x)
     t0 <- Sys.time()
     h <- quantile(abs(x),0.125)
     fit <- XBCF.rd(y, w, x, c, Owidth = h, Omin = Omin, Opct = Opct,
-                           num_trees_mod = m, num_trees_con = m,
-                           num_cutpoints = n, num_sweeps = num_sweeps,
-                           burnin = burnin, Nmin = Nmin,
-                           p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
-                           tau_con = 2*var(y)/m,
-                           tau_mod = 0.5*var(y)/m, parallel=F)
-    pred <- predict.XBCFrd(fit,w,rep(0,n))
-    post <- pred$tau.adj
+                   num_trees_mod = m, num_trees_con = m,
+                   num_cutpoints = n, num_sweeps = num_sweeps,
+                   burnin = burnin, Nmin = Nmin,
+                   p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
+                   tau_con = 2*var(y)/m,
+                   tau_mod = 0.5*var(y)/m, parallel=F)
+    test <- -h<=x & x<=h
+    pred <- predict.XBCFrd(fit,w[test,],rep(0,sum(test)))
+    post <- pred$tau.adj[,(burnin+1):num_sweeps]
     ind.post <- predict.XBCFrd(fit,w,x)
-    ind.post <- pred$tau.adj
+    ind.post <- ind.post$tau.adj[,(burnin+1):num_sweeps]
     t1 <- Sys.time()
     dt <- difftime(t1,t0)
     print(paste0("Elapsed time: ",round(dt,2)," seconds"))
@@ -133,6 +134,15 @@ fit.6b <- function(s,p,data)
             saveRDS(fit,paste0("Results/xbcf_6b_",p,"_",i,".rds"))
         }
 }
+fit.7 <- function(s,data)
+{
+    foreach(i=1:s,.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+        {
+            print(paste0("XBCF: Simulation ",i," for DGP 7"))
+            fit <- fit.xbcf(data[[i]]$y,data[[i]]$w,data[[i]]$x)
+            saveRDS(fit,paste0("Results/xbcf_7_",i,".rds"))
+        }
+}
 ####
 c             <- 0
 Omin          <- as.integer(0.03*n)
@@ -188,5 +198,8 @@ for (p in c(4,6,10))
     fit.6a(s,p,dgp)
     fit.6b(s,p,dgp)
 }
+## DGP7
+dgp <- readRDS("Data/DGP7.rds")
+fit.7(s,dgp)
 ####
 stopImplicitCluster()
