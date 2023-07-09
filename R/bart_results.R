@@ -420,7 +420,7 @@ data <- readRDS("Data/DGP7.rds")
 ate7 <- sapply(data,function(x) x$ate)
 ate7 <- ate7[1:s]
 ### Obtain ATE and CATE posterior
-results <- readFiles2(s,"7","bart")
+results <- readFiles2(s,"7","xbart")
 ate.sum.7 <- t(sapply(results, function(x) c(mean(x$ate.post),quantile(x$ate.post,c(0.025,0.975)))))
 cate.sum.7 <- lapply(results, function(i) t(apply(i$cate,1,function(x) c(mean(x),quantile(x,c(0.025,0.975))))))
 ### Table results

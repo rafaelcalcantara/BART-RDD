@@ -15,15 +15,15 @@ if (Sys.info()["sysname"] == "Linux")
     ## ## CCT simulations
     ## source("R/simulations_cct.R")
     ## gc()
-    ## XBART simulations
-    source("R/simulations_bart.R")
-    gc()
+    ## ## XBART simulations
+    ## source("R/simulations_bart.R")
+    ## gc()
     ## ## XBART2 simulations
     ## source("R/simulations_bart2.R")
     ## gc()
-    ## Regular XBCF simulations
-    source("R/simulations_bcf.R")
-    gc()
+    ## ## Regular XBCF simulations
+    ## source("R/simulations_bcf.R")
+    ## gc()
 } else
 {
     setwd("~/Git/XBCF-RDD/")
