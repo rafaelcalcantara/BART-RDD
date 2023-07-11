@@ -23,7 +23,7 @@ sample <- -0.3<=x & x<=0.3 ## For XBCF and loess plot
 #### averages for children t days away from the cutoff
 ## Plot data
 png("Figures/gpa_data.png")
-plot(x,y,pch=21,bg="azure",cex=0.5,xlab="1st Year GPA",ylab="2nd Year GPA")
+plot(x,y,pch=21,bg="azure",cex=0.5,xlab="1st Year GPA",ylab="2nd Year GPA",bty="n")
 dev.off()
 ###
 l0 <- loess(y~x,data=data.frame(y=y[x<c & sample],x=x[x<c & sample]))
@@ -38,7 +38,7 @@ l1 <- data.frame(Est=l1$fit, LI=l1$fit-1.96*l1$se.fit,
 png("Figures/gpa.png")
 matplot(x[sample],rbind(l0,l1),type="n",
         ylab="2nd Year GPA",
-        xlab="1st Year GPA")
+        xlab="1st Year GPA",bty="n")
 matlines(sort(x[x<c & sample]),l0[order(x[x<c & sample]),],col="black",lty=1,lwd=c(1.5,1,1))
 matlines(sort(x[x>=c & sample]),l1[order(x[x>=c & sample]),],col="black",lty=1,lwd=c(1.5,1,1))
 abline(v=c,lty=2)
@@ -319,9 +319,7 @@ sapply(by(pred,s4,colMeans),function(i) c(mean(i),quantile(i,c(0.025,0.975))))
 ### Grade pct < 35 seems to be the only one making a big difference
 png("Figures/cate_posterior.png")
 plot(density(colMeans(pred[s1,])),
-     xlab="", ylab="", main="",col="red",axes=F)
-axis(1)
-axis(2)
+     xlab="", ylab="", main="",col="red",bty="n")
 lines(density(colMeans(pred[!s1,])),col="blue")
 polygon(density(colMeans(pred[s1,])),col=rgb(1,0,0,0.25))
 polygon(density(colMeans(pred[!s1,])),col=rgb(0,0,1,0.25))
