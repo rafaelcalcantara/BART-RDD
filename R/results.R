@@ -7,6 +7,7 @@ results.1.6 <- res.mat.1.6
 results.2.6 <- res.mat.2.6
 results.1.10 <- res.mat.1.10
 results.2.10 <- res.mat.2.10
+results.het <- res.mat.het
 load("Tables/xbart_results.RData")
 results.1.4 <- rbind(results.1.4,res.mat.1.4[-1,])
 results.2.4 <- rbind(results.2.4,res.mat.2.4[-1,])
@@ -14,6 +15,7 @@ results.1.6 <- rbind(results.1.6,res.mat.1.6[-1,])
 results.2.6 <- rbind(results.2.6,res.mat.2.6[-1,])
 results.1.10 <- rbind(results.1.10,res.mat.1.10[-1,])
 results.2.10 <- rbind(results.2.10,res.mat.2.10[-1,])
+results.het <- rbind(results.het,res.mat.het[3,])
 load("Tables/xbart2_results.RData")
 results.1.4 <- rbind(results.1.4,res.mat.1.4[-1,])
 results.2.4 <- rbind(results.2.4,res.mat.2.4[-1,])
@@ -28,6 +30,7 @@ results.1.6 <- rbind(results.1.6,res.mat.1.6[-1,])
 results.2.6 <- rbind(results.2.6,res.mat.2.6[-1,])
 results.1.10 <- rbind(results.1.10,res.mat.1.10[-1,])
 results.2.10 <- rbind(results.2.10,res.mat.2.10[-1,])
+results.het <- rbind(results.het,res.mat.het[3,])
 load("Tables/cgs_results.RData")
 results.1.4 <- rbind(results.1.4,res.mat.1.4[-1,])
 results.2.4 <- rbind(results.2.4,res.mat.2.4[-1,])
@@ -56,3 +59,4 @@ print(xtable(results.1.6,caption="Simulation results for P=6",label="tab:sim.1.6
 print(xtable(results.2.6,caption="Simulation results for P=6",label="tab:sim.2.6"),include.rownames=F,include.colnames=F)
 print(xtable(results.1.10,caption="Simulation results for P=10",label="tab:sim.1.10"),include.rownames=F,include.colnames=F)
 print(xtable(results.2.10,caption="Simulation results for P=10",label="tab:sim.2.10"),include.rownames=F,include.colnames=F)
+print(xtable(results.het,caption="Simulation results CATE Estimates",label="tab:sim.cate"),include.rownames=F,include.colnames=F)

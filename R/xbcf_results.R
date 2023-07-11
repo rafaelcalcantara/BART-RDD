@@ -4,7 +4,7 @@ library(foreach)
 library(doParallel)
 setwd("~/Documents/Git/XBCF-RDD/")
 s <- 1000
-num_sweeps <- 50
+num_sweeps <- 120
 burnin     <- 20
 sample     <- (burnin+1):num_sweeps
 ### Function to read results files
@@ -441,17 +441,20 @@ ate7 <- ate7[1:s]
 results <- readFiles2(s,"7","xbcf")
 ate.sum.7 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 cate.sum.7 <- lapply(results, function(i) t(apply(i$ate.post,1,function(x) c(mean(x),quantile(x,c(0.025,0.975))))))
+cate <- mapply(function(i,j) i$cate[-j$Owidth<=i$x & i$x<=j$Owidth],data,results,SIMPLIFY=F)
 ### Table results
-res.mat.het <- matrix("",3,7)
-res.mat.het[1,] <- c("","","ATE","","","CATE","")
-res.mat.het[2,] <- c("","","MSE","Coverage","","MSE","Coverage")
+res.mat.het <- matrix("",3,9)
+res.mat.het[1,] <- c("","","ATE","","","","CATE","","")
+res.mat.het[2,] <- c("","","MSE","Coverage","Size","","MSE","Coverage","Size")
 res.mat.het[3,1] <- "XBCF"
 res.mat.het[3,3] <- round(mean((ate.sum.7[,1]-ate7)^2),2)
 res.mat.het[3,4] <- mean(ate.sum.7[,2]<=ate7 & ate7<=ate.sum.7[,3])
-res.mat.het[3,6] <- round(mean(mapply(function(x,y) mean((x[,1]-y$cate)^2),cate.sum.7,data[1:s])),2)
-res.mat.het[3,7] <- round(mean(mapply(function(x,y) mean(x[,2]<=y$cate & y$cate<=x[,3]),cate.sum.7,data[1:s])),2)
+res.mat.het[3,5] <- round(mean(-ate.sum.7[,2]+ate.sum.7[,3]),2)
+res.mat.het[3,7] <- round(mean(mapply(function(x,y) mean((x[,1]-y)^2),cate.sum.7,cate)),2)
+res.mat.het[3,8] <- round(mean(mapply(function(x,y) mean(x[,2]<=y & y<=x[,3]),cate.sum.7,cate)),2)
+res.mat.het[3,9] <- round(mean(sapply(cate.sum.7,function(i) mean(i[,3]-i[,2]))),2)
 ###
-rm(data,results,no_cores,readFiles,ate1,ate2,ate3,ate4,ate5,ate6)
+rm(data,results,no_cores,readFiles,readFiles2,ate1,ate2,ate3,ate4,ate5,ate6,ate7,cate.sum.7,cate)
 save.image("Tables/xbcf_results.RData")
 ####
 stopImplicitCluster()

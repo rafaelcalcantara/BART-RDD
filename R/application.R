@@ -43,6 +43,77 @@ matlines(sort(x[x<c & sample]),l0[order(x[x<c & sample]),],col="black",lty=1,lwd
 matlines(sort(x[x>=c & sample]),l1[order(x[x>=c & sample]),],col="black",lty=1,lwd=c(1.5,1,1))
 abline(v=c,lty=2)
 dev.off()
+## Descriptive statistics
+### Full sample
+stats <- apply(w,2,function(x) c(mean(x),sd(x)))
+stats <- t(stats)
+rownames(stats) <- c("High school grade percentile",
+                     "Credits attempted in first year",
+                     "Age at entry",
+                     "Male",
+                     "Born in North America",
+                     "Campus 1","Campus 2","Campus 3")
+colnames(stats) <- c("Mean","Std. Dev")
+stats <- rbind(`Next Term GPA`=c(mean(y),sd(y)),
+               `Distance from cutoff`=c(mean(x),sd(x)),
+               `Treatment assignment`= c(mean(x>0),sd(x>0)),
+               stats)
+stats <- round(stats,2)
+### XBCF subsample
+stats.subsample <- apply(w[sample,],2,function(x) c(mean(x),sd(x)))
+stats.subsample <- t(stats.subsample)
+rownames(stats.subsample) <- c("High school grade percentile",
+                     "Credits attempted in first year",
+                     "Age at entry",
+                     "Male",
+                     "Born in North America",
+                     "Campus 1","Campus 2","Campus 3")
+colnames(stats.subsample) <- c("Mean","Std. Dev")
+stats.subsample <- rbind(`Next Term GPA`=c(mean(y[sample]),sd(y[sample])),
+               `Distance from cutoff`=c(mean(x[sample]),sd(x[sample])),
+               `Treatment assignment`= c(mean(x[sample]>0),sd(x[sample]>0)),
+               stats.subsample)
+stats.subsample <- round(stats.subsample,2)
+### CKT window
+bw <- rdbwselect(y,x,c=0,covs=w)$bws[1]
+ckt.sample <- -bw<=x & x<=bw
+stats.ckt <- apply(w[ckt.sample,],2,function(x) c(mean(x),sd(x)))
+stats.ckt <- t(stats.ckt)
+rownames(stats.ckt) <- c("High school grade percentile",
+                          "Credits attempted in first year",
+                          "Age at entry",
+                          "Male",
+                          "Born in North America",
+                          "Campus 1","Campus 2","Campus 3")
+colnames(stats.ckt) <- c("Mean","Std. Dev")
+stats.ckt <- rbind(`Next Term GPA`=c(mean(y[ckt.sample]),sd(y[ckt.sample])),
+               `Distance from cutoff`=c(mean(x[ckt.sample]),sd(x[ckt.sample])),
+               `Treatment assignment`= c(mean(x[ckt.sample]>0),sd(x[ckt.sample]>0)),
+               stats.ckt)
+stats.ckt <- round(stats.ckt,2)
+### Combining tables
+desc.stats <- cbind(stats,stats.subsample,stats.ckt)
+desc.stats <- cbind(desc.stats[,1:2],"",
+                    desc.stats[,3:4],"",desc.stats[,5:6])
+print(xtable(desc.stats,caption="Descriptive statistics",
+             label="tab:desc.stats",align=c("l",rep("c",8))))
+## Plot high school grade percentile against score
+png("Figures/grades_score.png")
+plot(x,w$hsgrade_pct,pch=21,bg="azure",main="",
+     xlab="1st year GPA",ylab="High school grade percentile",
+     cex=0.5,bty="n")
+dev.off()
+## Plot high school grade percentile distribution
+d1 <- density(w$hsgrade_pct)
+d2 <- density(w[sample,]$hsgrade_pct)
+png("Figures/grades_dist.png")
+plot(d1,type="n",ylim=c(min(d1$y,d2$y),max(d1$y,d2$y)),bty="n",
+     xlab="High school grade percentile",ylab="",main="")
+polygon(d1,border="blue",col=rgb(0,0,1,0.25))
+polygon(d2,border="green",col=rgb(0,1,0,0.25))
+legend("topright",col=c("blue","green"),legend=c("Full","XBCF"),
+       title="Sample",lty=1)
+dev.off()
 ## RDRobust estimation
 cct1 <- rdrobust(y,x,c,all=T)
 cct2 <- rdrobust(y,x,c,covs=w,all=T)
