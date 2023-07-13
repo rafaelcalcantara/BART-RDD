@@ -59,21 +59,22 @@ stats <- rbind(`Next Term GPA`=c(mean(y),sd(y)),
                `Treatment assignment`= c(mean(x>0),sd(x>0)),
                stats)
 stats <- round(stats,2)
-### XBCF subsample
-stats.subsample <- apply(w[sample,],2,function(x) c(mean(x),sd(x)))
-stats.subsample <- t(stats.subsample)
-rownames(stats.subsample) <- c("High school grade percentile",
+### XBCF window
+sample <- -0.01<=x & x<=0.01
+stats.xbcf <- apply(w[sample,],2,function(x) c(mean(x),sd(x)))
+stats.xbcf <- t(stats.xbcf)
+rownames(stats.xbcf) <- c("High school grade percentile",
                      "Credits attempted in first year",
                      "Age at entry",
                      "Male",
                      "Born in North America",
                      "Campus 1","Campus 2","Campus 3")
-colnames(stats.subsample) <- c("Mean","Std. Dev")
-stats.subsample <- rbind(`Next Term GPA`=c(mean(y[sample]),sd(y[sample])),
+colnames(stats.xbcf) <- c("Mean","Std. Dev")
+stats.xbcf <- rbind(`Next Term GPA`=c(mean(y[sample]),sd(y[sample])),
                `Distance from cutoff`=c(mean(x[sample]),sd(x[sample])),
                `Treatment assignment`= c(mean(x[sample]>0),sd(x[sample]>0)),
-               stats.subsample)
-stats.subsample <- round(stats.subsample,2)
+               stats.xbcf)
+stats.xbcf <- round(stats.xbcf,2)
 ### CKT window
 bw <- rdbwselect(y,x,c=0,covs=w)$bws[1]
 ckt.sample <- -bw<=x & x<=bw
@@ -92,7 +93,7 @@ stats.ckt <- rbind(`Next Term GPA`=c(mean(y[ckt.sample]),sd(y[ckt.sample])),
                stats.ckt)
 stats.ckt <- round(stats.ckt,2)
 ### Combining tables
-desc.stats <- cbind(stats,stats.subsample,stats.ckt)
+desc.stats <- cbind(stats,stats.xbcf,stats.ckt)
 desc.stats <- cbind(desc.stats[,1:2],"",
                     desc.stats[,3:4],"",desc.stats[,5:6])
 print(xtable(desc.stats,caption="Descriptive statistics",
@@ -118,7 +119,7 @@ dev.off()
 cct1 <- rdrobust(y,x,c,all=T)
 cct2 <- rdrobust(y,x,c,covs=w,all=T)
 ## XBCF estimation
-fit.xbcf <- function(h,y,w,x,p_cat)
+fit.xbcf <- function(h,y,w,x,p_cat,pred.band,Omin)
 {
     t0 <- Sys.time()
     fit <- XBCF.rd(y, w, x, c, Owidth = h, Omin = Omin, Opct = Opct,
@@ -129,16 +130,17 @@ fit.xbcf <- function(h,y,w,x,p_cat)
                            tau_con = 2*var(y)/m,
                    tau_mod = 0.5*var(y)/m, parallel=T,
                    nthread = no_cores)
-    pred <- predict.XBCFrd(fit,w,rep(0,n))
-    post <- colMeans(pred$tau.adj[,(burnin+1):num_sweeps],na.rm=T)
+    test <- -pred.band <= x & x<= pred.band
+    pred <- predict.XBCFrd(fit,w[test,],rep(0,sum(test)))
+    pred <- pred$tau.adj[,(burnin+1):num_sweeps]
+    post <- colMeans(pred,na.rm=T)
     t1 <- Sys.time()
     dt <- difftime(t1,t0)
     print(paste0("Elapsed time: ",round(dt,2)," seconds"))
-    return(list(ate.post=post,pred=fit,Owidth=h,time=dt))
+    return(list(ate.post=post,pred=pred,Owidth=h,time=dt))
 }
 ###
-n             <- sum(sample)
-Omin          <- as.integer(0.03*n)
+n             <- length(y)
 Opct          <- 0.9
 m             <- 10
 Nmin          <- 10
@@ -150,14 +152,43 @@ num_cutpoints <- n
 ### Parallelization
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
-###
-xbcf1 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],NULL,x[sample],0)
-ate.post1 <- xbcf1$ate.post
-xbcf2 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
-ate.post2 <- xbcf2$ate.post
-## Comparing estimates
-r1 <- paste(round(quantile(ate.post1,c(.025,.975)),2),collapse=",")
-r2 <- paste(round(quantile(ate.post2,c(.025,.975)),2),collapse=",")
+### With controls
+xbcf.cont.1 <- fit.xbcf(0.01,y,w,x,p_categorical,0.01,10)
+ate.post.cont1 <- xbcf.cont.1$ate.post.cont
+xbcf.cont.2 <- fit.xbcf(0.02,y,w,x,p_categorical,0.01,10)
+ate.post.cont2 <- xbcf.cont.2$ate.post.cont
+xbcf.cont.3 <- fit.xbcf(0.03,y,w,x,p_categorical,0.01,10)
+ate.post.cont3 <- xbcf.cont.3$ate.post.cont
+xbcf.cont.4 <- fit.xbcf(0.04,y,w,x,p_categorical,0.01,10)
+ate.post.cont4 <- xbcf.cont.4$ate.post.cont
+xbcf.cont.5 <- fit.xbcf(0.01,y,w,x,p_categorical,0.01,50)
+ate.post.cont5 <- xbcf.cont.5$ate.post.cont
+xbcf.cont.6 <- fit.xbcf(0.02,y,w,x,p_categorical,0.01,50)
+ate.post.cont6 <- xbcf.cont.6$ate.post.cont
+xbcf.cont.7 <- fit.xbcf(0.03,y,w,x,p_categorical,0.01,50)
+ate.post.cont7 <- xbcf.cont.7$ate.post.cont
+xbcf.cont.8 <- fit.xbcf(0.04,y,w,x,p_categorical,0.01,50)
+ate.post.cont8 <- xbcf.cont.8$ate.post.cont
+### Without controls
+xbcf.no.cont.1 <- fit.xbcf(0.01,y,NULL,x,0,0.01,10)
+ate.post.no.cont1 <- xbcf.no.cont.1$ate.post.no.cont
+xbcf.no.cont.2 <- fit.xbcf(0.02,y,NULL,x,0,0.01,10)
+ate.post.no.cont2 <- xbcf.no.cont.2$ate.post.no.cont
+xbcf.no.cont.3 <- fit.xbcf(0.03,y,NULL,x,0,0.01,10)
+ate.post.no.cont3 <- xbcf.no.cont.3$ate.post.no.cont
+xbcf.no.cont.4 <- fit.xbcf(0.04,y,NULL,x,0,0.01,10)
+ate.post.no.cont4 <- xbcf.no.cont.4$ate.post.no.cont
+xbcf.no.cont.5 <- fit.xbcf(0.01,y,NULL,x,0,0.01,50)
+ate.post.no.cont5 <- xbcf.no.cont.5$ate.post.no.cont
+xbcf.no.cont.6 <- fit.xbcf(0.02,y,NULL,x,0,0.01,50)
+ate.post.no.cont6 <- xbcf.no.cont.6$ate.post.no.cont
+xbcf.no.cont.7 <- fit.xbcf(0.03,y,NULL,x,0,0.01,50)
+ate.post.no.cont7 <- xbcf.no.cont.7$ate.post.no.cont
+xbcf.no.cont.8 <- fit.xbcf(0.04,y,NULL,x,0,0.01,50)
+ate.post.no.cont8 <- xbcf.no.cont.8$ate.post.no.cont
+## Main results
+r1 <- paste(round(quantile(ate.post.no.cont1,c(.025,.975)),2),collapse=",")
+r2 <- paste(round(quantile(ate.post.cont1,c(.025,.975)),2),collapse=",")
 r3 <- paste(round(cct1$ci[3,],2),collapse=",")
 r4 <- paste(round(cct2$ci[3,],2),collapse=",")
 ###
@@ -181,159 +212,101 @@ results[5,] <- c("","Yes",round(cct2$coef[1],2),
                  sum(cct2$N_h))
 print(xtable(results,caption="RD Estimates",label="tab:gpa.res"),
       include.rownames=F,include.colnames=F)
-## Robustness
-### Different windows
-xbcf3 <- fit.xbcf(quantile(abs(x[sample]),0.1,na.rm=T),y[sample],NULL,x[sample],0)
-ate.post3 <- xbcf3$ate.post
-xbcf4 <- fit.xbcf(quantile(abs(x[sample]),0.1,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
-ate.post4 <- xbcf4$ate.post
-xbcf5 <- fit.xbcf(quantile(abs(x[sample]),0.15,na.rm=T),y[sample],NULL,x[sample],0)
-ate.post5 <- xbcf5$ate.post
-xbcf6 <- fit.xbcf(quantile(abs(x[sample]),0.15,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
-ate.post6 <- xbcf6$ate.post
-xbcf7 <- fit.xbcf(quantile(abs(x[sample]),0.2,na.rm=T),y[sample],NULL,x[sample],0)
-ate.post7 <- xbcf7$ate.post
-xbcf8 <- fit.xbcf(quantile(abs(x[sample]),0.2,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
-ate.post8 <- xbcf8$ate.post
+## Alternative specifications for XBCF
+r1 <- paste(round(quantile(ate.post.no.cont1,c(.025,.975)),2),collapse=",")
+r2 <- paste(round(quantile(ate.post.no.cont2,c(.025,.975)),2),collapse=",")
+r3 <- paste(round(quantile(ate.post.no.cont3,c(.025,.975)),2),collapse=",")
+r4 <- paste(round(quantile(ate.post.no.cont4,c(.025,.975)),2),collapse=",")
+r5 <- paste(round(quantile(ate.post.no.cont5,c(.025,.975)),2),collapse=",")
+r6 <- paste(round(quantile(ate.post.no.cont6,c(.025,.975)),2),collapse=",")
+r7 <- paste(round(quantile(ate.post.no.cont7,c(.025,.975)),2),collapse=",")
+r8 <- paste(round(quantile(ate.post.no.cont8,c(.025,.975)),2),collapse=",")
+r9 <- paste(round(quantile(ate.post.cont1,c(.025,.975)),2),collapse=",")
+r10 <- paste(round(quantile(ate.post.cont2,c(.025,.975)),2),collapse=",")
+r11 <- paste(round(quantile(ate.post.cont3,c(.025,.975)),2),collapse=",")
+r12 <- paste(round(quantile(ate.post.cont4,c(.025,.975)),2),collapse=",")
+r13 <- paste(round(quantile(ate.post.cont5,c(.025,.975)),2),collapse=",")
+r14 <- paste(round(quantile(ate.post.cont6,c(.025,.975)),2),collapse=",")
+r15 <- paste(round(quantile(ate.post.cont7,c(.025,.975)),2),collapse=",")
+r16 <- paste(round(quantile(ate.post.cont8,c(.025,.975)),2),collapse=",")
 ###
-r3 <- paste(round(quantile(ate.post3,c(.025,.975)),3),collapse=",")
-r4 <- paste(round(quantile(ate.post4,c(.045,.975)),3),collapse=",")
-r5 <- paste(round(quantile(ate.post5,c(.025,.975)),3),collapse=",")
-r6 <- paste(round(quantile(ate.post6,c(.065,.975)),3),collapse=",")
-r7 <- paste(round(quantile(ate.post7,c(.025,.975)),3),collapse=",")
-r8 <- paste(round(quantile(ate.post8,c(.085,.975)),3),collapse=",")
-###
-robustness <- matrix(NA,7,4)
-robustness[1,] <- c("Controls","hat{tau}","95% CI","h")
-robustness[2,] <- c("No",round(mean(ate.post3),2),
-                    paste0("[",r3,"]"),
-                    round(xbcf3$Owidth,2))
-robustness[3,] <- c("Yes",round(mean(ate.post4),2),
-                    paste0("[",r4,"]"),
-                    round(xbcf4$Owidth,2))
-robustness[4,] <- c("No",round(mean(ate.post5),2),
-                    paste0("[",r5,"]"),
-                    round(xbcf5$Owidth,2))
-robustness[5,] <- c("Yes",round(mean(ate.post6),2),
-                    paste0("[",r6,"]"),
-                    round(xbcf6$Owidth,2))
-robustness[6,] <- c("No",round(mean(ate.post7),2),
-                    paste0("[",r7,"]"),
-                    round(xbcf7$Owidth,2))
-robustness[7,] <- c("Yes",round(mean(ate.post8),2),
-                    paste0("[",r8,"]"),
-                    round(xbcf8$Owidth,2))
-print(xtable(robustness,caption="XBCF Estimates - Robustness to h",label="tab:gpa.robust.h"),
+results.check <- matrix(NA,17,5)
+results.check[1,] <- c("Controls","hat{tau}","95% CI","h","N")
+results.check[2,] <- c("No",round(mean(ate.post.no.cont1),2),
+                 paste0("[",r1,"]"),
+                 0.01,10)
+results.check[3,] <- c("No",round(mean(ate.post.no.cont2),2),
+                 paste0("[",r2,"]"),
+                 0.02,10)
+results.check[4,] <- c("No",round(mean(ate.post.no.cont3),2),
+                 paste0("[",r3,"]"),
+                 0.03,10)
+results.check[5,] <- c("No",round(mean(ate.post.no.cont4),2),
+                 paste0("[",r4,"]"),
+                 0.04,10)
+results.check[6,] <- c("No",round(mean(ate.post.no.cont5),2),
+                 paste0("[",r5,"]"),
+                 0.01,50)
+results.check[7,] <- c("No",round(mean(ate.post.no.cont6),2),
+                 paste0("[",r6,"]"),
+                 0.02,50)
+results.check[8,] <- c("No",round(mean(ate.post.no.cont7),2),
+                 paste0("[",r7,"]"),
+                 0.03,50)
+results.check[9,] <- c("No",round(mean(ate.post.no.cont8),2),
+                 paste0("[",r8,"]"),
+                 0.04,50)
+results.check[10,] <- c("Yes",round(mean(ate.post.cont1),2),
+                 paste0("[",r9,"]"),
+                 0.01,10)
+results.check[11,] <- c("Yes",round(mean(ate.post.cont2),2),
+                 paste0("[",r10,"]"),
+                 0.02,10)
+results.check[12,] <- c("Yes",round(mean(ate.post.cont3),2),
+                 paste0("[",r11,"]"),
+                 0.03,10)
+results.check[13,] <- c("Yes",round(mean(ate.post.cont4),2),
+                 paste0("[",r12,"]"),
+                 0.04,10)
+results.check[14,] <- c("Yes",round(mean(ate.post.cont5),2),
+                 paste0("[",r13,"]"),
+                 0.01,50)
+results.check[15,] <- c("Yes",round(mean(ate.post.cont6),2),
+                 paste0("[",r14,"]"),
+                 0.02,50)
+results.check[16,] <- c("Yes",round(mean(ate.post.cont7),2),
+                 paste0("[",r15,"]"),
+                 0.03,50)
+results.check[17,] <- c("Yes",round(mean(ate.post.cont8),2),
+                 paste0("[",r16,"]"),
+                 0.04,50)
+print(xtable(results.check,caption="RD Estimates - Sensitivity analysis",label="tab:gpa.robust"),
       include.rownames=F,include.colnames=F)
-### Different subsamples
-sample        <- -1<=x & x<=1
-n             <- sum(sample)
-n3            <- n
-Omin          <- as.integer(0.03*n)
-num_cutpoints <- n
-xbcf3 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],NULL,x[sample],0)
-ate.post3 <- xbcf3$ate.post
-xbcf4 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
-ate.post4 <- xbcf4$ate.post
-####
-sample        <- -0.5<=x & x<=0.5
-n             <- sum(sample)
-n5            <- n
-Omin          <- as.integer(0.03*n)
-num_cutpoints <- n
-xbcf5 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],NULL,x[sample],0)
-ate.post5 <- xbcf5$ate.post
-xbcf6 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
-ate.post6 <- xbcf6$ate.post
-####
-sample        <- -0.1<=x & x<=0.1
-n             <- sum(sample)
-n7            <- n
-Omin          <- as.integer(0.03*n)
-num_cutpoints <- n
-xbcf7 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],NULL,x[sample],0)
-ate.post7 <- xbcf7$ate.post
-xbcf8 <- fit.xbcf(quantile(abs(x[sample]),0.125,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
-ate.post8 <- xbcf8$ate.post
-###
-r3 <- paste(round(quantile(ate.post3,c(.025,.975)),3),collapse=",")
-r4 <- paste(round(quantile(ate.post4,c(.045,.975)),3),collapse=",")
-r5 <- paste(round(quantile(ate.post5,c(.025,.975)),3),collapse=",")
-r6 <- paste(round(quantile(ate.post6,c(.065,.975)),3),collapse=",")
-r7 <- paste(round(quantile(ate.post7,c(.025,.975)),3),collapse=",")
-r8 <- paste(round(quantile(ate.post8,c(.085,.975)),3),collapse=",")
-###
-robustness <- matrix(NA,7,5)
-robustness[1,] <- c("Controls","hat{tau}","95% CI","h","N")
-robustness[2,] <- c("No",round(mean(ate.post3),2),
-                    paste0("[",r3,"]"),
-                    round(xbcf3$Owidth,2),n3)
-robustness[3,] <- c("Yes",round(mean(ate.post4),2),
-                    paste0("[",r4,"]"),
-                    round(xbcf4$Owidth,2),n3)
-robustness[4,] <- c("No",round(mean(ate.post5),2),
-                    paste0("[",r5,"]"),
-                    round(xbcf5$Owidth,2),n5)
-robustness[5,] <- c("Yes",round(mean(ate.post6),2),
-                    paste0("[",r6,"]"),
-                    round(xbcf6$Owidth,2),n5)
-robustness[6,] <- c("No",round(mean(ate.post7),2),
-                    paste0("[",r7,"]"),
-                    round(xbcf7$Owidth,2),n7)
-robustness[7,] <- c("Yes",round(mean(ate.post8),2),
-                    paste0("[",r8,"]"),
-                    round(xbcf8$Owidth,2),n7)
-print(xtable(robustness,caption="XBCF Estimates - Robustness to sample choice",label="tab:gpa.robust.n"),
-      include.rownames=F,include.colnames=F)
-## Heterogeneous effects
-num_sweeps <- 1020
-sample        <- -0.3<=x & x<=0.3
-n             <- sum(sample)
-Omin          <- as.integer(0.03*n)
-num_cutpoints <- n
-xbcf.het <- fit.xbcf(quantile(abs(x[sample]),0.2,na.rm=T),y[sample],w[sample,],x[sample],p_categorical)
-pred <- predict.XBCFrd(xbcf.het$pred,w[sample,],rep(0,sum(sample)))
-pred <- pred$tau.adj[,(burnin+1):num_sweeps]
-summary(colMeans(pred))
-xbcf.het$pred$importance_treatment
-cart <- rpart(y~.,data.frame(y=rowMeans(pred),w[sample,]))
-### Plotting
-png("Figures/cart_tau.png")
-rpart.plot(cart)
-dev.off()
-### Subgroups
-s1 <- w[sample,]$hsgrade_pct >= 35
-s2 <- w[sample,]$hsgrade_pct >= 35 & w[sample,]$totcredits_year1 >= 4.8
-s3 <- w[sample,]$hsgrade_pct < 35 & w[sample,]$totcredits_year1 >= 4.8
-s4 <- w[sample,]$hsgrade_pct >= 35 & w[sample,]$totcredits_year1 < 4.8
-s5 <- w[sample,]$hsgrade_pct < 35 & w[sample,]$totcredits_year1 < 4.8
-s6 <- w[sample,]$hsgrade_pct >= 35 & w[sample,]$male==1
-s7 <- w[sample,]$hsgrade_pct < 35 & w[sample,]$male==1
-s6 <- w[sample,]$hsgrade_pct >= 35 & w[sample,]$male==0
-s7 <- w[sample,]$hsgrade_pct < 35 & w[sample,]$male==0
-###
-sapply(by(pred,s1,colMeans),function(i) c(mean(i),quantile(i,c(0.025,0.975))))
-sapply(by(pred,s2,colMeans),function(i) c(mean(i),quantile(i,c(0.025,0.975))))
-sapply(by(pred,s3,colMeans),function(i) c(mean(i),quantile(i,c(0.025,0.975))))
-sapply(by(pred,s4,colMeans),function(i) c(mean(i),quantile(i,c(0.025,0.975))))
-### Grade pct < 35 seems to be the only one making a big difference
-png("Figures/cate_posterior.png")
-plot(density(colMeans(pred[s1,])),
-     xlab="", ylab="", main="",col="red",bty="n")
-lines(density(colMeans(pred[!s1,])),col="blue")
-polygon(density(colMeans(pred[s1,])),col=rgb(1,0,0,0.25))
-polygon(density(colMeans(pred[!s1,])),col=rgb(0,0,1,0.25))
-legend("topleft",col=c("red","blue"),lty=1,
-       legend=c("Above 35","Below 35"),
-       title="High School\nGrade Percentile",cex=0.75)
-abline(v=0,lty=2)
-dev.off()
-###
-den <- density(colMeans(pred[!s1,])-colMeans(pred[s1,]))
-png("Figures/cate_difference.png")
-plot(den,bty="n",xlab=expression(Delta),ylab="Density",main="")
-polygon(c(den$x[den$x>=0],0),c(den$y[den$x>=0],0),col="black",
-        density=25,angle=45)
-dev.off()
+## CATE
+test <- -0.01<=x & x<=0.01
+cart1 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.1$pred),
+                              w[test,]))
+cart2 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.2$pred),
+                              w[test,]))
+cart3 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.3$pred),
+                              w[test,]))
+cart4 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.4$pred),
+                              w[test,]))
+cart5 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.5$pred),
+                              w[test,]))
+cart6 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.6$pred),
+                              w[test,]))
+cart7 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.7$pred),
+                              w[test,]))
+cart8 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.8$pred),
+                              w[test,]))
+### Plots
+cart <- list(cart1,cart2,cart3,cart4,cart5,cart6,cart7,cart8)
+for (i in length(cart))
+{
+    png(paste0("Figures/gpa_cart_",i,".png"))
+    rpart.plot(cart[[i]])
+    dev.off()
+}
 ###
 stopImplicitCluster()

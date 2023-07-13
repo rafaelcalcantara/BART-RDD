@@ -1,3 +1,0 @@
-## Setup
-library(rdrobust)
-data <- read.dta("CKT_2023_SIM--CostSharing.dta")

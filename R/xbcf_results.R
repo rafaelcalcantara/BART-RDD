@@ -441,7 +441,7 @@ ate7 <- ate7[1:s]
 results <- readFiles2(s,"7","xbcf")
 ate.sum.7 <- t(sapply(results, function(x) c(mean(colMeans(x$ate.post)),quantile(colMeans(x$ate.post),c(0.025,0.975)))))
 cate.sum.7 <- lapply(results, function(i) t(apply(i$ate.post,1,function(x) c(mean(x),quantile(x,c(0.025,0.975))))))
-cate <- mapply(function(i,j) i$cate[-j$Owidth<=i$x & i$x<=j$Owidth],data,results,SIMPLIFY=F)
+cate <- mapply(function(i,j) i$cate[-j$Owidth<=i$x & i$x<=j$Owidth],data,results,SIMPLIFY=F)[1:s]
 ### Table results
 res.mat.het <- matrix("",3,9)
 res.mat.het[1,] <- c("","","ATE","","","","CATE","","")

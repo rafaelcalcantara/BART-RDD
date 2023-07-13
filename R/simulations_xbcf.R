@@ -8,7 +8,7 @@ library(XBART)
 fit.xbcf <- function(y,w,x)
 {
     t0 <- Sys.time()
-    h <- quantile(abs(x),0.15)
+    h <- 0.1
     fit <- XBCF.rd(y, w, x, c, Owidth = h, Omin = Omin, Opct = Opct,
                    num_trees_mod = m, num_trees_con = m,
                    num_cutpoints = n, num_sweeps = num_sweeps,
@@ -19,12 +19,12 @@ fit.xbcf <- function(y,w,x)
     test <- -h<=x & x<=h
     pred <- predict.XBCFrd(fit,w[test,],rep(0,sum(test)))
     post <- pred$tau.adj[,(burnin+1):num_sweeps]
-    ind.post <- predict.XBCFrd(fit,w,x)
-    ind.post <- ind.post$tau.adj[,(burnin+1):num_sweeps]
+    ## ind.post <- predict.XBCFrd(fit,w,x)
+    ## ind.post <- ind.post$tau.adj[,(burnin+1):num_sweeps]
     t1 <- Sys.time()
     dt <- difftime(t1,t0)
     print(paste0("Elapsed time: ",round(dt,2)," seconds"))
-    return(list(ate.post=post,ind.post=ind.post,Owidth=h,time=dt))
+    return(list(ate.post=post,Owidth=h,time=dt))
 }
 fit.1a <- function(s,p,data)
 {
@@ -145,11 +145,12 @@ fit.7 <- function(s,data)
 }
 ####
 c             <- 0
-Omin          <- as.integer(0.03*n)
+Omin          <- 10
+## Omin          <- as.integer(0.03*n)
 Opct          <- 0.9
 m             <- 10
 Nmin          <- 10
-num_sweeps    <- 50
+num_sweeps    <- 120
 burnin        <- 20
 p_categorical <- 0
 num_cutpoints <- n
