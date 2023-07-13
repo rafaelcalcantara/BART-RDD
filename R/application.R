@@ -137,7 +137,7 @@ fit.xbcf <- function(h,y,w,x,p_cat,pred.band,Omin)
     t1 <- Sys.time()
     dt <- difftime(t1,t0)
     print(paste0("Elapsed time: ",round(dt,2)," seconds"))
-    return(list(ate.post=post,pred=pred,Owidth=h,time=dt))
+    return(list(fit=fit,ate.post=post,pred=pred,Owidth=h,time=dt))
 }
 ###
 n             <- length(y)
@@ -154,38 +154,38 @@ no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
 ### With controls
 xbcf.cont.1 <- fit.xbcf(0.01,y,w,x,p_categorical,0.01,10)
-ate.post.cont1 <- xbcf.cont.1$ate.post.cont
+ate.post.cont1 <- xbcf.cont.1$ate.post
 xbcf.cont.2 <- fit.xbcf(0.02,y,w,x,p_categorical,0.01,10)
-ate.post.cont2 <- xbcf.cont.2$ate.post.cont
+ate.post.cont2 <- xbcf.cont.2$ate.post
 xbcf.cont.3 <- fit.xbcf(0.03,y,w,x,p_categorical,0.01,10)
-ate.post.cont3 <- xbcf.cont.3$ate.post.cont
+ate.post.cont3 <- xbcf.cont.3$ate.post
 xbcf.cont.4 <- fit.xbcf(0.04,y,w,x,p_categorical,0.01,10)
-ate.post.cont4 <- xbcf.cont.4$ate.post.cont
+ate.post.cont4 <- xbcf.cont.4$ate.post
 xbcf.cont.5 <- fit.xbcf(0.01,y,w,x,p_categorical,0.01,50)
-ate.post.cont5 <- xbcf.cont.5$ate.post.cont
+ate.post.cont5 <- xbcf.cont.5$ate.post
 xbcf.cont.6 <- fit.xbcf(0.02,y,w,x,p_categorical,0.01,50)
-ate.post.cont6 <- xbcf.cont.6$ate.post.cont
+ate.post.cont6 <- xbcf.cont.6$ate.post
 xbcf.cont.7 <- fit.xbcf(0.03,y,w,x,p_categorical,0.01,50)
-ate.post.cont7 <- xbcf.cont.7$ate.post.cont
+ate.post.cont7 <- xbcf.cont.7$ate.post
 xbcf.cont.8 <- fit.xbcf(0.04,y,w,x,p_categorical,0.01,50)
-ate.post.cont8 <- xbcf.cont.8$ate.post.cont
+ate.post.cont8 <- xbcf.cont.8$ate.post
 ### Without controls
 xbcf.no.cont.1 <- fit.xbcf(0.01,y,NULL,x,0,0.01,10)
-ate.post.no.cont1 <- xbcf.no.cont.1$ate.post.no.cont
+ate.post.no.cont1 <- xbcf.no.cont.1$ate.post
 xbcf.no.cont.2 <- fit.xbcf(0.02,y,NULL,x,0,0.01,10)
-ate.post.no.cont2 <- xbcf.no.cont.2$ate.post.no.cont
+ate.post.no.cont2 <- xbcf.no.cont.2$ate.post
 xbcf.no.cont.3 <- fit.xbcf(0.03,y,NULL,x,0,0.01,10)
-ate.post.no.cont3 <- xbcf.no.cont.3$ate.post.no.cont
+ate.post.no.cont3 <- xbcf.no.cont.3$ate.post
 xbcf.no.cont.4 <- fit.xbcf(0.04,y,NULL,x,0,0.01,10)
-ate.post.no.cont4 <- xbcf.no.cont.4$ate.post.no.cont
+ate.post.no.cont4 <- xbcf.no.cont.4$ate.post
 xbcf.no.cont.5 <- fit.xbcf(0.01,y,NULL,x,0,0.01,50)
-ate.post.no.cont5 <- xbcf.no.cont.5$ate.post.no.cont
+ate.post.no.cont5 <- xbcf.no.cont.5$ate.post
 xbcf.no.cont.6 <- fit.xbcf(0.02,y,NULL,x,0,0.01,50)
-ate.post.no.cont6 <- xbcf.no.cont.6$ate.post.no.cont
+ate.post.no.cont6 <- xbcf.no.cont.6$ate.post
 xbcf.no.cont.7 <- fit.xbcf(0.03,y,NULL,x,0,0.01,50)
-ate.post.no.cont7 <- xbcf.no.cont.7$ate.post.no.cont
+ate.post.no.cont7 <- xbcf.no.cont.7$ate.post
 xbcf.no.cont.8 <- fit.xbcf(0.04,y,NULL,x,0,0.01,50)
-ate.post.no.cont8 <- xbcf.no.cont.8$ate.post.no.cont
+ate.post.no.cont8 <- xbcf.no.cont.8$ate.post
 ## Main results
 r1 <- paste(round(quantile(ate.post.no.cont1,c(.025,.975)),2),collapse=",")
 r2 <- paste(round(quantile(ate.post.cont1,c(.025,.975)),2),collapse=",")
@@ -194,14 +194,12 @@ r4 <- paste(round(cct2$ci[3,],2),collapse=",")
 ###
 results <- matrix(NA,5,6)
 results[1,] <- c("","Controls","hat{tau}","95% CI","h","N")
-results[2,] <- c("XBCF","No",round(mean(ate.post1),2),
+results[2,] <- c("XBCF","No",round(mean(ate.post.no.cont1),2),
                  paste0("[",r1,"]"),
-                 round(xbcf1$Owidth,2),
-                 n)
-results[3,] <- c("","Yes",round(mean(ate.post2),2),
+                 0.01,10)
+results[3,] <- c("","Yes",round(mean(ate.post.cont1),2),
                  paste0("[",r2,"]"),
-                 round(xbcf2$Owidth,2),
-                 n)
+                 0.01,10)
 results[4,] <- c("CCT","No",round(cct1$coef[1],2),
                  paste0("[",r3,"]"),
                  round(cct1$bws[1,1],2),
@@ -310,3 +308,4 @@ for (i in length(cart))
 }
 ###
 stopImplicitCluster()
+save.image("Tables/application.RData")
