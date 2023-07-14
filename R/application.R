@@ -18,9 +18,6 @@ x <- data$X
 w <- data[,4:11]
 c <- 0
 sample <- -0.3<=x & x<=0.3 ## For XBCF and loess plot
-### Original data is children-level information, here it is
-#### aggregated per distance to the cutoff, so variables are
-#### averages for children t days away from the cutoff
 ## Plot data
 png("Figures/gpa_data.png")
 plot(x,y,pch=21,bg="azure",cex=0.5,xlab="1st Year GPA",ylab="2nd Year GPA",bty="n")
@@ -115,6 +112,13 @@ polygon(d2,border="green",col=rgb(0,1,0,0.25))
 legend("topright",col=c("blue","green"),legend=c("Full","XBCF"),
        title="Sample",lty=1)
 dev.off()
+## 1st Year GPA distribution
+tab <- c(tail(table(x[x<=0]),5),head(table(x[x>=0]),5))
+names(tab)[1:4] <- substr(names(tab)[1:4],1,6)
+names(tab)[6:10] <- substr(names(tab)[6:10],1,5)
+png("Figures/gpa_cutoff_dist.png")
+barplot(tab,cex.names=0.75,cex.axis=0.75)
+dev.off()
 ## RDRobust estimation
 cct1 <- rdrobust(y,x,c,all=T)
 cct2 <- rdrobust(y,x,c,covs=w,all=T)
@@ -144,7 +148,7 @@ n             <- length(y)
 Opct          <- 0.9
 m             <- 10
 Nmin          <- 10
-num_sweeps    <- 120
+num_sweeps    <- 520
 burnin        <- 20
 p_categorical <- ncol(w)
 num_cutpoints <- n
