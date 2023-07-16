@@ -127,13 +127,12 @@ fit.xbcf <- function(h,y,w,x,p_cat,pred.band,Omin)
 {
     t0 <- Sys.time()
     fit <- XBCF.rd(y, w, x, c, Owidth = h, Omin = Omin, Opct = Opct,
-                           num_trees_mod = m, num_trees_con = m,
-                           num_cutpoints = n, num_sweeps = num_sweeps,
-                           burnin = burnin, Nmin = Nmin,
-                           p_categorical_con = p_cat, p_categorical_mod = p_cat,
-                           tau_con = 2*var(y)/m,
-                   tau_mod = 0.5*var(y)/m, parallel=T,
-                   nthread = no_cores)
+                   num_trees_mod = m, num_trees_con = m,
+                   num_cutpoints = n, num_sweeps = num_sweeps,
+                   burnin = burnin, Nmin = Nmin,
+                   p_categorical_con = p_cat, p_categorical_mod = p_cat,
+                   tau_con = 2*var(y)/m,
+                   tau_mod = 0.5*var(y)/m, parallel=F)
     test <- -pred.band <= x & x<= pred.band
     pred <- predict.XBCFrd(fit,w[test,],rep(0,sum(test)))
     pred <- pred$tau.adj[,(burnin+1):num_sweeps]
@@ -141,7 +140,7 @@ fit.xbcf <- function(h,y,w,x,p_cat,pred.band,Omin)
     t1 <- Sys.time()
     dt <- difftime(t1,t0)
     print(paste0("Elapsed time: ",round(dt,2)," seconds"))
-    return(list(fit=fit,ate.post=post,pred=pred,Owidth=h,time=dt))
+    return(list(ate.post=post,pred=pred,Owidth=h,time=dt))
 }
 ###
 n             <- length(y)
@@ -157,39 +156,65 @@ num_cutpoints <- n
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
 ### With controls
-xbcf.cont.1 <- fit.xbcf(0.01,y,w,x,p_categorical,0.01,10)
-ate.post.cont1 <- xbcf.cont.1$ate.post
-xbcf.cont.2 <- fit.xbcf(0.02,y,w,x,p_categorical,0.01,10)
-ate.post.cont2 <- xbcf.cont.2$ate.post
-xbcf.cont.3 <- fit.xbcf(0.03,y,w,x,p_categorical,0.01,10)
-ate.post.cont3 <- xbcf.cont.3$ate.post
-xbcf.cont.4 <- fit.xbcf(0.04,y,w,x,p_categorical,0.01,10)
-ate.post.cont4 <- xbcf.cont.4$ate.post
-xbcf.cont.5 <- fit.xbcf(0.01,y,w,x,p_categorical,0.01,50)
-ate.post.cont5 <- xbcf.cont.5$ate.post
-xbcf.cont.6 <- fit.xbcf(0.02,y,w,x,p_categorical,0.01,50)
-ate.post.cont6 <- xbcf.cont.6$ate.post
-xbcf.cont.7 <- fit.xbcf(0.03,y,w,x,p_categorical,0.01,50)
-ate.post.cont7 <- xbcf.cont.7$ate.post
-xbcf.cont.8 <- fit.xbcf(0.04,y,w,x,p_categorical,0.01,50)
-ate.post.cont8 <- xbcf.cont.8$ate.post
+fit.cont <- function(s)
+{
+    foreach(i=1:s,.multicombine=T,.export=c("y","w","x","p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+        {
+            if (i<5)
+            {
+                print(paste0("Model: h=",i/100,", Omin=",10))
+                fit.xbcf(i/100,y,w,x,p_categorical,0.01,10)
+            } else
+            {
+                print(paste0("Model: h=",(i-4)/100,", Omin=",50))
+                fit.xbcf((i-4)/100,y,w,x,p_categorical,0.01,50)
+            }
+        }
+}
+xbcf.cont <- fit.cont(8)
+
+ate.post.cont1 <- xbcf.cont[[1]]$ate.post
+ate.post.cont2 <- xbcf.cont[[2]]$ate.post
+ate.post.cont3 <- xbcf.cont[[3]]$ate.post
+ate.post.cont4 <- xbcf.cont[[4]]$ate.post
+ate.post.cont5 <- xbcf.cont[[5]]$ate.post
+ate.post.cont6 <- xbcf.cont[[6]]$ate.post
+ate.post.cont7 <- xbcf.cont[[7]]$ate.post
+ate.post.cont8 <- xbcf.cont[[8]]$ate.post
+### Saving results to avoid running it all again
+save(xbcf.cont,file="Tables/application1.RData")
+rm(xbcf.cont)
+gc()
 ### Without controls
-xbcf.no.cont.1 <- fit.xbcf(0.01,y,NULL,x,0,0.01,10)
-ate.post.no.cont1 <- xbcf.no.cont.1$ate.post
-xbcf.no.cont.2 <- fit.xbcf(0.02,y,NULL,x,0,0.01,10)
-ate.post.no.cont2 <- xbcf.no.cont.2$ate.post
-xbcf.no.cont.3 <- fit.xbcf(0.03,y,NULL,x,0,0.01,10)
-ate.post.no.cont3 <- xbcf.no.cont.3$ate.post
-xbcf.no.cont.4 <- fit.xbcf(0.04,y,NULL,x,0,0.01,10)
-ate.post.no.cont4 <- xbcf.no.cont.4$ate.post
-xbcf.no.cont.5 <- fit.xbcf(0.01,y,NULL,x,0,0.01,50)
-ate.post.no.cont5 <- xbcf.no.cont.5$ate.post
-xbcf.no.cont.6 <- fit.xbcf(0.02,y,NULL,x,0,0.01,50)
-ate.post.no.cont6 <- xbcf.no.cont.6$ate.post
-xbcf.no.cont.7 <- fit.xbcf(0.03,y,NULL,x,0,0.01,50)
-ate.post.no.cont7 <- xbcf.no.cont.7$ate.post
-xbcf.no.cont.8 <- fit.xbcf(0.04,y,NULL,x,0,0.01,50)
-ate.post.no.cont8 <- xbcf.no.cont.8$ate.post
+fit.no.cont <- function(s)
+{
+    foreach(i=1:s,.multicombine=T,.export=c("y","w","x","p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+        {
+            if (i<5)
+            {
+                print(paste0("Model: h=",i/100,", Omin=",10))
+                fit.xbcf(i/100,y,NULL,x,0,0.01,10)
+            } else
+            {
+                print(paste0("Model: h=",(i-4)/100,", Omin=",50))
+                fit.xbcf((i-4)/100,y,NULL,x,0,0.01,50)
+            }
+        }
+}
+xbcf.no.cont <- fit.no.cont(8)
+
+ate.post.no.cont1 <- xbcf.no.cont[[1]]$ate.post
+ate.post.no.cont2 <- xbcf.no.cont[[2]]$ate.post
+ate.post.no.cont3 <- xbcf.no.cont[[3]]$ate.post
+ate.post.no.cont4 <- xbcf.no.cont[[4]]$ate.post
+ate.post.no.cont5 <- xbcf.no.cont[[5]]$ate.post
+ate.post.no.cont6 <- xbcf.no.cont[[6]]$ate.post
+ate.post.no.cont7 <- xbcf.no.cont[[7]]$ate.post
+ate.post.no.cont8 <- xbcf.no.cont[[8]]$ate.post
+### Saving results to avoid running it all again
+save(xbcf.no.cont,file="Tables/application2.RData")
+rm(xbcf.no.cont)
+gc()
 ## Main results
 r1 <- paste(round(quantile(ate.post.no.cont1,c(.025,.975)),2),collapse=",")
 r2 <- paste(round(quantile(ate.post.cont1,c(.025,.975)),2),collapse=",")
@@ -282,29 +307,31 @@ results.check[16,] <- c("Yes",round(mean(ate.post.cont7),2),
 results.check[17,] <- c("Yes",round(mean(ate.post.cont8),2),
                  paste0("[",r16,"]"),
                  0.04,50)
+results.check <- results.check[,c(1,5,4,2,3)]
 print(xtable(results.check,caption="RD Estimates - Sensitivity analysis",label="tab:gpa.robust"),
       include.rownames=F,include.colnames=F)
 ## CATE
+load("Tables/application1.RData")
 test <- -0.01<=x & x<=0.01
-cart1 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.1$pred),
+cart1 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[1]]$pred),
                               w[test,]))
-cart2 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.2$pred),
+cart2 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[2]]$pred),
                               w[test,]))
-cart3 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.3$pred),
+cart3 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[3]]$pred),
                               w[test,]))
-cart4 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.4$pred),
+cart4 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[4]]$pred),
                               w[test,]))
-cart5 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.5$pred),
+cart5 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[5]]$pred),
                               w[test,]))
-cart6 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.6$pred),
+cart6 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[6]]$pred),
                               w[test,]))
-cart7 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.7$pred),
+cart7 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[7]]$pred),
                               w[test,]))
-cart8 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont.8$pred),
+cart8 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[8]]$pred),
                               w[test,]))
 ### Plots
 cart <- list(cart1,cart2,cart3,cart4,cart5,cart6,cart7,cart8)
-for (i in length(cart))
+for (i in 1:length(cart))
 {
     png(paste0("Figures/gpa_cart_",i,".png"))
     rpart.plot(cart[[i]])
@@ -312,4 +339,3 @@ for (i in length(cart))
 }
 ###
 stopImplicitCluster()
-save.image("Tables/application.RData")
