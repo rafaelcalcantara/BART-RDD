@@ -337,5 +337,71 @@ for (i in 1:length(cart))
     rpart.plot(cart[[i]])
     dev.off()
 }
+#### Outcomes per age, grade and campus
+bp.age <- data.frame(y=y,Treated=x>=0,Age=w$age_at_entry>=19)[test,]
+boxplot(bp.age$y~bp.age$Treated+bp.age$Age,col=c("red","blue"),
+        axes=F,xlab="",ylab="")
+axis(1,c(1.5,3.5),
+     labels=c("Below 19 years old","Above 19 years old"))
+axis(2)
+legend("topright",legend=c("Treatment","Control"),
+       fill=c("blue","red"))
+#####
+bp.camp <- data.frame(y=y,Treated=x>=0,Camp=ifelse(w$loc_campus1==1,1,ifelse(w$loc_campus2,2,3)))[test,]
+boxplot(bp.camp$y~bp.camp$Treated+bp.camp$Camp,col=c("red","blue"),
+        axes=F,xlab="",ylab="")
+axis(1,c(1.5,3.5,5.5),
+     labels=c("Campus 1","Campus 2","Campus 3"))
+axis(2)
+legend("topright",legend=c("Treatment","Control"),
+       fill=c("blue","red"))
+#####
+bp.hsg <- data.frame(y=y,Treated=x>=0,Grade=w$hsgrade_pct>=34)[test,]
+boxplot(bp.hsg$y~bp.hsg$Treated+bp.hsg$Grade,col=c("red","blue"),
+        axes=F,xlab="",ylab="")
+axis(1,c(1.5,3.5),labels=c("Below 34","Above 34"))
+axis(2)
+legend("topright",legend=c("Treatment","Control"),
+       fill=c("blue","red"))
+#### Posterior for subgroups
+s1 <- w[test,]$age_at_entry<19 & w[test,]$loc_campus3==1
+s2 <- w[test,]$age_at_entry<19 & w[test,]$loc_campus3==0
+s3 <- w[test,]$age_at_entry<19 & w[test,]$hsgrade_pct<34 & w[test,]$loc_campus1==1
+s4 <- w[test,]$age_at_entry<19 & w[test,]$hsgrade_pct<34 & w[test,]$loc_campus3==0
+#####
+p1 <- colMeans(xbcf.cont[[1]]$pred[s1,])
+p2 <- colMeans(xbcf.cont[[1]]$pred[s2,])
+p3 <- colMeans(xbcf.cont[[1]]$pred[s3,])
+p4 <- colMeans(xbcf.cont[[1]]$pred[s4,])
+#####
+png("Figures/post_age.png")
+boxplot(by(xbcf.cont[[1]]$pred,w[test,]$age_at_entry,colMeans),axes=F,xlab="Age at entry",ylab=expression(tau))
+axis(1,at=1:5,labels=17:21)
+axis(2)
+dev.off()
+##
+grade.sd <- by(xbcf.cont[[1]]$pred,w[test,]$hsgrade_pct,function(x) sd(colMeans(x)))
+grade.mean <- by(xbcf.cont[[1]]$pred,w[test,]$hsgrade_pct,function(x) mean(colMeans(x)))
+grade.sd.u <- grade.mean + grade.sd
+grade.sd.l <- grade.mean - grade.sd
+grade.plot <- cbind(grade.sd.l,grade.mean,grade.sd.u)
+png("Figures/post_grade.png")
+matplot(grade.plot,type=c("l","b","l"),lty=c(2,1,2),pch=19,axes=F,col="black",xlab="High school grade percentile",ylab=expression(tau))
+axis(1,at=c(1,12,25,38,50,62,74),labels=rownames(grade.plot)[c(1,12,25,38,50,62,74)])
+axis(2)
+dev.off()
+##
+den <- density(p1-p2)
+png("Figures/post_diff_camp_1.png")
+plot(den,bty="n",xlab=expression(Delta),ylab="Density",main="")
+polygon(c(den$x[den$x>=0],0),c(den$y[den$x>=0],0),col="black",
+        density=25,angle=45)
+dev.off()
+den <- density(p3-p4)
+png("Figures/post_diff_camp_2.png")
+plot(den,bty="n",xlab=expression(Delta),ylab="Density",main="")
+polygon(c(den$x[den$x>=0],0),c(den$y[den$x>=0],0),col="black",
+        density=25,angle=45)
+dev.off()
 ###
 stopImplicitCluster()
