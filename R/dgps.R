@@ -24,7 +24,7 @@ num_sweeps    <- 150
 burnin        <- 50
 p_categorical <- 0
 num_cutpoints <- n
-attach(data4[[3]])
+attach(data1[[3]])
 h <- 0.2
 fit <- XBCF.rd(y, w, x, c, Owidth = h, Omin = Omin, Opct = Opct,
                num_trees_mod = m, num_trees_con = m,
