@@ -2,7 +2,7 @@
 library(parallel)
 library(foreach)
 library(doParallel)
-devtools::install_github("rafaelcalcantara/XBART@XBCF-RDD")
+devtools::install_github("JingyuHe/XBART@XBCF-RDD")
 library(XBART)
 library(rdrobust)
 library(rpart)
@@ -132,7 +132,7 @@ fit.xbcf <- function(h,y,w,x,p_cat,pred.band,Omin)
                    burnin = burnin, Nmin = Nmin,
                    p_categorical_con = p_cat, p_categorical_mod = p_cat,
                    tau_con = 2*var(y)/m,
-                   tau_mod = 0.5*var(y)/m, parallel=F)
+                   tau_mod = 0.5*var(y)/m, parallel=T,nthread=num_cores)
     test <- -pred.band <= x & x<= pred.band
     pred <- predict.XBCFrd(fit,w[test,],rep(0,sum(test)))
     pred <- pred$tau.adj[,(burnin+1):num_sweeps]
