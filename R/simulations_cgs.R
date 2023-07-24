@@ -82,7 +82,7 @@ for (j in 1:6)
         }
     }
     fit.dgp(s,i,dgp,"a")
-    ## fit.dgp(s,i,dgp,"b")
+    fit.dgp(s,i,dgp,"b")
   }
 }
 ####

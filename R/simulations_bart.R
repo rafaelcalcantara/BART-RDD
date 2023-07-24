@@ -152,13 +152,13 @@ num_cutpoints <- n
 ### Parallelization
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
-## ## DGP1
-## for (p in c(4,6,10))
-## {
-##     dgp <- readRDS(paste0("Data/DGP1_",p,".rds"))
-##     fit.1a(s,p,dgp)
-##     fit.1b(s,p,dgp)
-## }
+## DGP1
+for (p in c(4,6,10))
+{
+    dgp <- readRDS(paste0("Data/DGP1_",p,".rds"))
+    fit.1a(s,p,dgp)
+    fit.1b(s,p,dgp)
+}
 ## ## DGP2
 ## for (p in c(4,6,10))
 ## {

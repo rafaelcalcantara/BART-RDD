@@ -156,40 +156,40 @@ for (p in c(4,6,10))
     fit.1a(s,p,dgp)
     fit.1b(s,p,dgp)
 }
-## DGP2
-for (p in c(4,6,10))
-{
-    dgp <- readRDS(paste0("Data/DGP2_",p,".rds"))
-    fit.2a(s,p,dgp)
-    fit.2b(s,p,dgp)
-}
-## DGP3
-for (p in c(4,6,10))
-{
-    dgp <- readRDS(paste0("Data/DGP3_",p,".rds"))
-    fit.3a(s,p,dgp)
-    fit.3b(s,p,dgp)
-}
-## DGP4
-for (p in c(4,6,10))
-{
-    dgp <- readRDS(paste0("Data/DGP4_",p,".rds"))
-    fit.4a(s,p,dgp)
-    fit.4b(s,p,dgp)
-}
-## DGP5
-for (p in c(4,6,10))
-{
-    dgp <- readRDS(paste0("Data/DGP5_",p,".rds"))
-    fit.5a(s,p,dgp)
-    fit.5b(s,p,dgp)
-}
-## DGP6
-for (p in c(4,6,10))
-{
-    dgp <- readRDS(paste0("Data/DGP6_",p,".rds"))
-    fit.6a(s,p,dgp)
-    fit.6b(s,p,dgp)
-}
+## ## DGP2
+## for (p in c(4,6,10))
+## {
+##     dgp <- readRDS(paste0("Data/DGP2_",p,".rds"))
+##     fit.2a(s,p,dgp)
+##     fit.2b(s,p,dgp)
+## }
+## ## DGP3
+## for (p in c(4,6,10))
+## {
+##     dgp <- readRDS(paste0("Data/DGP3_",p,".rds"))
+##     fit.3a(s,p,dgp)
+##     fit.3b(s,p,dgp)
+## }
+## ## DGP4
+## for (p in c(4,6,10))
+## {
+##     dgp <- readRDS(paste0("Data/DGP4_",p,".rds"))
+##     fit.4a(s,p,dgp)
+##     fit.4b(s,p,dgp)
+## }
+## ## DGP5
+## for (p in c(4,6,10))
+## {
+##     dgp <- readRDS(paste0("Data/DGP5_",p,".rds"))
+##     fit.5a(s,p,dgp)
+##     fit.5b(s,p,dgp)
+## }
+## ## DGP6
+## for (p in c(4,6,10))
+## {
+##     dgp <- readRDS(paste0("Data/DGP6_",p,".rds"))
+##     fit.6a(s,p,dgp)
+##     fit.6b(s,p,dgp)
+## }
 ####
 stopImplicitCluster()

@@ -25,7 +25,7 @@ dgp.cgs <- function(n,p)
     {
         0.04 - 0.43*x - 10.18*x^2 - 12.22*x^3 - 30.55*x^4 - 3.77*x^5
     }
-    y  <- mu(x) + tau(x)*z + 0.1295*rt(n,3)
+    y  <- mu(x) + tau(x)*z + rnorm(n) ##0.1295*rt(n,3)
     ate <- 0.04
     tau.x <- tau(x)
     return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))

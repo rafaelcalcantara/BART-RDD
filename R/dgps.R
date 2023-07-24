@@ -24,7 +24,7 @@ num_sweeps    <- 150
 burnin        <- 50
 p_categorical <- 0
 num_cutpoints <- n
-attach(data1[[3]])
+attach(data1[[1]])
 h <- 0.2
 fit <- XBCF.rd(y, w, x, c, Owidth = h, Omin = Omin, Opct = Opct,
                num_trees_mod = m, num_trees_con = m,
@@ -38,4 +38,5 @@ pred <- predict.XBCFrd(fit,w[test,],rep(0,sum(test)))
 post <- pred$tau.adj[,(burnin+1):num_sweeps]
 summary(colMeans(post))
 fit$importance_treatment
-plot(cumsum(colMeans(fit$sigma0))/1:150,type="l")
+quantile(colMeans(post),c(0.025,0.975))
+## plot(cumsum(fit$a)/1:num_sweeps,type="l")
