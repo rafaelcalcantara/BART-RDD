@@ -3,10 +3,11 @@ set.seed(0)
 library(parallel)
 library(foreach)
 library(doParallel)
-devtools::install_github("rafaelcalcantara/XBART@XBCF-RDD")
+devtools::install_github("JingyuHe/XBART@XBCF-RDD")
 library(XBART)
 setwd("~/Documents/Git/XBCF-RDD")
 ## Functions
+### Functions for plotting partitions
 temp <- function(tree,w,x,x0,y0,x1,y1)
 {
     if (length(tree)==0) return()
@@ -46,7 +47,6 @@ plot.trees <- function(w,x,tree,Owidth)
     abline(v=Owidth,lty=2)
     abline(v=0,lty=3)
 }   
-###
 split <- function(tree,var,val)
 {
     if (length(tree) != 0) stop("Not a leaf node")
@@ -56,78 +56,10 @@ split <- function(tree,var,val)
     tree$right <- list()
     return(tree)
 }
-nbot <- function(tree)
-{
-    if (length(tree)==0) return(1)
-    nbot(tree$left)+nbot(tree$right)
-}
-### Functions to find good Owidth values
-params <- function(x)
-{
-    if (is.null(x$theta)) c(params(x$left),params(x$right))
-    else x$theta
-}
-nbot <- function(t) length(params(t))
-nbot.trees <- function(t,m) sapply(0:(m-1),function(y) nbot(t[[as.character(y)]]))
-nbot.sweeps <- function(t,num_sweeps,m) sapply(1:num_sweeps, function(y) nbot.trees(t[[y]],m))
-avg.nbot <- function(Owidth,y,w,x)
-{
-    foreach(i=1:length(Owidth),.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
-        {
-            fit <- XBCF.rd(y, w, x, c, Owidth = Owidth[i], Omin = Omin, Opct = Opct,
-                           num_trees_mod = 1, num_trees_con = 1,
-                           num_cutpoints = n, num_sweeps = 500,
-                           burnin = 0, Nmin = Nmin,
-                           p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
-                           tau_con = 2*var(y),
-                           tau_mod = 0.5*var(y), parallel=F)
-            trees <- jsonlite::parse_json(fit$tree_json_mod)$trees
-            median(nbot.sweeps(trees,500,1))
-        }
-}
-nbot.par <- function(Owidth,y,w,x)
-{
-    foreach(i=1:length(Owidth),.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
-        {
-            fit <- XBCF.rd(y, w, x, c, Owidth = Owidth[i], Omin = Omin, Opct = Opct,
-                           num_trees_mod = 1, num_trees_con = 1,
-                           num_cutpoints = n, num_sweeps = 1000,
-                           burnin = 0, Nmin = Nmin,
-                           p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
-                           tau_con = 2*var(y),
-                           tau_mod = 0.5*var(y), parallel=F)
-            trees <- jsonlite::parse_json(fit$tree_json_mod)$trees
-            nbot.sweeps(trees,1000,1)
-        }
-}
-findOwidth <- function(Owidth,y,w,x)
-{
-    ## nbots <- sapply(1:5,function(a) unlist(avg.nbot(Owidth,y,w,x)))
-    ## nbots <- t(nbots)
-    ## nbots <- apply(nbots,2,function(x) sum(x>t))
-    ## nbots <- nbots/5
-    nbots <- unlist(avg.nbot(Owidth,y,w,x))
-    ## nbots <- rbinom(length(Owidth),1,nbots)
-    return(Owidth[nbots>4])
-}
-fit.general <- function(h,y,w,x)
-{
-    foreach(i=1:length(h),.multicombine=T,.export=c("p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
-        {
-            fit <- XBCF.rd(y, w, x, c, Owidth = h[i], Omin = Omin, Opct = Opct,
-                           num_trees_mod = m, num_trees_con = m,
-                           num_cutpoints = n, num_sweeps = num_sweeps,
-                           burnin = burnin, Nmin = Nmin,
-                           p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
-                           tau_con = 2*var(y)/m,
-                           tau_mod = 0.5*var(y)/m, parallel=F)
-            predict.XBCFrd(fit,w,rep(0,n))
-        }
-}
-fit.xbcf <- function(y,w,x)
+### Function for fitting
+fit.xbcf <- function(y,w,x,h)
 {
     t0 <- Sys.time()
-    h <- quantile(abs(x),0.125)
     fit <- XBCF.rd(y, w, x, c, Owidth = h, Omin = Omin, Opct = Opct,
                    num_trees_mod = m, num_trees_con = m,
                    num_cutpoints = n, num_sweeps = num_sweeps,
@@ -135,12 +67,13 @@ fit.xbcf <- function(y,w,x)
                    p_categorical_con = p_categorical, p_categorical_mod = p_categorical,
                    tau_con = 0.5*var(y)/m,
                    tau_mod = 2*var(y)/m, parallel=F)
-    pred <- predict.XBCFrd(fit,w,rep(0,n))
-    post <- colMeans(pred$tau.adj,na.rm=T)
+    test <- -h <= x & x <= h
+    pred <- predict.XBCFrd(fit,w[test],rep(0,sum(test)))$tau.adj
+    post <- colMeans(pred,na.rm=T)[(burnin+1):num_sweeps]
     t1 <- Sys.time()
     dt <- difftime(t1,t0)
     print(paste0("Elapsed time: ",round(dt,2)," seconds"))
-    return(list(ate.post=post,pred=fit,Owidth=h,time=dt))
+    return(list(ate.post=post,pred=pred,fit=fit,Owidth=h,time=dt))
 }
 ## Example data: w independent of x
 h <- 0.25
@@ -148,12 +81,6 @@ n <- 100
 x <- runif(n,-1,1)
 w <- runif(n,-1,1)
 ### Plots
-#### This plot makes it clear that Owidth=0.25 is too narrow for
-#### this dataset
-## plot(x,w)
-## abline(v=-h,lty=2)
-## abline(v=h,lty=2)
-## abline(v=0,lty=3)
 #### This tree is invalid because it partitions the window
 root1 <- list()
 root1 <- split(root1,1,order(w)[50])
@@ -216,133 +143,36 @@ png("Figures/good_tree_1.png")
 plot.trees(w,x,root4,0.36)
 dev.off()
 ## Fit
-n <- 5000
+n <- 500
 x <- rnorm(n,0,0.25)
 w <- rnorm(n,0,0.25)
 z <- x>=0
-mu.fun <- function(W, X){return(0.1 * w + 1/(1+exp(-5*X)))} 
+mu.fun <- function(W, X){return(0.1*w + 1/(1+exp(-5*X)))} 
 tau.fun <- function(W, X) return( sin(mu.fun(W, X)) +1) # make sure the treatment effect is non-zero
-y <- mu.fun(w, x) + tau.fun(w, x)*z + rnorm(n, 0, 0.2)
+y <- mu.fun(w, x) + tau.fun(w, x)*z + rnorm(n)
 ####
 c             <- 0
-Owidth        <- quantile(abs(x),seq(0.01,1,0.01))
-Omin          <- as.integer(0.03*n)
+Omin          <- 10
 Opct          <- 0.9
 m             <- 10
 Nmin          <- 10
-num_sweeps    <- 70
+num_sweeps    <- 520
 burnin        <- 20
 p_categorical <- 0
 num_cutpoints <- n
-## Error
-## ### Parallelization
-no_cores <- detectCores() - 1
-registerDoParallel(no_cores)
+h             <- 0.1
 ###
-fit <- fit.general(Owidth,y,w,x)
-stopImplicitCluster()
-###
-pred <- sapply(fit,function(i) colMeans(i$tau.adj)[(burnin+1):num_sweeps])
-tau.var <- apply(pred,2,var)
-tau.hat <- apply(pred,2,function(i) c(mean(i),quantile(i,c(0.025,0.975))))
-tau.hat <- t(tau.hat)
-Error <- (tau.hat[,1]-mean(tau.fun(w,0)))^2
-###
-png("Figures/example_error.png")
-plot(Owidth[1:75],Error[1:75],type="b",lty=1,pch=19,col="blue",cex=0.75,xlab="h",ylab="Squared error")
-dev.off()
-png("Figures/example_variance.png")
-plot(Owidth,tau.var,type="l",ylab="Posterior variance",xlab="h")
-dev.off()
-###
-fit <- fit.xbcf(y,w,x)
-quantile(fit$ate.post,0.975)-quantile(fit$ate.post,0.025)
+fit <- fit.xbcf(y,w,x,h)
+mean(tau.fun(w,0))
+quantile(fit$ate.post,c(0.025,0.975))
 (mean(fit$ate.post)-mean(tau.fun(w,0)))^2
-pred <- predict.XBCFrd(fit$pred,w,x)
+pred <- predict.XBCFrd(fit$fit,w,x)
+pred <- rowMeans(pred$tau.adj[,(burnin+1):num_sweeps])
+pred.loess <- loess(y~x,data.frame(y=pred,x=x))
+pred.loess <- predict(pred.loess)
 png("Figures/good_owidth.png")
-matplot(sort(x),cbind(rowMeans(pred$tau.adj[,(burnin+1):num_sweeps]),tau.fun(w,x))[order(x),],type=c("p","l"),pch=1,lty=1,col=c("blue","black"),ylab=expression(tau(w,x)),xlab="X")
+matplot(sort(x),cbind(pred.loess,tau.fun(w,x))[order(x),],type="l",lwd=c(1.5,1),lty=1,col=c("blue","black"),ylab=expression(tau(w,x)),xlab="X")
 abline(v=fit$Owidth,lty=2)
 abline(v=-fit$Owidth,lty=2)
 abline(v=0,lty=3)
 dev.off()
-###
-## Error <- (sapply(fit, function(i) mean(colMeans(i$tau.adj)))-mean(tau.fun(w,0)))^2
-## Error <- sqrt(Error)
-## nbots <- avg.nbot(Owidth,y,w,x)
-## nbots <- unlist(nbots)
-## png("Figures/error.png")
-## plot(Owidth,Error,"b",xlab="h")
-## dev.off()
-## stopImplicitCluster()
-## ## Good Owidth
-## fit <- XBCF.rd(y, w, x, c=0, Owidth = Owidth[9], Omin = 10, Opct = 0.95,
-##                num_trees_mod = 10, num_trees_con = 10,
-##                num_cutpoints = n, num_sweeps = 100,
-##                burnin = 10, Nmin = 20,
-##                p_categorical_con = 0, p_categorical_mod = 0,
-##                tau_con = 2*var(y)/10,
-##                tau_mod = 0.5*var(y)/10, parallel=F,
-##                random_seed=0)
-## tau <- predict.XBCFrd(fit,w,rep(0,n))
-## mean((colMeans(tau$tau.adj) - mean(tau.fun(w,0)))^2)
-## tau <- predict.XBCFrd(fit,w,x)
-## ###
-## png("Figures/good_owidth.png")
-## plot(sort(x),tau$tau.adj.mean[order(x)],col="blue",
-##      xlab = "x", ylab=expression(tau(w,x)),type="p",
-##      ylim = range(tau$tau.adj.mean,tau.fun(w,x)))
-## lines(sort(x),tau.fun(w,x)[order(x)])
-## abline(v=-0.1,lty=2)
-## abline(v=0.1,lty=2)
-## dev.off()
-## ###
-## nbots <- nbot.par(Owidth,y,w,x)
-## nbots <- do.call("rbind",nbots)
-## plot(apply(nbots,1,median),Error,xlab="Median nbot")
-#### Maybe counting depths is better than IQR?
-###
-## ## Example data: w and x related
-## ### In this setting, the partitions must reflect the relationship
-## ### between w and x otherwise we end up with empty nodes.
-## ### For example, in this case high w equals high x, meaning
-## ### partitions at high values of w are less likely to feature
-## ### x near the cutoff and thus inside the window. Similarly for
-## ### low w and low x.
-## h <- 0.25
-## n <- 100
-## x <- runif(n,-1,1)
-## w <- sapply(x,function(i) rnorm(1,i,0.5))
-## y <- w + x + (x>=0)*(3 + w + x) + rnorm(n)
-## ### Plots
-## #### This plot makes it clear that Owidth=0.25 is too narrow for
-## #### this dataset
-## plot(x,w)
-## abline(v=-h,lty=2)
-## abline(v=h,lty=2)
-## abline(v=0,lty=3)
-## #### This tree is invalid because it creates empty nodes in window
-## root1 <- list()
-## root1 <- split(root1,1,order(w)[49])
-## root1$left <- split(root1$left,2,order(x)[30])
-## root1$right <- split(root1$right,2,order(x)[32])
-## root1$left$left <- split(root1$left$left,1,order(w)[15])
-## root1$left$right <- split(root1$left$right,2,order(x)[65])
-## root1$right$left <- split(root1$right$left,2,order(x)[25])
-## root1$right$right <- split(root1$right$right,1,order(w)[85])
-## ###
-## root2 <- list()
-## root2 <- split(root2,1,order(w)[49])
-## root2$left <- split(root2$left,2,order(x)[30])
-## root2$right <- split(root2$right,2,order(x)[32])
-## root2$left$left <- split(root2$left$left,1,order(w)[15])
-## root2$left$right <- split(root2$left$right,2,order(x)[65])
-## root2$right$left <- split(root2$right$left,2,order(x)[25])
-## root2$right$right <- split(root2$right$right,2,order(x)[67])
-## ###
-## png("Figures/bad_tree_2.png")
-## plot.trees(w,x,root1,h)
-## dev.off()
-## png("Figures/good_tree_2.png")
-## plot.trees(w,x,root2,h)
-## dev.off()
-## ###
