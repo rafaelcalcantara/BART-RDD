@@ -407,7 +407,7 @@ res.mat.2.10[5,7] <- round(mean(-ate.sum.5b.10[,2]+ate.sum.5b.10[,3]),2)
 res.mat.2.10[6,7] <- round(mean(-ate.sum.6a.10[,2]+ate.sum.6a.10[,3]),2)
 res.mat.2.10[7,7] <- round(mean(-ate.sum.6b.10[,2]+ate.sum.6b.10[,3]),2)
 ###
-rm(data,results,no_cores,sreadFiles,ate1,ate2,ate3,ate4,ate5,ate6)
+rm(data,results,no_cores,readFiles,ate1,ate2,ate3,ate4,ate5,ate6)
 save.image("Tables/cgs_results.RData")
 ####
 stopImplicitCluster()
