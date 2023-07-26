@@ -6,10 +6,11 @@ library(doParallel)
 library(bayesrdd)
 c <- 0
 burn <- 100
-nsamples <- 500
+nsamples <- 150
 ### Parallelization
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
+## j = 1; i = 4; k = 1; ab = "a"; p = 4
 ###
 for (j in 1:6)
 {
@@ -18,17 +19,15 @@ for (j in 1:6)
     dgp <- readRDS(paste0("Data/DGP",j,"_",i,".rds"))
     fit.dgp <- function(s,p,dgp,ab)
     {
-      foreach(i=1:s,.multicombine=T,.packages = "bayesrdd",.export=c("burn","nsamples")) %do%
+      foreach(k=1:s,.multicombine=T,.packages = "bayesrdd",.export=c("burn","nsamples")) %do%
         {
           P = c(.70,.30)
-          mz = c(3,3)
+          mz = c(5,5)
           mztau = c(5,5)
           s2mean0_ = .3
           s2sd0_ = 1
-          nudgp = 3
-          nuval = 3
-          print(paste0("Simulation ",i," for DGP",j,ab,", ",p," covariates"))
-          data <- dgp[[i]]
+          print(paste0("Simulation ",k," for DGP",j,ab,", ",p," covariates"))
+          data <- dgp[[k]]
           list2env(data,globalenv())
           t0 <- Sys.time()
           if (ab=="a")
@@ -47,8 +46,8 @@ for (j in 1:6)
                                 d = rep(1,2),
                                 s2mean0_ = s2mean0_,
                                 s2sd0_ = s2sd0_,
-                                distribution = "t",
-                                nuval = nuval,
+                                distribution = "gaussian",
+                                nuval=3,
                                 hetero = FALSE,
                                 n0=burn,
                                 m=nsamples)
@@ -70,15 +69,15 @@ for (j in 1:6)
                                 d = rep(1,p+2),
                                 s2mean0_ = s2mean0_,
                                 s2sd0_ = s2sd0_,
-                                distribution = "t",
-                                nuval = nuval,
+                                distribution = "gaussian",
+                                nuval=3,
                                 hetero = FALSE,
                                 n0=burn,
                                 m=nsamples)
           }
           t1 <- Sys.time()
           dt <- difftime(t1,t0)
-          saveRDS(list(ate.post=fit$atem,time=dt),paste0("Results/cgs",j,"_",ab,"_",p,"_",i,".rds"))
+          saveRDS(list(ate.post=fit$atem,time=dt),paste0("Results/cgs",j,"_",ab,"_",p,"_",k,".rds"))
         }
     }
     fit.dgp(s,i,dgp,"a")

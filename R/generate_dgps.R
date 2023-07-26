@@ -25,7 +25,8 @@ dgp.cgs <- function(n,p)
     {
         0.04 - 0.43*x - 10.18*x^2 - 12.22*x^3 - 30.55*x^4 - 3.77*x^5
     }
-    y  <- mu(x) + tau(x)*z + rnorm(n) ##0.1295*rt(n,3)
+    y <- mu(x) + tau(x)*z
+    y <- y + 0.25*var(y)
     ate <- 0.04
     tau.x <- tau(x)
     return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
@@ -46,7 +47,8 @@ dgp.fh <- function(n,p=2)
     {
         1 - 0.25*x
     }
-    y <- mu(x,w) + tau(x)*z + rnorm(n,sd=0.25)
+    y <- mu(x,w) + tau(x)*z
+    y <- y + 0.25*as.numeric(var(y))
     ate <- 1
     tau.x <- tau(x)
     return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
@@ -76,7 +78,7 @@ dgp.kr <- function(n,p=200)
     {
         2 - 0.34*x - 8.31*x^2 - 6.86*x^3 - 0.83*x^5 + as.vector(0.06*w%*%a)
     }
-    y  <- mu(x,w,a) + tau(x,w,a)*z + e
+    y  <- mu(x,w,a) + tau(x,w,a)*z + 0.25*e
     ate <- mean(tau(0,w,a))
     tau.x <- tau(x,w,a)
     return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
@@ -95,7 +97,8 @@ dgp4.fun <- function(n,p)
     {
         1 + 0.5*x*rowMeans(cos(w)) + sin(rowSums(w))
     }
-    y <- mu(x,w) + z*tau(x,w) + rnorm(n)
+    y <- mu(x,w) + tau(x,w)*z
+    y <- y + 0.25*var(y)
     ate <- mean(tau(0,w))
     tau.x <- tau(x,w)
     return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
@@ -127,7 +130,8 @@ dgp5.fun <- function(n,p)
     {
         1 + x + sin(rowSums(w))
     }
-    y <- mu(x,w) + z*tau(x,w) + rnorm(n)
+    y <- mu(x,w) + tau(x,w)*z
+    y <- y + 0.25*var(y)
     ate <- mean(tau(0,w))
     tau.x <- tau(x,w)
     return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
@@ -159,7 +163,8 @@ dgp6.fun <- function(n,p)
     {
         1 + 0.5*x*rowMeans(cos(w)) + sin(rowSums(w)) + 0.7*(w2>=0) - 0.5*(w3<0 & w4>=0.1)
     }
-    y <- mu(x,w) + z*tau(x,w) + rnorm(n)
+    y <- mu(x,w) + tau(x,w)*z
+    y <- y + 0.25*var(y)
     ate <- mean(tau(0,w))
     tau.x <- tau(x,w)
     return(list(y=y,x=x,z=z,w=w,ate=ate,tau.x=tau.x))
@@ -172,7 +177,8 @@ dgp.het <- function(n)
     w <- matrix(rnorm(n*2,0,0.25),n,2)
     mu <- function(x,w) 1 + x + abs(w[,1]-1) + 0.5*w[,2]
     tau <- function(x,w) 1 + exp(x)*w[,2] + w[,1]
-    y <- mu(x,w) + tau(x,w)*z + rnorm(n)
+    y <- mu(x,w) + tau(x,w)*z
+    y <- y + 0.25*var(y)
     tau.zero <- tau(0,w)
     ate <- mean(tau.zero)
     return(list(y=y,x=x,z=z,w=w,ate=ate,cate=tau.zero))
