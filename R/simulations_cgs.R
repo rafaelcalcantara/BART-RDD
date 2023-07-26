@@ -27,7 +27,7 @@ for (j in 1:6)
           s2sd0_ = 1
           nudgp = 3
           nuval = 3
-          print(paste0("Simulation ",i," for DGP1",ab,", ",p," covariates"))
+          print(paste0("Simulation ",i," for DGP",j,ab,", ",p," covariates"))
           data <- dgp[[i]]
           list2env(data,globalenv())
           t0 <- Sys.time()
@@ -47,7 +47,7 @@ for (j in 1:6)
                                 d = rep(1,2),
                                 s2mean0_ = s2mean0_,
                                 s2sd0_ = s2sd0_,
-                                distribution = "gaussian",
+                                distribution = "t",
                                 nuval = nuval,
                                 hetero = FALSE,
                                 n0=burn,
@@ -70,7 +70,7 @@ for (j in 1:6)
                                 d = rep(1,p+2),
                                 s2mean0_ = s2mean0_,
                                 s2sd0_ = s2sd0_,
-                                distribution = "gaussian",
+                                distribution = "t",
                                 nuval = nuval,
                                 hetero = FALSE,
                                 n0=burn,
