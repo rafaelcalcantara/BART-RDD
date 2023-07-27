@@ -62,7 +62,7 @@ for (i in sample)
                 for (m in kappa)
                 {
                     bart.rdd <- fit(s,i,j,k,l,m)
-                    saveRDS(paste0("Results/bart_rdd_",i,"_",j,"_",k,"_",l,"_",m))
+                    saveRDS(bart.rdd,paste0("Results/bart_rdd_",i,"_",j,"_",k,"_",l,"_",m,".rds"))
                 }
             }
         }
@@ -93,7 +93,7 @@ for (i in sample)
                 for (m in kappa)
                 {
                     cct <- fit(s,i,j,k,l,m)
-                    saveRDS(paste0("Results/cct_",i,"_",j,"_",k,"_",l,"_",m))
+                    saveRDS(cct,paste0("Results/cct_",i,"_",j,"_",k,"_",l,"_",m,".rds"))
                 }
             }
         }
@@ -128,7 +128,7 @@ for (i in sample)
                 for (m in kappa)
                 {
                     kr <- fit(s,i,j,k,l,m)
-                    saveRDS(paste0("Results/kr_",i,"_",j,"_",k,"_",l,"_",m))
+                    saveRDS(kr,paste0("Results/kr_",i,"_",j,"_",k,"_",l,"_",m,".rds"))
                 }
             }
         }
@@ -169,7 +169,7 @@ for (i in sample)
                 for (m in kappa)
                 {
                     bart1 <- fit(s,i,j,k,l,m)
-                    saveRDS(paste0("Results/bart1_",i,"_",j,"_",k,"_",l,"_",m))
+                    saveRDS(bart1,paste0("Results/bart1_",i,"_",j,"_",k,"_",l,"_",m,".rds"))
                 }
             }
         }
@@ -221,14 +221,14 @@ for (i in sample)
             {
                 for (m in kappa)
                 {
-                    bart1 <- fit(s,i,j,k,l,m)
-                    saveRDS(paste0("Results/bart2_",i,"_",j,"_",k,"_",l,"_",m))
+                    bart2 <- fit(s,i,j,k,l,m)
+                    saveRDS(bart2,paste0("Results/bart2_",i,"_",j,"_",k,"_",l,"_",m,".rds"))
                 }
             }
         }
     }
 }
-BCF
+## BCF
 fit <- function(s,n,m,xi,nu,kappa)
 {
     foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
@@ -256,7 +256,7 @@ fit <- function(s,n,m,xi,nu,kappa)
             pred$tau.adj[,(burnin+1):num_sweeps]
         }
 }
-
+###
 for (i in sample)
 {
     for (j in model)
@@ -267,8 +267,8 @@ for (i in sample)
             {
                 for (m in kappa)
                 {
-                    bart1 <- fit(s,i,j,k,l,m)
-                    saveRDS(paste0("Results/bcf_",i,"_",j,"_",k,"_",l,"_",m))
+                    bcf <- fit(s,i,j,k,l,m)
+                    saveRDS(bcf,paste0("Results/bcf_",i,"_",j,"_",k,"_",l,"_",m,".rds"))
                 }
             }
         }
