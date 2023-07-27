@@ -9,7 +9,10 @@ devtools::install_github("kolesarm/RDHonest")
 library(RDHonest)
 devtools::install_github("akreiss/HighDimRD")
 library(HighDimRD)
-s <- 1000
+s      <- 1000
+sample <- c(500,1000)
+model  <- 1:6
+xi <- nu <- kappa <- c(0.25,2)
 ## Parallelization
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
