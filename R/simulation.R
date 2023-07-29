@@ -10,8 +10,8 @@ library(RDHonest)
 devtools::install_github("akreiss/HighDimRD")
 library(HighDimRD)
 s      <- 1000
-sample <- c(500,1000)
-model  <- 1:6
+sample <- 500
+model  <- 3:6
 xi <- nu <- kappa <- c(0.25,2)
 ## Parallelization
 no_cores <- detectCores() - 1
@@ -35,6 +35,7 @@ fit <- function(s,n,m,xi,nu,kappa)
             print(paste0("N=",n,"; Model=",m,"; xi=",xi,"; nu=",nu,"; kappa=",kappa))
             print(paste0("Simulation ",i))
             data <- readRDS(paste0("Data/DGP_",n,"_",m,"_",xi,"_",nu,"_",kappa,"_",i))
+            t0 <- Sys.time()
             fit <- XBCF.rd(data$Y, data$W, data$X, c,
                            Owidth = h, Omin = Omin, Opct = Opct,
                            num_trees_mod = m, num_trees_con = m,
@@ -47,7 +48,10 @@ fit <- function(s,n,m,xi,nu,kappa)
                            tau_mod = 0.5*var(data$Y)/m, parallel=F)
             test <- -h<=data$X & data$X<=h
             pred <- predict.XBCFrd(fit,data$W[test,],rep(0,sum(test)))
-            pred$tau.adj[,(burnin+1):num_sweeps]
+            pred <- pred$tau.adj[,(burnin+1):num_sweeps]
+            t1 <- Sys.time()
+            dt <- difftime(t1,t0)
+            return(list(pred=pred,dt=dt))
         }
 }
 ###
@@ -77,8 +81,12 @@ fit <- function(s,n,m,xi,nu,kappa)
             print(paste0("N=",n,"; Model=",m,"; xi=",xi,"; nu=",nu,"; kappa=",kappa))
             print(paste0("Simulation ",i))
             data <- readRDS(paste0("Data/DGP_",n,"_",m,"_",xi,"_",nu,"_",kappa,"_",i))
+            t0 <- Sys.time()
             fit <- rdrobust(data$Y,data$X,0,covs=data$W)
-            c(fit$coef[1],fit$ci[3,])
+            t1 <- Sys.time()
+            dt <- difftime(t1,t0)
+            pred <- c(fit$coef[1],fit$ci[3,])
+            return(list(pred=pred,dt=dt))
         }
 }
 ###
@@ -108,12 +116,16 @@ fit <- function(s,n,m,xi,nu,kappa)
             print(paste0("N=",n,"; Model=",m,"; xi=",xi,"; nu=",nu,"; kappa=",kappa))
             print(paste0("Simulation ",i))
             data <- readRDS(paste0("Data/DGP_",n,"_",m,"_",xi,"_",nu,"_",kappa,"_",i))
+            t0 <- Sys.time()
             w1 <- fourier_basis(matrix(data$X),4)
             w_HighDim <- cbind(data$W,interaction_terms(data$W),w1,interaction_terms(w1))
             ## Estimation
             fit  <- HighDim_rd(data$Y,data$X,w_HighDim,
                                tpc="CV",rd="robust")
-            c(fit$rd[["Estimate"]][,"tau.bc"],fit$rd[["ci"]]["Robust",])
+            t1 <- Sys.time()
+            dt <- difftime(t1,t0)
+            pred <- c(fit$rd[["Estimate"]][,"tau.bc"],fit$rd[["ci"]]["Robust",])
+            return(list(pred=pred,dt=dt))
         }
 }
 ###
@@ -144,6 +156,7 @@ fit <- function(s,n,m,xi,nu,kappa)
             print(paste0("Simulation ",i))
             data <- readRDS(paste0("Data/DGP_",n,"_",m,"_",xi,"_",nu,"_",kappa,"_",i))
             X <- cbind(data$X,data$W,data$Z)
+            t0 <- Sys.time()
             fit <- XBART(data$Y, X, num_trees = m,
                          num_cutpoints = n, num_sweeps = num_sweeps,
                          burnin = burnin, Nmin = Nmin,
@@ -152,9 +165,13 @@ fit <- function(s,n,m,xi,nu,kappa)
                          p_categorical_mod = p_categorical+1,
                          tau_con = 2*var(y)/m,
                          tau_mod = 0.5*var(y)/m, parallel=F)
-            pred1 <- predict.XBART(fit,cbind(rep(0,n),data$W,rep(1,n)))[,(burnin+1):num_sweeps]
-            pred0 <- predict.XBART(fit,cbind(rep(0,n),data$W,rep(0,n)))[,(burnin+1):num_sweeps]
-            pred1-pred0
+            test <- -h<=data$X & data$X<=h
+            pred1 <- predict.XBART(fit,cbind(rep(0,sum(test)),data$W[test,],rep(1,sum(test))))[,(burnin+1):num_sweeps]
+            pred0 <- predict.XBART(fit,cbind(rep(0,sum(test)),data$W[test,],rep(0,sum(test))))[,(burnin+1):num_sweeps]
+            pred <- pred1-pred0
+            t1 <- Sys.time()
+            dt <- difftime(t1,t0)
+            return(list(pred=pred,dt=dt))
         }
 }
 ###
@@ -185,6 +202,7 @@ fit <- function(s,n,m,xi,nu,kappa)
             print(paste0("Simulation ",i))
             data <- readRDS(paste0("Data/DGP_",n,"_",m,"_",xi,"_",nu,"_",kappa,"_",i))
             X <- cbind(data$X,data$W)
+            t0 <- Sys.time()
             fit0 <- XBART(data$Y[!data$Z], X[!data$Z,],
                           num_trees = m,
                           num_cutpoints = n,
@@ -205,9 +223,14 @@ fit <- function(s,n,m,xi,nu,kappa)
                           tau_con = 2*var(data$Y[data$Z])/m,
                           tau_mod = 0.5*var(data$Y[data$Z])/m,
                           parallel=F)
-            pred1 <- predict.XBART(fit1,cbind(rep(0,sum(data$Z)),data$W))
-            pred0 <- predict.XBART(fit0,cbind(rep(0,sum(!data$Z)),data$W))
-            colMeans(pred1[,(burnin+1):num_sweeps])-colMeans(pred0[,(burnin+1):num_sweeps])
+            test0 <- -h<=data$X
+            test1 <- data$X<=h
+            pred1 <- predict.XBART(fit1,cbind(rep(0,sum(data$Z & test1)),data$W[test1,]))
+            pred0 <- predict.XBART(fit0,cbind(rep(0,sum(!data$Z & test0)),data$W[test0,]))
+            pred <- colMeans(pred1[,(burnin+1):num_sweeps])-colMeans(pred0[,(burnin+1):num_sweeps])
+            t1 <- Sys.time()
+            dt <- difftime(t1,t0)
+            return(list(pred=pred,dt=dt))
         }
 }
 ###
@@ -238,6 +261,7 @@ fit <- function(s,n,m,xi,nu,kappa)
             print(paste0("Simulation ",i))
             data <- readRDS(paste0("Data/DGP_",n,"_",m,"_",xi,"_",nu,"_",kappa,"_",i))
             X <- cbind(data$X,data$W)
+            t0 <- Sys.time()
             fit <- XBCF.discrete(data$Y, data$Z, X_con=X, X_mod=X,
                                  num_trees_con = m,
                                  num_trees_mod = m,
@@ -249,11 +273,15 @@ fit <- function(s,n,m,xi,nu,kappa)
                                  tau_con = 2*var(data$Y)/m,
                                  tau_mod = 0.5*var(data$Y)/m,
                                  parallel=F)
-            pred <- predict.XBCFdiscrete(fit,cbind(rep(0,n),data$W),
-                                         cbind(rep(0,n),data$W),
-                                         data$Z,pihat=data$Z,
+            test <- -h<=data$X & data$X<=h
+            pred <- predict.XBCFdiscrete(fit,cbind(rep(0,sum(test)),data$W[test,]),
+                                         cbind(rep(0,sum(test)),data$W[test,]),
+                                         data$Z[test],pihat=data$Z[test],
                                          burnin=burnin)
-            pred$tau.adj[,(burnin+1):num_sweeps]
+            pred <- pred$tau.adj[,(burnin+1):num_sweeps]
+            t1 <- Sys.time()
+            dt <- difftime(t1,t0)
+            return(list(pred=pred,dt=dt))
         }
 }
 ###
@@ -274,3 +302,5 @@ for (i in sample)
         }
     }
 }
+##
+print("Simulation ended!")
