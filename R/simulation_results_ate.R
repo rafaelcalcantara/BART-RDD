@@ -1,158 +1,148 @@
 ## Setup
-s      <- 500
+s      <- 1000
 sample <- c(500,1000)
 model  <- 3:6
 xi <- nu <- kappa <- c(0.25,2)
 ## BART-RDD
-bart.rdd <- vector("list",32)
 res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("BART-RDD","Model","Xi","Nu","Kappa"))))
 rmse.bart.rdd <- res.mat
 cov.bart.rdd <- res.mat
 length.bart.rdd <- res.mat
-for (i in 1:length(500))
+alpha.bart.rdd <- res.mat
+index <- 0
+for (j in 1:length(model))
 {
-    index <- 0
-    for (j in 1:length(model))
+    for (k in 1:length(xi))
     {
-        for (k in 1:length(xi))
+        for (l in 1:length(nu))
         {
-            for (l in 1:length(nu))
+            for (m in 1:length(kappa))
             {
-                for (m in 1:length(kappa))
-                {
-                    index <- index+1
-                    dgp <- c(model[j],xi[k],nu[l],kappa[m])
-                    file <- paste0("Results/bart_rdd_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
-                    bart.rdd[[index]] <- readRDS(paste0(file,".rds"))
-                    bart.rdd[[index]] <- t(sapply(bart.rdd[[index]],function(x) c(mean(colMeans(x)),quantile(colMeans(x),c(0.025,0.975)))))
-                    rmse.bart.rdd[index,] <- c(sqrt(mean((bart.rdd[[index]][,1]-xi[k])^2)),dgp)
-                    cov.bart.rdd[index,] <- c(mean(bart.rdd[[index]][,2] <= xi[k] & xi[k] <= bart.rdd[[index]][,3]),dgp)
-                    length.bart.rdd[index,] <- c(mean(bart.rdd[[index]][,3] - bart.rdd[[index]][,2]),dgp)
-                }
+                index <- index+1
+                dgp <- c(model[j],xi[k],nu[l],kappa[m])
+                file <- paste0("Results/bart_rdd_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
+                bart.rdd <- readRDS(paste0(file,".rds"))
+                bart.rdd <- lapply(bart.rdd, function(x) x$pred)
+                a <- sapply(bart.rdd, function(x) mean(x<=xi[k]))
+                alpha.bart.rdd[index,] <- c(mean(a),dgp)
+                bart.rdd <- t(sapply(bart.rdd,function(x) c(mean(colMeans(x)),quantile(colMeans(x),c(0.025,0.975)))))
+                rmse.bart.rdd[index,] <- c(sqrt(mean((bart.rdd[,1]-xi[k])^2)),dgp)
+                cov.bart.rdd[index,] <- c(mean(bart.rdd[,2] <= xi[k] & xi[k] <= bart.rdd[,3]),dgp)
+                length.bart.rdd[index,] <- c(mean(bart.rdd[,3] - bart.rdd[,2]),dgp)
             }
         }
     }
 }
 ## CKT
-ckt <- vector("list",32)
 res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("CKT","Model","Xi","Nu","Kappa"))))
 rmse.ckt <- res.mat
 cov.ckt <- res.mat
 length.ckt <- res.mat
-for (i in 1:length(500))
+index <- 0
+for (j in 1:length(model))
 {
-    index <- 0
-    for (j in 1:length(model))
+    for (k in 1:length(xi))
     {
-        for (k in 1:length(xi))
+        for (l in 1:length(nu))
         {
-            for (l in 1:length(nu))
+            for (m in 1:length(kappa))
             {
-                for (m in 1:length(kappa))
-                {
-                    index <- index+1
-                    dgp <- c(model[j],xi[k],nu[l],kappa[m])
-                    file <- paste0("Results/cct_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
-                    ckt <- readRDS(paste0(file,".rds"))
-                    ckt[[index]] <- do.call("rbind",ckt[[index]])
-                    rmse.ckt[index,] <- c(sqrt(mean((ckt[[index]][,1]-xi[k])^2)),dgp)
-                    cov.ckt[index,] <- c(mean(ckt[[index]][,2] <= xi[k] & xi[k] <= ckt[[index]][,3]),dgp)
-                    length.ckt[index,] <- c(mean(ckt[[index]][,3] - ckt[[index]][,2]),dgp)
-                }
+                index <- index+1
+                dgp <- c(model[j],xi[k],nu[l],kappa[m])
+                file <- paste0("Results/ckt_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
+                ckt <- readRDS(paste0(file,".rds"))
+                ckt <- lapply(ckt, function(x) x$pred)
+                ckt <- do.call("rbind",ckt)
+                rmse.ckt[index,] <- c(sqrt(mean((ckt[,1]-xi[k])^2)),dgp)
+                cov.ckt[index,] <- c(mean(ckt[,2] <= xi[k] & xi[k] <= ckt[,3]),dgp)
+                length.ckt[index,] <- c(mean(ckt[,3] - ckt[,2]),dgp)
             }
         }
     }
 }
 ## KR
-kr <- vector("list",32)
 res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("KR","Model","Xi","Nu","Kappa"))))
 rmse.kr <- res.mat
 cov.kr <- res.mat
 length.kr <- res.mat
-for (i in 1:length(500))
+index <- 0
+for (j in 1:length(model))
 {
-    index <- 0
-    for (j in 1:length(model))
+    for (k in 1:length(xi))
     {
-        for (k in 1:length(xi))
+        for (l in 1:length(nu))
         {
-            for (l in 1:length(nu))
+            for (m in 1:length(kappa))
             {
-                for (m in 1:length(kappa))
-                {
-                    index <- index+1
-                    dgp <- c(model[j],xi[k],nu[l],kappa[m])
-                    file <- paste0("Results/kr_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
-                    kr[[index]] <- readRDS(paste0(file,".rds"))
-                    kr[[index]] <- do.call("rbind",kr[[index]])
-                    rmse.kr[index,] <- c(sqrt(mean((kr[[index]][,1]-xi[k])^2)),dgp)
-                    cov.kr[index,] <- c(mean(kr[[index]][,2] <= xi[k] & xi[k] <= kr[[index]][,3]),dgp)
-                    length.kr[index,] <- c(mean(kr[[index]][,3] - kr[[index]][,2]),dgp)
-                }
+                index <- index+1
+                dgp <- c(model[j],xi[k],nu[l],kappa[m])
+                file <- paste0("Results/kr_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
+                kr <- readRDS(paste0(file,".rds"))
+                kr <- lapply(kr, function(x) x$pred)
+                kr <- do.call("rbind",kr)
+                rmse.kr[index,] <- c(sqrt(mean((kr[,1]-xi[k])^2)),dgp)
+                cov.kr[index,] <- c(mean(kr[,2] <= xi[k] & xi[k] <= kr[,3]),dgp)
+                length.kr[index,] <- c(mean(kr[,3] - kr[,2]),dgp)
             }
         }
     }
 }
 ## BART1
-bart.1 <- vector("list",32)
 res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("BART1","Model","Xi","Nu","Kappa"))))
 rmse.bart.1 <- res.mat
 cov.bart.1 <- res.mat
 length.bart.1 <- res.mat
-for (i in 1:length(500))
+alpha.bart.1 <- res.mat
+index <- 0
+for (j in 1:length(model))
 {
-    index <- 0
-    for (j in 1:length(model))
+    for (k in 1:length(xi))
     {
-        for (k in 1:length(xi))
+        for (l in 1:length(nu))
         {
-            for (l in 1:length(nu))
+            for (m in 1:length(kappa))
             {
-                for (m in 1:length(kappa))
-                {
-                    index <- index+1
-                    dgp <- c(model[j],xi[k],nu[l],kappa[m])
-                    file <- paste0("Results/bart1_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
-                    bart.1 <- readRDS(paste0(file,".rds"))
-                    dt <- sapply(bart.1,function(x) x$dt)
-                    bart.1 <- lapply(bart.1, function(x) x$pred)
-                    bart.1 <- t(sapply(bart.1,function(x) c(mean(colMeans(x)),quantile(colMeans(x),c(0.025,0.975)))))
-                    rmse.bart.1[index,] <- c(sqrt(mean((bart.1[,1]-xi[k])^2)),dgp)
-                    cov.bart.1[index,] <- c(mean(bart.1[,2] <= xi[k] & xi[k] <= bart.1[,3]),dgp)
-                    length.bart.1[index,] <- c(mean(bart.1[,3] - bart.1[,2]),dgp)
-                }
+                index <- index+1
+                dgp <- c(model[j],xi[k],nu[l],kappa[m])
+                file <- paste0("Results/bart1_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
+                bart.1 <- readRDS(paste0(file,".rds"))
+                bart.1 <- lapply(bart.1, function(x) x$pred)
+                a <- sapply(bart.1, function(x) mean(x<=xi[k]))
+                alpha.bart.1[index,] <- c(mean(a),dgp)
+                bart.1 <- t(sapply(bart.1,function(x) c(mean(colMeans(x)),quantile(colMeans(x),c(0.025,0.975)))))
+                rmse.bart.1[index,] <- c(sqrt(mean((bart.1[,1]-xi[k])^2)),dgp)
+                cov.bart.1[index,] <- c(mean(bart.1[,2] <= xi[k] & xi[k] <= bart.1[,3]),dgp)
+                length.bart.1[index,] <- c(mean(bart.1[,3] - bart.1[,2]),dgp)
             }
         }
     }
 }
 ## BART2
-bart.2 <- vector("list",32)
 res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("BART2","Model","Xi","Nu","Kappa"))))
 rmse.bart.2 <- res.mat
 cov.bart.2 <- res.mat
 length.bart.2 <- res.mat
-for (i in 1:length(500))
+alhpa.bart.2 <- res.mat
+index <- 0
+for (j in 1:length(model))
 {
-    index <- 0
-    for (j in 1:length(model))
+    for (k in 1:length(xi))
     {
-        for (k in 1:length(xi))
+        for (l in 1:length(nu))
         {
-            for (l in 1:length(nu))
+            for (m in 1:length(kappa))
             {
-                for (m in 1:length(kappa))
-                {
-                    index <- index+1
-                    dgp <- c(model[j],xi[k],nu[l],kappa[m])
-                    file <- paste0("Results/bart2_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
-                    bart.2 <- readRDS(paste0(file,".rds"))
-                    dt <- sapply(bart.2,function(x) x$dt)
-                    bart.2 <- lapply(bart.2, function(x) x$pred)
-                    bart.2 <- t(sapply(bart.2,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
-                    rmse.bart.2[index,] <- c(sqrt(mean((bart.2[,1]-xi[k])^2)),dgp)
-                    cov.bart.2[index,] <- c(mean(bart.2[,2] <= xi[k] & xi[k] <= bart.2[,3]),dgp)
-                    length.bart.2[index,] <- c(mean(bart.2[,3] - bart.2[,2]),dgp)
-                }
+                index <- index+1
+                dgp <- c(model[j],xi[k],nu[l],kappa[m])
+                file <- paste0("Results/bart2_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
+                bart.2 <- readRDS(paste0(file,".rds"))
+                bart.2 <- lapply(bart.2, function(x) x$pred)
+                a <- sapply(bart.2, function(x) mean(x<=xi[k]))
+                alpha.bart.2[index,] <- c(mean(a),dgp)
+                bart.2 <- t(sapply(bart.2,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
+                rmse.bart.2[index,] <- c(sqrt(mean((bart.2[,1]-xi[k])^2)),dgp)
+                cov.bart.2[index,] <- c(mean(bart.2[,2] <= xi[k] & xi[k] <= bart.2[,3]),dgp)
+                length.bart.2[index,] <- c(mean(bart.2[,3] - bart.2[,2]),dgp)
             }
         }
     }
@@ -163,28 +153,27 @@ res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("BCF","Model","Xi","
 rmse.bcf <- res.mat
 cov.bcf <- res.mat
 length.bcf <- res.mat
-for (i in 1:length(500))
+alpha.bcf <- res.mat
+index <- 0
+for (j in 1:length(model))
 {
-    index <- 0
-    for (j in 1:length(model))
+    for (k in 1:length(xi))
     {
-        for (k in 1:length(xi))
+        for (l in 1:length(nu))
         {
-            for (l in 1:length(nu))
+            for (m in 1:length(kappa))
             {
-                for (m in 1:length(kappa))
-                {
-                    index <- index+1
-                    dgp <- c(model[j],xi[k],nu[l],kappa[m])
-                    file <- paste0("Results/bcf_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
-                    bcf <- readRDS(paste0(file,".rds"))
-                    dt <- sapply(bcf,function(x) x$dt)
-                    bcf <- lapply(bcf, function(x) x$pred)
-                    bcf <- t(sapply(bcf,function(x) c(mean(colMeans(x)),quantile(colMeans(x),c(0.025,0.975)))))
-                    rmse.bcf[index,] <- c(sqrt(mean((bcf[,1]-xi[k])^2)),dgp)
-                    cov.bcf[index,] <- c(mean(bcf[,2] <= xi[k] & xi[k] <= bcf[,3]),dgp)
-                    length.bcf[index,] <- c(mean(bcf[,3] - bcf[,2]),dgp)
-                }
+                index <- index+1
+                dgp <- c(model[j],xi[k],nu[l],kappa[m])
+                file <- paste0("Results/bcf_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
+                bcf <- readRDS(paste0(file,".rds"))
+                bcf <- lapply(bcf, function(x) x$pred)
+                a <- sapply(bcf, function(x) mean(x<=xi[k]))
+                alpha.bcf[index,] <- c(mean(a),dgp)
+                bcf <- t(sapply(bcf,function(x) c(mean(colMeans(x)),quantile(colMeans(x),c(0.025,0.975)))))
+                rmse.bcf[index,] <- c(sqrt(mean((bcf[,1]-xi[k])^2)),dgp)
+                cov.bcf[index,] <- c(mean(bcf[,2] <= xi[k] & xi[k] <= bcf[,3]),dgp)
+                length.bcf[index,] <- c(mean(bcf[,3] - bcf[,2]),dgp)
             }
         }
     }
