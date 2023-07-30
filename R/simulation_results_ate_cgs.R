@@ -1,3 +1,4 @@
+setwd("~/Git/XBCF-RDD/")
 ## Setup
 s      <- 1000
 sample <- c(500,1000)
@@ -20,7 +21,7 @@ for (j in 1:length(model))
             {
                 index <- index+1
                 dgp <- c(model[j],xi[k],nu[l],kappa[m])
-                file <- paste0("Results/cgs_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
+                file <- paste0("Results/cgs_",500,"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
                 cgs <- readRDS(paste0(file,".rds"))
                 cgs <- lapply(cgs, function(x) x$pred)
                 a <- sapply(cgs, function(x) mean(x<=xi[k]))
@@ -33,3 +34,5 @@ for (j in 1:length(model))
         }
     }
 }
+rm(cgs,res.mat)
+save.image("Tables/cgs.RData")

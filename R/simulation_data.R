@@ -1,9 +1,10 @@
+setwd("~/Git/XBCF-RDD/")
 set.seed(0)
 ## General settings
 s <- 1000
-n <- c(500,1000)
+n <- 500
 p <- 5
-m <- 1:6
+m <- 3:6
 xi <- nu <- kappa <- c(0.25,2)
 vars <- function(n,p)
 {

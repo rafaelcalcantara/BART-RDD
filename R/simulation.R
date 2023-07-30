@@ -307,6 +307,7 @@ if (Sys.info()["sysname"] == "Linux")
     }
 } else
 {
+  setwd("~/Git/XBCF-RDD/")
     ## CGS
     install.packages("http://apps.olin.wustl.edu/faculty/chib/rpackages/rdd/bayesrdd_1.0.zip",repo=NULL,source=T)
     library(bayesrdd)
@@ -315,7 +316,7 @@ if (Sys.info()["sysname"] == "Linux")
     nsamples <- 100
     fit <- function(s,p,n,m,xi,nu,kappa)
     {
-        foreach(k=1:s,.multicombine=T,.packages = "bayesrdd",.export=c("burn","nsamples")) %do%
+        foreach(i=1:s,.multicombine=T,.packages = "bayesrdd",.export=c("burn","nsamples")) %do%
             {
                 print("CGS simulations")
                 print(paste0("N=",n,"; Model=",m,"; xi=",xi,"; nu=",nu,"; kappa=",kappa))
@@ -329,15 +330,16 @@ if (Sys.info()["sysname"] == "Linux")
                 lamstmean0_ = rep(1,p+2)
                 lamstsd0_ = 5*rep(1,p+2)
                 t0 <- Sys.time()
-                fit  <- bayesrddest(y = y,
-                                    z = x,
-                                    W = w,
-                                    mw = rep(5,p), ## as per help file
+                fit  <- bayesrddest(y = data$Y,
+                                    z = data$X,
+                                    V = as.matrix(data$W[,5]),
+                                    W = data$W[,1:4],
+                                    mw = rep(5,p-1), ## as per help file
                                     tau = c,
                                     p = P,
                                     mz = mz,
                                     mztau = mztau,
-                                    beta0_ = rep(0,4+2*p),
+                                    beta0_ = rep(0,5+2*(p-1)),
                                     lamstmean0_ = lamstmean0_,
                                     lamstsd0_ = lamstsd0_,
                                     d = rep(1,p+2),
@@ -366,7 +368,7 @@ if (Sys.info()["sysname"] == "Linux")
                     for (m in kappa)
                     {
                         cgs <- fit(s,5,i,j,k,l,m)
-                        saveRDS(bcf,paste0("Results/cgs_",i,"_",j,"_",k,"_",l,"_",m,".rds"))
+                        saveRDS(cgs,paste0("Results/cgs_",i,"_",j,"_",k,"_",l,"_",m,".rds"))
                     }
                 }
             }
