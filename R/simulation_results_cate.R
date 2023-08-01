@@ -49,6 +49,7 @@ res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("BART-RDD","Model","
 rmse.bart.rdd <- res.mat
 cov.bart.rdd <- res.mat
 length.bart.rdd <- res.mat
+distance.bart.rdd <- matrix(0,s,32)
 index <- 0
 for (j in 1:length(model))
 {
@@ -81,6 +82,7 @@ res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("BART1","Model","Xi"
 rmse.bart.1 <- res.mat
 cov.bart.1 <- res.mat
 length.bart.1 <- res.mat
+distance.bart.1 <- matrix(0,s,32)
 index <- 0
 for (j in 1:length(model))
 {
@@ -113,6 +115,7 @@ res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("BCF","Model","Xi","
 rmse.bcf <- res.mat
 cov.bcf <- res.mat
 length.bcf <- res.mat
+distance.bcf <- matrix(0,s,32)
 index <- 0
 for (j in 1:length(model))
 {
@@ -153,12 +156,11 @@ plot.cov <- reshape(cov,direction="long",varying=c("BART-RDD","BART1","BCF"),v.n
 plot.length <- reshape(length,direction="long",varying=c("BART-RDD","BART1","BCF"),v.names="Length",idvar=c("Model","Xi","Nu","Kappa"),timevar="Method",times=c("BART-RDD","BART1","BCF"))
 ### RMSE
 plot.rmse$Method <- as.factor(plot.rmse$Method)
-bwplot(RMSE~Method|as.factor(Nu)+as.factor(Kappa),data=plot.rmse)
+png("Figures/rmse_cate.png")
+xyplot(RMSE~Method|factor(Nu,labels=paste("Nu=",c(0.25,2),sep=""))+factor(Kappa,labels=paste("Kappa=",c(0.25,2),sep="")),data=plot.rmse,scales=list(cex=0.5),col="black")
+dev.off()
 ### Cov x Length
 p <- merge(plot.cov,plot.length)
-cols <- rainbow(3)
-coplot(Coverage~Length|as.factor(Nu)*as.factor(Kappa),data=p,
-       bg=cols,pch=21,show.given=T)
-legend(x=1.9,y=2.16,legend=c("BART-RDD","BART1","BCF"),
-       pt.bg=cols,pch=21,cex=0.75)
-xyplot(Coverage~Length|as.factor(Nu)+as.factor(Kappa),data=p,groups=Method,pch=21,bg=cols,auto.key=T)
+png("Figures/coverage_cate.png")
+xyplot(Coverage~Length|factor(Nu,labels=paste("Nu=",c(0.25,2),sep=""))+factor(Kappa,labels=paste("Kappa=",c(0.25,2),sep="")),data=p,groups=Method,pch=21,bg=cols,auto.key=list(column=3,cex=0.75))
+dev.off()

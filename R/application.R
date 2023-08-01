@@ -156,28 +156,28 @@ num_cutpoints <- n
 ### Parallelization
 num_cores <- detectCores() - 1
 registerDoParallel(num_cores)
-### With controls
-fit.cont <- function(s)
-{
-    foreach(i=1:s,.multicombine=T,.export=c("y","w","x","p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
-        {
-            if (i<5)
-            {
-                print(paste0("Model: h=",0.08+i/100,", Omin=",10))
-                fit.xbcf(0.08+i/100,y,w,x,p_categorical,0.1,10)
-            } else
-            {
-                print(paste0("Model: h=",0.08+(i-4)/100,", Omin=",50))
-                fit.xbcf(0.08+(i-4)/100,y,w,x,p_categorical,0.1,50)
-            }
-        }
-}
-xbcf.cont <- fit.cont(8)
-### Saving results to avoid running it all again
-save(xbcf.cont,file="Tables/application1.RData")
-rm(xbcf.cont)
-gc()
-print("Finished estimations")
+## ### With controls
+## fit.cont <- function(s)
+## {
+##     foreach(i=1:s,.multicombine=T,.export=c("y","w","x","p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+##         {
+##             if (i<5)
+##             {
+##                 print(paste0("Model: h=",0.08+i/100,", Omin=",10))
+##                 fit.xbcf(0.08+i/100,y,w,x,p_categorical,0.1,10)
+##             } else
+##             {
+##                 print(paste0("Model: h=",0.08+(i-4)/100,", Omin=",50))
+##                 fit.xbcf(0.08+(i-4)/100,y,w,x,p_categorical,0.1,50)
+##             }
+##         }
+## }
+## xbcf.cont <- fit.cont(8)
+## ### Saving results to avoid running it all again
+## save(xbcf.cont,file="Tables/application1.RData")
+## rm(xbcf.cont)
+## gc()
+## print("Finished estimations")
 ## load("Tables/application1.RData")
 ## ate.post.cont1 <- xbcf.cont[[1]]$ate.post
 ## ate.post.cont2 <- xbcf.cont[[2]]$ate.post
@@ -187,27 +187,27 @@ print("Finished estimations")
 ## ate.post.cont6 <- xbcf.cont[[6]]$ate.post
 ## ate.post.cont7 <- xbcf.cont[[7]]$ate.post
 ## ate.post.cont8 <- xbcf.cont[[8]]$ate.post
-## ### Without controls
-## fit.no.cont <- function(s)
-## {
-##     foreach(i=1:s,.multicombine=T,.export=c("y","w","x","p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
-##         {
-##             if (i<5)
-##             {
-##                 print(paste0("Model: h=",i/10,", Omin=",10))
-##                 fit.xbcf(i/10,y,NULL,x,0,0.1,10)
-##             } else
-##             {
-##                 print(paste0("Model: h=",(i-4)/10,", Omin=",50))
-##                 fit.xbcf((i-4)/10,y,NULL,x,0,0.1,50)
-##             }
-##         }
-## }
-## xbcf.no.cont <- fit.no.cont(8)
-## ### Saving results to avoid running it all again
-## save(xbcf.no.cont,file="Tables/application2.RData")
-## rm(xbcf.no.cont)
-## gc()
+### Without controls
+fit.no.cont <- function(s)
+{
+    foreach(i=1:s,.multicombine=T,.export=c("y","w","x","p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+        {
+            if (i<5)
+            {
+                print(paste0("Model: h=",0.08+i/100,", Omin=",10))
+                fit.xbcf(0.08+i/100,y,NULL,x,0,0.1,10)
+            } else
+            {
+                print(paste0("Model: h=",0.08+(i-4)/100,", Omin=",50))
+                fit.xbcf(0.08+(i-4)/100,y,NULL,x,0,0.1,50)
+            }
+        }
+}
+xbcf.no.cont <- fit.no.cont(8)
+### Saving results to avoid running it all again
+save(xbcf.no.cont,file="Tables/application2.RData")
+rm(xbcf.no.cont)
+gc()
 ## load("Tables/application2.RData")
 ## ate.post.no.cont1 <- xbcf.no.cont[[1]]$ate.post
 ## ate.post.no.cont2 <- xbcf.no.cont[[2]]$ate.post
