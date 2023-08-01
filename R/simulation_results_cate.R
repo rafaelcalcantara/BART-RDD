@@ -3,7 +3,7 @@ library(parallel)
 library(foreach)
 library(doParallel)
 library(lattice)
-s      <- 500
+s      <- 1000
 sample <- c(500,1000)
 model  <- 3:6
 xi <- nu <- kappa <- c(0.25,2)
@@ -32,7 +32,7 @@ for (i in 1:length(model))
             for (l in 1:length(kappa))
             {
                 index <- index+1
-                for (m in 1:500)
+                for (m in 1:s)
                 {
                     dgp <- paste(model[i],xi[j],nu[k],kappa[l],m,sep="_")
                     dgp <- readRDS(paste0("Data/DGP_500_",dgp))
@@ -63,8 +63,9 @@ for (j in 1:length(model))
                 print(paste(c("Model","Xi","Nu","Kappa"),dgp,sep=": "))
                 file <- paste(model[j],xi[k],nu[l],kappa[m],sep="_")
                 file <- paste0("Results/bart_rdd_500_",file)
-                bart.rdd[[index]] <- readRDS(paste0(file,".rds"))
-                temp <- calc.stats(data,index,bart.rdd[[index]],500)
+                bart.rdd <- readRDS(paste0(file,".rds"))
+                bart.rdd <- lapply(bart.rdd, function(x) x$pred)
+                temp <- calc.stats(data,index,bart.rdd,1000)
                 temp <- do.call("rbind",temp)
                 temp <- apply(temp,2,unlist)
                 temp <- colMeans(temp)
@@ -152,7 +153,6 @@ plot.cov <- reshape(cov,direction="long",varying=c("BART-RDD","BART1","BCF"),v.n
 plot.length <- reshape(length,direction="long",varying=c("BART-RDD","BART1","BCF"),v.names="Length",idvar=c("Model","Xi","Nu","Kappa"),timevar="Method",times=c("BART-RDD","BART1","BCF"))
 ### RMSE
 plot.rmse$Method <- as.factor(plot.rmse$Method)
-## coplot(RMSE~Method|as.factor(Nu)*as.factor(Kappa),data=plot.rmse,panel = function(x, y, ...){boxplot(y ~ x, add=TRUE,names=F)},xlim=c(0,4),number=1,overlap=0.1)
 bwplot(RMSE~Method|as.factor(Nu)+as.factor(Kappa),data=plot.rmse)
 ### Cov x Length
 p <- merge(plot.cov,plot.length)
@@ -161,4 +161,4 @@ coplot(Coverage~Length|as.factor(Nu)*as.factor(Kappa),data=p,
        bg=cols,pch=21,show.given=T)
 legend(x=1.9,y=2.16,legend=c("BART-RDD","BART1","BCF"),
        pt.bg=cols,pch=21,cex=0.75)
-xyplot(Coverage~Length|as.factor(Nu)+as.factor(Kappa),data=p,groups=Method,pch=21,bg=cols)
+xyplot(Coverage~Length|as.factor(Nu)+as.factor(Kappa),data=p,groups=Method,pch=21,bg=cols,auto.key=T)

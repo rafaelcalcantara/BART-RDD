@@ -10,6 +10,7 @@ rmse.cgs <- res.mat
 cov.cgs <- res.mat
 length.cgs <- res.mat
 alpha.cgs <- res.mat
+distance.cgs <- matrix(0,s,32)
 index <- 0
 for (j in 1:length(model))
 {
@@ -30,6 +31,7 @@ for (j in 1:length(model))
                 rmse.cgs[index,] <- c(sqrt(mean((cgs[,1]-xi[k])^2)),dgp)
                 cov.cgs[index,] <- c(mean(cgs[,2] <= xi[k] & xi[k] <= cgs[,3]),dgp)
                 length.cgs[index,] <- c(mean(cgs[,3] - cgs[,2]),dgp)
+                distance.cgs[,index] <- apply(cgs,1,function(x) ifelse(x[2]<=xi[k] & xi[k]<=x[3],0,min(abs(x[2]-xi[k]),abs(x[3]-xi[k]))))
             }
         }
     }

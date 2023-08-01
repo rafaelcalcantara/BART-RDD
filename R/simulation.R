@@ -29,87 +29,87 @@ if (Sys.info()["sysname"] == "Linux")
     num_sweeps    <- 150
     burnin        <- 50
     p_categorical <- 1
-    ## BART-RDD
-    fit <- function(s,n,m,xi,nu,kappa)
-    {
-        foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
-            {
-                print("BART-RDD simulations")
-                print(paste0("N=",n,"; Model=",m,"; xi=",xi,"; nu=",nu,"; kappa=",kappa))
-                print(paste0("Simulation ",i))
-                data <- readRDS(paste0("Data/DGP_",n,"_",m,"_",xi,"_",nu,"_",kappa,"_",i))
-                t0 <- Sys.time()
-                fit <- XBCF.rd(data$Y, data$W, data$X, c,
-                               Owidth = h, Omin = Omin, Opct = Opct,
-                               num_trees_mod = m, num_trees_con = m,
-                               num_cutpoints = n,
-                               num_sweeps = num_sweeps,
-                               burnin = burnin, Nmin = Nmin,
-                               p_categorical_con = p_categorical,
-                               p_categorical_mod = p_categorical,
-                               tau_con = 2*var(data$Y)/m,
-                               tau_mod = 0.5*var(data$Y)/m, parallel=F)
-                test <- -h<=data$X & data$X<=h
-                pred <- predict.XBCFrd(fit,data$W[test,],rep(0,sum(test)))
-                pred <- pred$tau.adj[,(burnin+1):num_sweeps]
-                t1 <- Sys.time()
-                dt <- difftime(t1,t0)
-                return(list(pred=pred,dt=dt))
-            }
-    }
-###
-    for (i in sample)
-    {
-        for (j in model)
-        {
-            for (k in xi)
-            {
-                for (l in nu)
-                {
-                    for (m in kappa)
-                    {
-                        bart.rdd <- fit(s,i,j,k,l,m)
-                        saveRDS(bart.rdd,paste0("Results/bart_rdd_",i,"_",j,"_",k,"_",l,"_",m,".rds"))
-                    }
-                }
-            }
-        }
-    }
-    ## CCT
-    fit <- function(s,n,m,xi,nu,kappa)
-    {
-        foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
-            {
-                print("CCT simulations")
-                print(paste0("N=",n,"; Model=",m,"; xi=",xi,"; nu=",nu,"; kappa=",kappa))
-                print(paste0("Simulation ",i))
-                data <- readRDS(paste0("Data/DGP_",n,"_",m,"_",xi,"_",nu,"_",kappa,"_",i))
-                t0 <- Sys.time()
-                fit <- rdrobust(data$Y,data$X,0,covs=data$W)
-                t1 <- Sys.time()
-                dt <- difftime(t1,t0)
-                pred <- c(fit$coef[1],fit$ci[3,])
-                return(list(pred=pred,dt=dt))
-            }
-    }
-###
-    for (i in sample)
-    {
-        for (j in model)
-        {
-            for (k in xi)
-            {
-                for (l in nu)
-                {
-                    for (m in kappa)
-                    {
-                        cct <- fit(s,i,j,k,l,m)
-                        saveRDS(cct,paste0("Results/cct_",i,"_",j,"_",k,"_",l,"_",m,".rds"))
-                    }
-                }
-            }
-        }
-    }
+##     ## BART-RDD
+##     fit <- function(s,n,m,xi,nu,kappa)
+##     {
+##         foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+##             {
+##                 print("BART-RDD simulations")
+##                 print(paste0("N=",n,"; Model=",m,"; xi=",xi,"; nu=",nu,"; kappa=",kappa))
+##                 print(paste0("Simulation ",i))
+##                 data <- readRDS(paste0("Data/DGP_",n,"_",m,"_",xi,"_",nu,"_",kappa,"_",i))
+##                 t0 <- Sys.time()
+##                 fit <- XBCF.rd(data$Y, data$W, data$X, c,
+##                                Owidth = h, Omin = Omin, Opct = Opct,
+##                                num_trees_mod = m, num_trees_con = m,
+##                                num_cutpoints = n,
+##                                num_sweeps = num_sweeps,
+##                                burnin = burnin, Nmin = Nmin,
+##                                p_categorical_con = p_categorical,
+##                                p_categorical_mod = p_categorical,
+##                                tau_con = 2*var(data$Y)/m,
+##                                tau_mod = 0.5*var(data$Y)/m, parallel=F)
+##                 test <- -h<=data$X & data$X<=h
+##                 pred <- predict.XBCFrd(fit,data$W[test,],rep(0,sum(test)))
+##                 pred <- pred$tau.adj[,(burnin+1):num_sweeps]
+##                 t1 <- Sys.time()
+##                 dt <- difftime(t1,t0)
+##                 return(list(pred=pred,dt=dt))
+##             }
+##     }
+## ###
+##     for (i in sample)
+##     {
+##         for (j in model)
+##         {
+##             for (k in xi)
+##             {
+##                 for (l in nu)
+##                 {
+##                     for (m in kappa)
+##                     {
+##                         bart.rdd <- fit(s,i,j,k,l,m)
+##                         saveRDS(bart.rdd,paste0("Results/bart_rdd_",i,"_",j,"_",k,"_",l,"_",m,".rds"))
+##                     }
+##                 }
+##             }
+##         }
+##     }
+##     ## CCT
+##     fit <- function(s,n,m,xi,nu,kappa)
+##     {
+##         foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+##             {
+##                 print("CCT simulations")
+##                 print(paste0("N=",n,"; Model=",m,"; xi=",xi,"; nu=",nu,"; kappa=",kappa))
+##                 print(paste0("Simulation ",i))
+##                 data <- readRDS(paste0("Data/DGP_",n,"_",m,"_",xi,"_",nu,"_",kappa,"_",i))
+##                 t0 <- Sys.time()
+##                 fit <- rdrobust(data$Y,data$X,0,covs=data$W)
+##                 t1 <- Sys.time()
+##                 dt <- difftime(t1,t0)
+##                 pred <- c(fit$coef[1],fit$ci[3,])
+##                 return(list(pred=pred,dt=dt))
+##             }
+##     }
+## ###
+##     for (i in sample)
+##     {
+##         for (j in model)
+##         {
+##             for (k in xi)
+##             {
+##                 for (l in nu)
+##                 {
+##                     for (m in kappa)
+##                     {
+##                         cct <- fit(s,i,j,k,l,m)
+##                         saveRDS(cct,paste0("Results/cct_",i,"_",j,"_",k,"_",l,"_",m,".rds"))
+##                     }
+##                 }
+##             }
+##         }
+##     }
     ## KR
     fit <- function(s,n,m,xi,nu,kappa)
     {

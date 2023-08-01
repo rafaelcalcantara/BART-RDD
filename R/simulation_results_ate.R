@@ -1,14 +1,18 @@
 ## Setup
+library(lattice)
 s      <- 1000
 sample <- c(500,1000)
 model  <- 3:6
 xi <- nu <- kappa <- c(0.25,2)
+i <- 1
 ## BART-RDD
 res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("BART-RDD","Model","Xi","Nu","Kappa"))))
 rmse.bart.rdd <- res.mat
 cov.bart.rdd <- res.mat
 length.bart.rdd <- res.mat
 alpha.bart.rdd <- res.mat
+interval.bart.rdd <- cbind(LI=0,UI=0,res.mat[,-1])
+distance.bart.rdd <- matrix(0,s,32)
 index <- 0
 for (j in 1:length(model))
 {
@@ -29,15 +33,20 @@ for (j in 1:length(model))
                 rmse.bart.rdd[index,] <- c(sqrt(mean((bart.rdd[,1]-xi[k])^2)),dgp)
                 cov.bart.rdd[index,] <- c(mean(bart.rdd[,2] <= xi[k] & xi[k] <= bart.rdd[,3]),dgp)
                 length.bart.rdd[index,] <- c(mean(bart.rdd[,3] - bart.rdd[,2]),dgp)
+                interval.bart.rdd[index,] <- c(mean(bart.rdd[,2]),mean(bart.rdd[,3]),dgp)
+                distance.bart.rdd[,index] <- apply(bart.rdd,1,function(x) ifelse(x[2]<=xi[k] & xi[k]<=x[3],0,min(abs(x[2]-xi[k]),abs(x[3]-xi[k]))))
             }
         }
     }
 }
+interval.bart.rdd <- reshape(interval.bart.rdd,direction="long",varying=c("LI","UI"),v.names="BART-RDD",idvar=c("Model","Xi","Nu","Kappa"),timevar="Interval",times=c("LI","UI"))
 ## CKT
 res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("CKT","Model","Xi","Nu","Kappa"))))
 rmse.ckt <- res.mat
 cov.ckt <- res.mat
 length.ckt <- res.mat
+interval.ckt <- cbind(LI=0,UI=0,res.mat[,-1])
+distance.ckt <- matrix(0,s,32)
 index <- 0
 for (j in 1:length(model))
 {
@@ -49,22 +58,27 @@ for (j in 1:length(model))
             {
                 index <- index+1
                 dgp <- c(model[j],xi[k],nu[l],kappa[m])
-                file <- paste0("Results/ckt_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
+                file <- paste0("Results/cct_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
                 ckt <- readRDS(paste0(file,".rds"))
                 ckt <- lapply(ckt, function(x) x$pred)
                 ckt <- do.call("rbind",ckt)
                 rmse.ckt[index,] <- c(sqrt(mean((ckt[,1]-xi[k])^2)),dgp)
                 cov.ckt[index,] <- c(mean(ckt[,2] <= xi[k] & xi[k] <= ckt[,3]),dgp)
                 length.ckt[index,] <- c(mean(ckt[,3] - ckt[,2]),dgp)
+                interval.ckt[index,] <- c(mean(ckt[,2]),mean(ckt[,3]),dgp)
+                distance.ckt[,index] <- apply(ckt,1,function(x) ifelse(x[2]<=xi[k] & xi[k]<=x[3],0,min(abs(x[2]-xi[k]),abs(x[3]-xi[k]))))
             }
         }
     }
 }
+interval.ckt <- reshape(interval.ckt,direction="long",varying=c("LI","UI"),v.names="CKT",idvar=c("Model","Xi","Nu","Kappa"),timevar="Interval",times=c("LI","UI"))
 ## KR
 res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("KR","Model","Xi","Nu","Kappa"))))
 rmse.kr <- res.mat
 cov.kr <- res.mat
 length.kr <- res.mat
+interval.kr <- cbind(LI=0,UI=0,res.mat[,-1])
+distance.kr <- matrix(0,s,32)
 index <- 0
 for (j in 1:length(model))
 {
@@ -78,21 +92,27 @@ for (j in 1:length(model))
                 dgp <- c(model[j],xi[k],nu[l],kappa[m])
                 file <- paste0("Results/kr_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
                 kr <- readRDS(paste0(file,".rds"))
+                dt <- lapply(kr, function(x) x$dt)
                 kr <- lapply(kr, function(x) x$pred)
                 kr <- do.call("rbind",kr)
                 rmse.kr[index,] <- c(sqrt(mean((kr[,1]-xi[k])^2)),dgp)
                 cov.kr[index,] <- c(mean(kr[,2] <= xi[k] & xi[k] <= kr[,3]),dgp)
                 length.kr[index,] <- c(mean(kr[,3] - kr[,2]),dgp)
+                interval.kr[index,] <- c(mean(kr[,2]),mean(kr[,3]),dgp)
+                distance.kr[,index] <- apply(kr,1,function(x) ifelse(x[2]<=xi[k] & xi[k]<=x[3],0,min(abs(x[2]-xi[k]),abs(x[3]-xi[k]))))
             }
         }
     }
 }
+interval.kr <- reshape(interval.kr,direction="long",varying=c("LI","UI"),v.names="KR",idvar=c("Model","Xi","Nu","Kappa"),timevar="Interval",times=c("LI","UI"))
 ## BART1
 res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("BART1","Model","Xi","Nu","Kappa"))))
 rmse.bart.1 <- res.mat
 cov.bart.1 <- res.mat
 length.bart.1 <- res.mat
 alpha.bart.1 <- res.mat
+interval.bart.1 <- cbind(LI=0,UI=0,res.mat[,-1])
+distance.bart.1 <- matrix(0,s,32)
 index <- 0
 for (j in 1:length(model))
 {
@@ -113,16 +133,21 @@ for (j in 1:length(model))
                 rmse.bart.1[index,] <- c(sqrt(mean((bart.1[,1]-xi[k])^2)),dgp)
                 cov.bart.1[index,] <- c(mean(bart.1[,2] <= xi[k] & xi[k] <= bart.1[,3]),dgp)
                 length.bart.1[index,] <- c(mean(bart.1[,3] - bart.1[,2]),dgp)
+                interval.bart.1[index,] <- c(mean(bart.1[,2]),mean(bart.1[,3]),dgp)
+                distance.bart.1[,index] <- apply(bart.1,1,function(x) ifelse(x[2]<=xi[k] & xi[k]<=x[3],0,min(abs(x[2]-xi[k]),abs(x[3]-xi[k]))))
             }
         }
     }
 }
+interval.bart.1 <- reshape(interval.bart.1,direction="long",varying=c("LI","UI"),v.names="BART1",idvar=c("Model","Xi","Nu","Kappa"),timevar="Interval",times=c("LI","UI"))
 ## BART2
 res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("BART2","Model","Xi","Nu","Kappa"))))
 rmse.bart.2 <- res.mat
 cov.bart.2 <- res.mat
 length.bart.2 <- res.mat
-alhpa.bart.2 <- res.mat
+alpha.bart.2 <- res.mat
+interval.bart.2 <- cbind(LI=0,UI=0,res.mat[,-1])
+distance.bart.2 <- matrix(0,s,32)
 index <- 0
 for (j in 1:length(model))
 {
@@ -143,10 +168,13 @@ for (j in 1:length(model))
                 rmse.bart.2[index,] <- c(sqrt(mean((bart.2[,1]-xi[k])^2)),dgp)
                 cov.bart.2[index,] <- c(mean(bart.2[,2] <= xi[k] & xi[k] <= bart.2[,3]),dgp)
                 length.bart.2[index,] <- c(mean(bart.2[,3] - bart.2[,2]),dgp)
+                interval.bart.2[index,] <- c(mean(bart.2[,2]),mean(bart.2[,3]),dgp)
+                distance.bart.2[,index] <- apply(bart.2,1,function(x) ifelse(x[2]<=xi[k] & xi[k]<=x[3],0,min(abs(x[2]-xi[k]),abs(x[3]-xi[k]))))
             }
         }
     }
 }
+interval.bart.2 <- reshape(interval.bart.2,direction="long",varying=c("LI","UI"),v.names="BART2",idvar=c("Model","Xi","Nu","Kappa"),timevar="Interval",times=c("LI","UI"))
 ## BCF
 bcf <- vector("list",32)
 res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("BCF","Model","Xi","Nu","Kappa"))))
@@ -154,6 +182,8 @@ rmse.bcf <- res.mat
 cov.bcf <- res.mat
 length.bcf <- res.mat
 alpha.bcf <- res.mat
+interval.bcf <- cbind(LI=0,UI=0,res.mat[,-1])
+distance.bcf <- matrix(0,s,32)
 index <- 0
 for (j in 1:length(model))
 {
@@ -174,46 +204,74 @@ for (j in 1:length(model))
                 rmse.bcf[index,] <- c(sqrt(mean((bcf[,1]-xi[k])^2)),dgp)
                 cov.bcf[index,] <- c(mean(bcf[,2] <= xi[k] & xi[k] <= bcf[,3]),dgp)
                 length.bcf[index,] <- c(mean(bcf[,3] - bcf[,2]),dgp)
+                interval.bcf[index,] <- c(mean(bcf[,2]),mean(bcf[,3]),dgp)
+                distance.bcf[,index] <- apply(bcf,1,function(x) ifelse(x[2]<=xi[k] & xi[k]<=x[3],0,min(abs(x[2]-xi[k]),abs(x[3]-xi[k]))))
             }
         }
     }
 }
+interval.bcf <- reshape(interval.bcf,direction="long",varying=c("LI","UI"),v.names="BCF",idvar=c("Model","Xi","Nu","Kappa"),timevar="Interval",times=c("LI","UI"))
 ## Merge results
-rmse <- merge(rmse.bart.rdd,rmse.ckt)
-## rmse <- merge(rmse,rmse.kr)
-rmse <- merge(rmse,rmse.bart.1)
+load("Tables/cgs.RData")
+rmse <- merge(rmse.bart.rdd,rmse.bart.1)
 rmse <- merge(rmse,rmse.bart.2)
 rmse <- merge(rmse,rmse.bcf)
-cov <- merge(cov.bart.rdd,cov.ckt)
-cov <- merge(cov,cov.kr)
-cov <- merge(cov,cov.bart.1)
+rmse <- merge(rmse,rmse.ckt)
+rmse <- merge(rmse,rmse.kr)
+rmse <- merge(rmse,rmse.cgs)
+###
+cov <- merge(cov.bart.rdd,cov.bart.1)
 cov <- merge(cov,cov.bart.2)
 cov <- merge(cov,cov.bcf)
-length <- merge(length.bart.rdd,length.ckt)
-length <- merge(length,length.kr)
-length <- merge(length,length.bart.1)
+cov <- merge(cov,cov.ckt)
+cov <- merge(cov,cov.kr)
+cov <- merge(cov,cov.cgs)
+###
+length <- merge(length.bart.rdd,length.bart.1)
 length <- merge(length,length.bart.2)
 length <- merge(length,length.bcf)
+length <- merge(length,length.ckt)
+length <- merge(length,length.kr)
+length <- merge(length,length.cgs)
+###
+alpha <- merge(alpha.bart.rdd,alpha.bart.1)
+alpha <- merge(alpha,alpha.bart.2)
+alpha <- merge(alpha,alpha.bcf)
+alpha <- merge(alpha,alpha.cgs)
+###
+interval <- merge(interval.bart.rdd,interval.bart.1)
+interval <- merge(interval,interval.bart.2)
+interval <- merge(interval,interval.bcf)
+interval <- merge(interval,interval.ckt)
+interval <- merge(interval,interval.kr)
+## interval <- merge(interval,interval.cgs)
 ## Plots
-plot.rmse <- reshape(rmse,direction="long",varying=c("BART-RDD","CKT","KR","BART1","BART2","BCF"),v.names="RMSE",idvar=c("Model","Xi","Nu","Kappa"),timevar="Method",times=c("BART-RDD","CKT","KR","BART1","BART2","BCF"))
-plot.cov <- reshape(cov,direction="long",varying=c("BART-RDD","CKT","KR","BART1","BART2","BCF"),v.names="Coverage",idvar=c("Model","Xi","Nu","Kappa"),timevar="Method",times=c("BART-RDD","CKT","KR","BART1","BART2","BCF"))
-plot.length <- reshape(length,direction="long",varying=c("BART-RDD","CKT","KR","BART1","BART2","BCF"),v.names="Length",idvar=c("Model","Xi","Nu","Kappa"),timevar="Method",times=c("BART-RDD","CKT","KR","BART1","BART2","BCF"))
+plot.rmse <- reshape(rmse,direction="long",varying=c("BART-RDD","BART1","BART2","BCF","CKT","KR","CGS"),v.names="RMSE",idvar=c("Model","Xi","Nu","Kappa"),timevar="Method",times=c("BART-RDD","BART1","BART2","BCF","CKT","KR","CGS"))
+plot.cov <- reshape(cov,direction="long",varying=c("BART-RDD","BART1","BART2","BCF","CKT","KR","CGS"),v.names="Coverage",idvar=c("Model","Xi","Nu","Kappa"),timevar="Method",times=c("BART-RDD","BART1","BART2","BCF","CKT","KR","CGS"))
+plot.length <- reshape(length,direction="long",varying=c("BART-RDD","BART1","BART2","BCF","CKT","KR","CGS"),v.names="Length",idvar=c("Model","Xi","Nu","Kappa"),timevar="Method",times=c("BART-RDD","BART1","BART2","BCF","CKT","KR","CGS"))
+plot.interval <- reshape(interval,direction="long",varying=c("BART-RDD","BART1","BART2","BCF","CKT","KR"),v.names="Value",idvar=c("Model","Xi","Nu","Kappa","Interval"),timevar="Method",times=c("BART-RDD","BART1","BART2","BCF","CKT","KR"))
+plot.interval$Method <- as.factor(plot.interval$Method)
 ### RMSE
 plot.rmse$Method <- as.factor(plot.rmse$Method)
-coplot(RMSE~Method|as.factor(Nu)*as.factor(Kappa),data=plot.rmse,panel = function(x, y, ...){boxplot(y ~ x, add=TRUE,names=F)},xlim=c(0,7),number=1,overlap=0.1)
+xyplot(RMSE~Method|factor(Nu,labels=paste("Nu=",c(0.25,2),sep=""))+factor(Kappa,labels=paste("Kappa=",c(0.25,2),sep="")),data=plot.rmse,groups=factor(Xi,labels=paste("Xi=",c(0.25,2),sep="")),auto.key=T,scales=list(cex=0.5))
 ### Cov x Length
 p <- merge(plot.cov,plot.length)
 cols <- rainbow(7)
 coplot(Coverage~Length|as.factor(Nu)*as.factor(Kappa),data=p,
        bg=cols,pch=21,show.given=T)
-legend("topright",legend=c("BART-RDD","CKT","KR","BART1","BART2","BCF"),
+legend("topright",legend=c("BART-RDD","BART1","BART2","BCF","CGS","CKT","KR"),
        pt.bg=cols,pch=21,cex=0.75)
-#####
-bart.test <- bart.rdd[rmse.bart.rdd$Xi==0.25 & rmse.bart.rdd$Nu==2 & rmse.bart.rdd$Kappa==0.25]
-bart.test <- do.call("rbind",bart.test)
-bart.test <- bart.test[bart.test[,2]>=0.25|0.25>=bart.test[,3],]
-mean(apply(bart.test,1,function(x) max(x[2]-0.25,0.25-x[3])))
-bart.test <- bart.rdd[rmse.bart.rdd$Xi==2 & rmse.bart.rdd$Nu==2 & rmse.bart.rdd$Kappa==0.25]
-bart.test <- do.call("rbind",bart.test)
-bart.test <- bart.test[bart.test[,2]>=2|2>=bart.test[,3],]
-mean(apply(bart.test,1,function(x) max(x[2]-2,2-x[3])))
+### Interval inflation
+d1 <- data.frame(Method="BART-RDD",delta=apply(distance.bart.rdd,2,quantile,0.95))
+d2 <- data.frame(Method="BART1",delta=apply(distance.bart.1,2,quantile,0.95))
+d3 <- data.frame(Method="BART2",delta=apply(distance.bart.2,2,quantile,0.95))
+d4 <- data.frame(Method="BCF",delta=apply(distance.bcf,2,quantile,0.95))
+d5 <- data.frame(Method="CKT",delta=apply(distance.ckt,2,quantile,0.95))
+d6 <- data.frame(Method="KR",delta=apply(distance.kr,2,quantile,0.95))
+d <- rbind(d1,d2,d3,d4,d5,d6)
+d$delta <- 2*d$delta
+d <- cbind(d,subset(plot.length,Method!="CGS",select=c("Method","Model","Xi","Nu","Kappa","Length")))
+d$`Corrected Interval` <- d$delta+d$Length
+boxplot(`Corrected Interval`~Method,data=subset(d,Method!="KR"))
+d$Method <- as.factor(d$Method)
+xyplot(`Corrected Interval`~Method|factor(Nu,labels=paste("Nu=",c(0.25,2),sep=""))+factor(Kappa,labels=paste("Kappa=",c(0.25,2),sep="")),data=subset(d,Method!="KR"),groups=factor(Xi,labels=paste("Xi=",c(0.25,2),sep="")),auto.key=T,scales=list(cex=0.5))
