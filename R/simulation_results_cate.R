@@ -157,10 +157,10 @@ plot.length <- reshape(length,direction="long",varying=c("BART-RDD","BART1","BCF
 ### RMSE
 plot.rmse$Method <- as.factor(plot.rmse$Method)
 png("Figures/rmse_cate.png")
-xyplot(RMSE~Method|factor(Nu,labels=paste("Nu=",c(0.25,2),sep=""))+factor(Kappa,labels=paste("Kappa=",c(0.25,2),sep="")),data=plot.rmse,scales=list(cex=0.5),col="black")
+xyplot(RMSE~Method|factor(Nu,labels=paste("Nu=",c(0.25,2),sep=""))+factor(Kappa,labels=paste("Kappa=",c(0.25,2),sep="")),data=plot.rmse,groups=factor(Xi,labels=paste("Xi=",c(0.25,2),sep="")),auto.key=list(column=2,cex=0.75),scales=list(cex=0.5),pch=21)
 dev.off()
 ### Cov x Length
 p <- merge(plot.cov,plot.length)
 png("Figures/coverage_cate.png")
-xyplot(Coverage~Length|factor(Nu,labels=paste("Nu=",c(0.25,2),sep=""))+factor(Kappa,labels=paste("Kappa=",c(0.25,2),sep="")),data=p,groups=Method,pch=21,bg=cols,auto.key=list(column=3,cex=0.75))
+xyplot(Coverage~Length|factor(Nu,labels=paste("Nu=",c(0.25,2),sep=""))+factor(Kappa,labels=paste("Kappa=",c(0.25,2),sep="")),data=p,groups=Method,pch=21,auto.key=list(column=3,cex=0.75))
 dev.off()
