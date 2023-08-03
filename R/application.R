@@ -368,7 +368,7 @@ legend("topright",legend=c("Treatment","Control"),
 #### Posterior for subgroups
 s1 <- w[test,]$age_at_entry<19 & w[test,]$loc_campus3==1
 s2 <- w[test,]$age_at_entry<19 & w[test,]$loc_campus3==0
-s3 <- w[test,]$age_at_entry<19 & w[test,]$hsgrade_pct<34 & w[test,]$loc_campus1==1
+s3 <- w[test,]$age_at_entry<19 & w[test,]$hsgrade_pct<34 & w[test,]$loc_campus3==1
 s4 <- w[test,]$age_at_entry<19 & w[test,]$hsgrade_pct<34 & w[test,]$loc_campus3==0
 #####
 p1 <- colMeans(xbcf.cont[[2]]$pred[s1,])
