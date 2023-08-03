@@ -377,13 +377,13 @@ p3 <- colMeans(xbcf.cont[[2]]$pred[s3,])
 p4 <- colMeans(xbcf.cont[[2]]$pred[s4,])
 #####
 png("Figures/post_age.png")
-boxplot(by(xbcf.cont[[1]]$pred,w[test,]$age_at_entry,colMeans),axes=F,xlab="Age at entry",ylab=expression(tau))
+boxplot(by(xbcf.cont[[2]]$pred,w[test,]$age_at_entry,colMeans),axes=F,xlab="Age at entry",ylab=expression(tau))
 axis(1,at=1:5,labels=17:21)
 axis(2)
 dev.off()
 ##
-grade.sd <- by(xbcf.cont[[1]]$pred,w[test,]$hsgrade_pct,function(x) sd(colMeans(x)))
-grade.mean <- by(xbcf.cont[[1]]$pred,w[test,]$hsgrade_pct,function(x) mean(colMeans(x)))
+grade.sd <- by(xbcf.cont[[2]]$pred,w[test,]$hsgrade_pct,function(x) sd(colMeans(x)))
+grade.mean <- by(xbcf.cont[[2]]$pred,w[test,]$hsgrade_pct,function(x) mean(colMeans(x)))
 grade.sd.u <- grade.mean + grade.sd
 grade.sd.l <- grade.mean - grade.sd
 grade.plot <- cbind(grade.sd.l,grade.mean,grade.sd.u)
