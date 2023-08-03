@@ -371,10 +371,10 @@ s2 <- w[test,]$age_at_entry<19 & w[test,]$loc_campus3==0
 s3 <- w[test,]$age_at_entry<19 & w[test,]$hsgrade_pct<34 & w[test,]$loc_campus1==1
 s4 <- w[test,]$age_at_entry<19 & w[test,]$hsgrade_pct<34 & w[test,]$loc_campus3==0
 #####
-p1 <- colMeans(xbcf.cont[[1]]$pred[s1,])
-p2 <- colMeans(xbcf.cont[[1]]$pred[s2,])
-p3 <- colMeans(xbcf.cont[[1]]$pred[s3,])
-p4 <- colMeans(xbcf.cont[[1]]$pred[s4,])
+p1 <- colMeans(xbcf.cont[[2]]$pred[s1,])
+p2 <- colMeans(xbcf.cont[[2]]$pred[s2,])
+p3 <- colMeans(xbcf.cont[[2]]$pred[s3,])
+p4 <- colMeans(xbcf.cont[[2]]$pred[s4,])
 #####
 png("Figures/post_age.png")
 boxplot(by(xbcf.cont[[1]]$pred,w[test,]$age_at_entry,colMeans),axes=F,xlab="Age at entry",ylab=expression(tau))
