@@ -138,19 +138,19 @@ for (j in 1:length(model))
     }
 }
 ## Merge results
-load("Tables/cgs.RData")
+cgs.dt <- readRDS("Tables/cgs_dt.rds")
 dt <- merge(bart.rdd.dt,bart1.dt)
 dt <- merge(dt,bart2.dt)
 dt <- merge(dt,bcf.dt)
 dt <- merge(dt,ckt.dt)
 dt <- merge(dt,kr.dt)
-## dt <- merge(dt,cgs.dt)
+dt <- merge(dt,cgs.dt)
 ## Plots
-plot.dt <- reshape(dt,direction="long",varying=c("BART-RDD","BART1","BART2","BCF","CKT","KR"),v.names="Runtime",timevar="Method",times=c("BART-RDD","BART1","BART2","BCF","CKT","KR"))
+plot.dt <- reshape(dt,direction="long",varying=c("BART-RDD","BART1","BART2","BCF","CKT","KR","CGS"),v.names="Running time",timevar="Method",times=c("BART-RDD","BART1","BART2","BCF","CKT","KR","CGS"))
 ### RMSE
 plot.dt$Method <- as.factor(plot.dt$Method)
-## png("Figures/runtime.png")
-boxplot(Runtime~Method,data=plot.dt,axes=F)
-axis(1,at=1:6,labels=c("BART-RDD","BART1","BART2","BCF","CKT","KR"),cex.axis=0.75)
+png("Figures/runtime.png")
+boxplot(`Running time`~Method,data=plot.dt,axes=F)
+axis(1,at=1:7,labels=c("BART-RDD","BART1","BART2","BCF","CGS","CKT","KR"),cex.axis=0.75)
 axis(2,cex.axis=0.75)
-## dev.off()
+dev.off()
