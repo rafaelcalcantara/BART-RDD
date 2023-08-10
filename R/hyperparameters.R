@@ -10,7 +10,7 @@ xi <- nu <- kappa <- c(0.25,2)
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
 c             <- 0
-Omin          <- 10
+Omin          <- 1
 h             <- 0.1
 Opct          <- 0.9
 ntrees        <- 10
@@ -141,3 +141,4 @@ dev.off()
 ## axis(2,at=yticks,labels=F)
 ## text(y=yticks,par("usr")[1]-0.002,labels=round(yticks,2),pos=2,xpd=T,cex=0.75)
 ## dev.off()
+print("Simulation ended!")

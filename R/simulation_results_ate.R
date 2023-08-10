@@ -1,6 +1,6 @@
 ## Setup
 library(lattice)
-s      <- 1000
+s      <- 500
 sample <- c(500,1000)
 model  <- 3:6
 xi <- nu <- kappa <- c(0.25,2)
@@ -61,7 +61,7 @@ for (j in 1:length(model))
                 file <- paste0("Results/cct_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
                 ckt <- readRDS(paste0(file,".rds"))
                 ckt <- lapply(ckt, function(x) x$pred)
-                ckt <- do.call("rbind",ckt)
+                ckt <- do.call("rbind",ckt)[1:s,]
                 rmse.ckt[index,] <- c(sqrt(mean((ckt[,1]-xi[k])^2)),dgp)
                 cov.ckt[index,] <- c(mean(ckt[,2] <= xi[k] & xi[k] <= ckt[,3]),dgp)
                 length.ckt[index,] <- c(mean(ckt[,3] - ckt[,2]),dgp)
@@ -94,7 +94,7 @@ for (j in 1:length(model))
                 kr <- readRDS(paste0(file,".rds"))
                 dt <- lapply(kr, function(x) x$dt)
                 kr <- lapply(kr, function(x) x$pred)
-                kr <- do.call("rbind",kr)
+                kr <- do.call("rbind",kr)[1:s,]
                 rmse.kr[index,] <- c(sqrt(mean((kr[,1]-xi[k])^2)),dgp)
                 cov.kr[index,] <- c(mean(kr[,2] <= xi[k] & xi[k] <= kr[,3]),dgp)
                 length.kr[index,] <- c(mean(kr[,3] - kr[,2]),dgp)
@@ -129,7 +129,7 @@ for (j in 1:length(model))
                 bart.1 <- lapply(bart.1, function(x) x$pred)
                 a <- sapply(bart.1, function(x) mean(x<=xi[k]))
                 alpha.bart.1[index,] <- c(mean(a),dgp)
-                bart.1 <- t(sapply(bart.1,function(x) c(mean(colMeans(x)),quantile(colMeans(x),c(0.025,0.975)))))
+                bart.1 <- t(sapply(bart.1,function(x) c(mean(colMeans(x)),quantile(colMeans(x),c(0.025,0.975)))))[1:s,]
                 rmse.bart.1[index,] <- c(sqrt(mean((bart.1[,1]-xi[k])^2)),dgp)
                 cov.bart.1[index,] <- c(mean(bart.1[,2] <= xi[k] & xi[k] <= bart.1[,3]),dgp)
                 length.bart.1[index,] <- c(mean(bart.1[,3] - bart.1[,2]),dgp)
@@ -164,7 +164,7 @@ for (j in 1:length(model))
                 bart.2 <- lapply(bart.2, function(x) x$pred)
                 a <- sapply(bart.2, function(x) mean(x<=xi[k]))
                 alpha.bart.2[index,] <- c(mean(a),dgp)
-                bart.2 <- t(sapply(bart.2,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
+                bart.2 <- t(sapply(bart.2,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))[1:s,]
                 rmse.bart.2[index,] <- c(sqrt(mean((bart.2[,1]-xi[k])^2)),dgp)
                 cov.bart.2[index,] <- c(mean(bart.2[,2] <= xi[k] & xi[k] <= bart.2[,3]),dgp)
                 length.bart.2[index,] <- c(mean(bart.2[,3] - bart.2[,2]),dgp)
@@ -200,7 +200,7 @@ for (j in 1:length(model))
                 bcf <- lapply(bcf, function(x) x$pred)
                 a <- sapply(bcf, function(x) mean(x<=xi[k]))
                 alpha.bcf[index,] <- c(mean(a),dgp)
-                bcf <- t(sapply(bcf,function(x) c(mean(colMeans(x)),quantile(colMeans(x),c(0.025,0.975)))))
+                bcf <- t(sapply(bcf,function(x) c(mean(colMeans(x)),quantile(colMeans(x),c(0.025,0.975)))))[1:s,]
                 rmse.bcf[index,] <- c(sqrt(mean((bcf[,1]-xi[k])^2)),dgp)
                 cov.bcf[index,] <- c(mean(bcf[,2] <= xi[k] & xi[k] <= bcf[,3]),dgp)
                 length.bcf[index,] <- c(mean(bcf[,3] - bcf[,2]),dgp)

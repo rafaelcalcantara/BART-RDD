@@ -2,7 +2,7 @@
 library(parallel)
 library(foreach)
 library(doParallel)
-s      <- 1000
+s      <- 500
 sample <- 500
 model  <- 3:6
 xi <- nu <- kappa <- c(0.25,2)
@@ -21,7 +21,7 @@ if (Sys.info()["sysname"] == "Linux")
     library(HighDimRD)
     ## BART Prior settings
     c             <- 0
-    Omin          <- 10
+    Omin          <- 1
     h             <- 0.1
     Opct          <- 0.9
     m             <- 10
@@ -146,153 +146,153 @@ if (Sys.info()["sysname"] == "Linux")
     ##             }
     ##         }
     ##     }
-    ## BART1
-    fit <- function(s,n,Model,xi,nu,kappa)
-    {
-        foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
-            {
-                print("BART1 simulations")
-                print(paste0("N=",n,"; Model=",Model,"; xi=",xi,"; nu=",nu,"; kappa=",kappa))
-                print(paste0("Simulation ",i))
-                data <- readRDS(paste0("Data/DGP_",n,"_",Model,"_",xi,"_",nu,"_",kappa,"_",i))
-                X <- cbind(data$X,data$W,data$Z)
-                t0 <- Sys.time()
-                fit <- XBART(data$Y, X, num_trees = m,
-                             num_cutpoints = n, num_sweeps = num_sweeps,
-                             burnin = burnin, Nmin = Nmin,
-                             p_categorical_con = p_categorical+1,
-                             ## add 1 for Z
-                             p_categorical_mod = p_categorical+1,
-                             tau_con = 2*var(y)/m,
-                             tau_mod = 0.5*var(y)/m, parallel=F)
-                test <- -h<=data$X & data$X<=h
-                pred1 <- predict.XBART(fit,cbind(rep(0,sum(test)),data$W[test,],rep(1,sum(test))))[,(burnin+1):num_sweeps]
-                pred0 <- predict.XBART(fit,cbind(rep(0,sum(test)),data$W[test,],rep(0,sum(test))))[,(burnin+1):num_sweeps]
-                pred <- pred1-pred0
-                t1 <- Sys.time()
-                dt <- difftime(t1,t0)
-                return(list(pred=pred,dt=dt))
-            }
-    }
-###
-    for (i in model)
-    {
-        for (j in xi)
-        {
-            for (k in nu)
-            {
-                for (l in kappa)
-                {
-                    bart1 <- fit(s,500,i,j,k,l)
-                    saveRDS(bart1,paste0("Results/bart1_500_",i,"_",j,"_",k,"_",l,".rds"))
-                }
-            }
-        }
-    }
-    ## BART2
-    fit <- function(s,n,Model,xi,nu,kappa)
-    {
-        foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
-            {
-                print("BART2 simulations")
-                print(paste0("N=",n,"; Model=",Model,"; xi=",xi,"; nu=",nu,"; kappa=",kappa))
-                print(paste0("Simulation ",i))
-                data <- readRDS(paste0("Data/DGP_",n,"_",Model,"_",xi,"_",nu,"_",kappa,"_",i))
-                X <- cbind(data$X,data$W)
-                t0 <- Sys.time()
-                fit0 <- XBART(data$Y[!data$Z], X[!data$Z,],
-                              num_trees = m,
-                              num_cutpoints = n,
-                              num_sweeps = num_sweeps,
-                              burnin = burnin, Nmin = Nmin,
-                              p_categorical_con = p_categorical,
-                              p_categorical_mod = p_categorical,
-                              tau_con = 2*var(data$Y[!data$Z])/m,
-                              tau_mod = 0.5*var(data$Y[!data$Z])/m,
-                              parallel=F)
-                fit1 <- XBART(data$Y[data$Z], X[data$Z,],
-                              num_trees = m,
-                              num_cutpoints = n,
-                              num_sweeps = num_sweeps,
-                              burnin = burnin, Nmin = Nmin,
-                              p_categorical_con = p_categorical,
-                              p_categorical_mod = p_categorical,
-                              tau_con = 2*var(data$Y[data$Z])/m,
-                              tau_mod = 0.5*var(data$Y[data$Z])/m,
-                              parallel=F)
-                test0 <- -h<=data$X
-                test1 <- data$X<=h
-                pred1 <- predict.XBART(fit1,cbind(rep(0,sum(data$Z & test1)),data$W[test1,]))
-                pred0 <- predict.XBART(fit0,cbind(rep(0,sum(!data$Z & test0)),data$W[test0,]))
-                pred <- colMeans(pred1[,(burnin+1):num_sweeps])-colMeans(pred0[,(burnin+1):num_sweeps])
-                t1 <- Sys.time()
-                dt <- difftime(t1,t0)
-                return(list(pred=pred,dt=dt))
-            }
-    }
-###
-    for (i in model)
-    {
-        for (j in xi)
-        {
-            for (k in nu)
-            {
-                for (l in kappa)
-                {
-                    bart2 <- fit(s,500,i,j,k,l)
-                    saveRDS(bart2,paste0("Results/bart2_500_",i,"_",j,"_",k,"_",l,".rds"))
-                }
-            }
-        }
-    }
-    ## BCF
-    fit <- function(s,n,Model,xi,nu,kappa)
-    {
-        foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
-            {
-                print("BCF simulations")
-                print(paste0("N=",n,"; Model=",Model,"; xi=",xi,"; nu=",nu,"; kappa=",kappa))
-                print(paste0("Simulation ",i))
-                data <- readRDS(paste0("Data/DGP_",n,"_",Model,"_",xi,"_",nu,"_",kappa,"_",i))
-                X <- cbind(data$X,data$W)
-                t0 <- Sys.time()
-                fit <- XBCF.discrete(data$Y, data$Z, X_con=X, X_mod=X,
-                                     num_trees_con = m,
-                                     num_trees_mod = m,
-                                     num_cutpoints = n,
-                                     num_sweeps = num_sweeps,
-                                     burnin = burnin, Nmin = Nmin,
-                                     p_categorical_con = p_categorical,
-                                     p_categorical_mod = p_categorical,
-                                     tau_con = 2*var(data$Y)/m,
-                                     tau_mod = 0.5*var(data$Y)/m,
-                                     parallel=F)
-                test <- -h<=data$X & data$X<=h
-                pred <- predict.XBCFdiscrete(fit,cbind(rep(0,sum(test)),data$W[test,]),
-                                             cbind(rep(0,sum(test)),data$W[test,]),
-                                             data$Z[test],pihat=data$Z[test],
-                                             burnin=burnin)
-                pred <- pred$tau.adj[,(burnin+1):num_sweeps]
-                t1 <- Sys.time()
-                dt <- difftime(t1,t0)
-                return(list(pred=pred,dt=dt))
-            }
-    }
-###
-    for (i in model)
-    {
-        for (j in xi)
-        {
-            for (k in nu)
-            {
-                for (l in kappa)
-                {
-                    bcf <- fit(s,500,i,j,k,l)
-                    saveRDS(bcf,paste0("Results/bcf_500_",i,"_",j,"_",k,"_",l,".rds"))
-                }
-            }
-        }
-    }
+##     ## BART1
+##     fit <- function(s,n,Model,xi,nu,kappa)
+##     {
+##         foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+##             {
+##                 print("BART1 simulations")
+##                 print(paste0("N=",n,"; Model=",Model,"; xi=",xi,"; nu=",nu,"; kappa=",kappa))
+##                 print(paste0("Simulation ",i))
+##                 data <- readRDS(paste0("Data/DGP_",n,"_",Model,"_",xi,"_",nu,"_",kappa,"_",i))
+##                 X <- cbind(data$X,data$W,data$Z)
+##                 t0 <- Sys.time()
+##                 fit <- XBART(data$Y, X, num_trees = m,
+##                              num_cutpoints = n, num_sweeps = num_sweeps,
+##                              burnin = burnin, Nmin = Nmin,
+##                              p_categorical_con = p_categorical+1,
+##                              ## add 1 for Z
+##                              p_categorical_mod = p_categorical+1,
+##                              tau_con = 2*var(y)/m,
+##                              tau_mod = 0.5*var(y)/m, parallel=F)
+##                 test <- -h<=data$X & data$X<=h
+##                 pred1 <- predict.XBART(fit,cbind(rep(0,sum(test)),data$W[test,],rep(1,sum(test))))[,(burnin+1):num_sweeps]
+##                 pred0 <- predict.XBART(fit,cbind(rep(0,sum(test)),data$W[test,],rep(0,sum(test))))[,(burnin+1):num_sweeps]
+##                 pred <- pred1-pred0
+##                 t1 <- Sys.time()
+##                 dt <- difftime(t1,t0)
+##                 return(list(pred=pred,dt=dt))
+##             }
+##     }
+## ###
+##     for (i in model)
+##     {
+##         for (j in xi)
+##         {
+##             for (k in nu)
+##             {
+##                 for (l in kappa)
+##                 {
+##                     bart1 <- fit(s,500,i,j,k,l)
+##                     saveRDS(bart1,paste0("Results/bart1_500_",i,"_",j,"_",k,"_",l,".rds"))
+##                 }
+##             }
+##         }
+##     }
+##     ## BART2
+##     fit <- function(s,n,Model,xi,nu,kappa)
+##     {
+##         foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+##             {
+##                 print("BART2 simulations")
+##                 print(paste0("N=",n,"; Model=",Model,"; xi=",xi,"; nu=",nu,"; kappa=",kappa))
+##                 print(paste0("Simulation ",i))
+##                 data <- readRDS(paste0("Data/DGP_",n,"_",Model,"_",xi,"_",nu,"_",kappa,"_",i))
+##                 X <- cbind(data$X,data$W)
+##                 t0 <- Sys.time()
+##                 fit0 <- XBART(data$Y[!data$Z], X[!data$Z,],
+##                               num_trees = m,
+##                               num_cutpoints = n,
+##                               num_sweeps = num_sweeps,
+##                               burnin = burnin, Nmin = Nmin,
+##                               p_categorical_con = p_categorical,
+##                               p_categorical_mod = p_categorical,
+##                               tau_con = 2*var(data$Y[!data$Z])/m,
+##                               tau_mod = 0.5*var(data$Y[!data$Z])/m,
+##                               parallel=F)
+##                 fit1 <- XBART(data$Y[data$Z], X[data$Z,],
+##                               num_trees = m,
+##                               num_cutpoints = n,
+##                               num_sweeps = num_sweeps,
+##                               burnin = burnin, Nmin = Nmin,
+##                               p_categorical_con = p_categorical,
+##                               p_categorical_mod = p_categorical,
+##                               tau_con = 2*var(data$Y[data$Z])/m,
+##                               tau_mod = 0.5*var(data$Y[data$Z])/m,
+##                               parallel=F)
+##                 test0 <- -h<=data$X
+##                 test1 <- data$X<=h
+##                 pred1 <- predict.XBART(fit1,cbind(rep(0,sum(data$Z & test1)),data$W[test1,]))
+##                 pred0 <- predict.XBART(fit0,cbind(rep(0,sum(!data$Z & test0)),data$W[test0,]))
+##                 pred <- colMeans(pred1[,(burnin+1):num_sweeps])-colMeans(pred0[,(burnin+1):num_sweeps])
+##                 t1 <- Sys.time()
+##                 dt <- difftime(t1,t0)
+##                 return(list(pred=pred,dt=dt))
+##             }
+##     }
+## ###
+##     for (i in model)
+##     {
+##         for (j in xi)
+##         {
+##             for (k in nu)
+##             {
+##                 for (l in kappa)
+##                 {
+##                     bart2 <- fit(s,500,i,j,k,l)
+##                     saveRDS(bart2,paste0("Results/bart2_500_",i,"_",j,"_",k,"_",l,".rds"))
+##                 }
+##             }
+##         }
+##     }
+##     ## BCF
+##     fit <- function(s,n,Model,xi,nu,kappa)
+##     {
+##         foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+##             {
+##                 print("BCF simulations")
+##                 print(paste0("N=",n,"; Model=",Model,"; xi=",xi,"; nu=",nu,"; kappa=",kappa))
+##                 print(paste0("Simulation ",i))
+##                 data <- readRDS(paste0("Data/DGP_",n,"_",Model,"_",xi,"_",nu,"_",kappa,"_",i))
+##                 X <- cbind(data$X,data$W)
+##                 t0 <- Sys.time()
+##                 fit <- XBCF.discrete(data$Y, data$Z, X_con=X, X_mod=X,
+##                                      num_trees_con = m,
+##                                      num_trees_mod = m,
+##                                      num_cutpoints = n,
+##                                      num_sweeps = num_sweeps,
+##                                      burnin = burnin, Nmin = Nmin,
+##                                      p_categorical_con = p_categorical,
+##                                      p_categorical_mod = p_categorical,
+##                                      tau_con = 2*var(data$Y)/m,
+##                                      tau_mod = 0.5*var(data$Y)/m,
+##                                      parallel=F)
+##                 test <- -h<=data$X & data$X<=h
+##                 pred <- predict.XBCFdiscrete(fit,cbind(rep(0,sum(test)),data$W[test,]),
+##                                              cbind(rep(0,sum(test)),data$W[test,]),
+##                                              data$Z[test],pihat=data$Z[test],
+##                                              burnin=burnin)
+##                 pred <- pred$tau.adj[,(burnin+1):num_sweeps]
+##                 t1 <- Sys.time()
+##                 dt <- difftime(t1,t0)
+##                 return(list(pred=pred,dt=dt))
+##             }
+##     }
+## ###
+##     for (i in model)
+##     {
+##         for (j in xi)
+##         {
+##             for (k in nu)
+##             {
+##                 for (l in kappa)
+##                 {
+##                     bcf <- fit(s,500,i,j,k,l)
+##                     saveRDS(bcf,paste0("Results/bcf_500_",i,"_",j,"_",k,"_",l,".rds"))
+##                 }
+##             }
+##         }
+##     }
 } else
 {
     setwd("~/Git/XBCF-RDD/")
