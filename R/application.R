@@ -301,7 +301,7 @@ cart6 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[6]]$pred),
 cart <- list(cart1,cart2,cart3,cart4,cart5,cart6)
 for (i in 1:length(cart))
 {
-    png(paste0("Figures/gpa_cart_",i,".png"))
+    pdf(paste0("Figures/gpa_cart_",i,".pdf"))
     rpart.plot(cart[[i]])
     dev.off()
 }
