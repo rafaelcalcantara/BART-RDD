@@ -2,7 +2,7 @@
 library(parallel)
 library(foreach)
 library(doParallel)
-s      <- 500
+s      <- 50
 sample <- 500
 model  <- 3:6
 xi <- nu <- kappa <- c(0.25,2)
@@ -21,11 +21,11 @@ if (Sys.info()["sysname"] == "Linux")
     library(HighDimRD)
     ## BART Prior settings
     c             <- 0
-    Omin          <- 1
-    h             <- 0.1
+    Omin          <- 5
+    h             <- 0.05
     Opct          <- 0.9
     m             <- 10
-    Nmin          <- 10
+    Nmin          <- 5
     num_sweeps    <- 150
     burnin        <- 50
     p_categorical <- 1

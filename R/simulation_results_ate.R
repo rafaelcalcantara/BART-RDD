@@ -1,6 +1,6 @@
 ## Setup
 library(lattice)
-s      <- 500
+s      <- 50
 sample <- c(500,1000)
 model  <- 3:6
 xi <- nu <- kappa <- c(0.25,2)
