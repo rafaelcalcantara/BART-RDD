@@ -277,7 +277,7 @@ if (Sys.info()["sysname"] == "Linux")
                         for (n in x.dist)
                             {
                                 bart2 <- fit(s,i,j,k,l,m,n)
-                                saveRDS(bart2,paste0("Results/bart2_",i,"_",j,"_",k,"_",l,"_",m,"_",n".rds"))
+                                saveRDS(bart2,paste0("Results/bart2_",i,"_",j,"_",k,"_",l,"_",m,"_",n,".rds"))
                             }
                     }
                 }
