@@ -1,19 +1,23 @@
 ## setwd("~/Git/XBCF-RDD/")
 set.seed(0)
 ## General settings
-s <- 1000
-n <- 500
-p <- 5
-m <- 3:6
+s <- 500
+n <- c(500,2000)
+p <- 7
+m <- 1:4
 xi <- c(0.05,0.2)
 nu <- kappa <- c(0.25,2)
-vars <- function(n,p)
+x.dist <- 1:4
+vars <- function(n,p,x.dist)
 {
-    X <- 2*rbeta(n,2,4)-0.5
+    if (x.dist==1) X <- 2*rbeta(n,2,4)-1
+    if (x.dist==2) X <- 2*rbeta(n,2,4)-0.5
+    if (x.dist==3) X <- rnorm(n,0,0.5)
+    if (x.dist==4) X <- runif(n,-1,1)
     W1 <- matrix(rnorm(n*2,0,0.25),n,2)
-    Wp <- lapply(3:(p-1),function(i) rnorm(n,(i-1)*X/i,1))
+    Wp <- lapply(3:(p-3),function(i) rnorm(n,(i-1)*X/i,1))
     Wp <- do.call("cbind",Wp)
-    W2 <- matrix(rbinom(n*3,1,0.7),n,3)
+    W2 <- cbind(rbinom(n,1,0.7),rbinom(n,1,0.3),as.numeric(X>=0.3))
     W <- cbind(W1,Wp,W2)
     Z <- X>=0
     return(list(X=X,W=W,Z=Z))
@@ -23,22 +27,16 @@ mu <- function(X,W,n,p,m)
     a <- 2/1:p
     if (m==1)
     {
-        mu <- 2 + X + W%*%a
+        mu <- 0.1*X - 0.2*X^2 + 0.5*X^3 + W%*%a
     } else if (m==2)
     {
-        mu <- 2 + X + W%*%a + W[,p]*X
+        mu <- 0.1*X - 0.2*X^2 + 0.5*X^3 + W%*%a + W[,p]*X - 0.5*W[,p-1]*X + 0.3*W[,p-2]
     } else if (m==3)
-    {
-        mu <- 0.1*X - 0.2*X^2 + 0.5*X^3 + W%*%a
-    } else if (m==4)
-    {
-        mu <- 0.1*X - 0.2*X^2 + 0.5*X^3 + W%*%a + W[,p]*X - 0.5*W[,p-1]*X
-    } else if (m==5)
     {
         mu <- exp(X) + sqrt(abs(W))%*%a
     } else
     {
-        mu <- exp(X) + W[,p-2]*(sqrt(abs(W))%*%a) + W[,p]*X - 0.5*W[,p-1]*X
+        mu <- exp(X) + W[,p-2]*(sqrt(abs(W))%*%a) + W[,p]*X - 0.5*W[,p-1]*X + 0.3*W[,p-2]
     }
     return(mu)
 }
@@ -47,17 +45,11 @@ tau <- function(X,W,n,p,m)
     b <- 1/1:p
     if (m==1)
     {
-        tau <- -5 + 0.7*X + W%*%b
+        tau <- 0.7*X + 0.4*X^2 - 0.1*X^3 + W%*%b
     } else if (m==2)
     {
-        tau <- -5 + 0.7*X + W%*%b + 0.5*W[,p]*X
-    } else if (m==3)
-    {
-        tau <- 0.7*X + 0.4*X^2 - 0.1*X^3 + W%*%b
-    } else if (m==4)
-    {
         tau <- 0.7*X + 0.4*X^2 - 0.1*X^3 + W%*%b + 0.5*W[,p]*X - W[,p-1]*X
-    } else if (m==5)
+    } else if (m==3)
     {
         tau <- sin(X) + sqrt(abs(W))%*%b
     } else
@@ -76,9 +68,9 @@ tau.std <- function(X,W,n,p,m,xi,nu)
 }
 out <- function(n,Z,mu,tau,kappa) mu + tau*Z + kappa*rnorm(n)
 ## Function to generate data
-dgp <- function(n,p,m,xi,nu,kappa)
+dgp <- function(n,p,m,xi,nu,kappa,x.dist)
 {
-    v <- vars(n,p)
+    v <- vars(n,p,x.dist)
     X <- v$X
     W <- v$W
     Z <- v$Z
@@ -103,8 +95,11 @@ for (i in 1:s)
                 {
                     for (q in kappa)
                     {
-                        data <- dgp(j,p,k,l,o,q)
-                        saveRDS(data,paste0("Data/DGP_",j,"_",k,"_",l,"_",o,"_",q,"_",i))
+                        for (r in x.dist)
+                            {
+                                data <- dgp(j,p,k,l,o,q,r)
+                                saveRDS(data,paste0("Data/DGP_",j,"_",k,"_",l,"_",o,"_",q,"_",r,"_",i,".rds"))
+                            }
                     }
                 }
             }
