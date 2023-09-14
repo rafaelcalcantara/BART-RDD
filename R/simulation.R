@@ -2,12 +2,12 @@
 library(parallel)
 library(foreach)
 library(doParallel)
-s      <- 500
+s      <- 200
 sample <- c(500,2000)
-model  <- 1:4
+model  <- c(2,4)
 xi <- c(0.05,0.2)
-nu <- kappa <- c(0.25,2)
-x.dist <- 1:4
+nu <- kappa <- c(0.5,2)
+x.dist <- 1
 ## Parallelization
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
@@ -23,52 +23,66 @@ if (Sys.info()["sysname"] == "Linux")
     library(HighDimRD)
     ## BART Prior settings
     c             <- 0
-    Omin          <- 2
-    h             <- 0.05
+    Omin          <- 1
     Opct          <- 0.9
-    m             <- 10
-    Nmin          <- 5
+    ntrees        <- 10
+    Nmin          <- 10
     num_sweeps    <- 150
     burnin        <- 50
     p_categorical <- 3
     ## BART-RDD
-    fit <- function(s,n,Model,xi,nu,kappa,x.dist)
+    fit <- function(s,ncut,Model,xi,nu,kappa,x.dist)
     {
-        foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+        foreach(i=1:s,.multicombine=T,.export=c("c","Omin","Opct","m","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
             {
                 print("BART-RDD simulations")
-                print(paste0("N=",n,"; Model=",Model,"; xi=",xi,"; nu=",nu,"; kappa=",kappa,"; X distribution=",x.dist))
+                print(paste0("N=",ncut,"; Model=",Model,"; xi=",xi,"; nu=",nu,"; kappa=",kappa,"; X distribution=",x.dist))
                 print(paste0("Simulation ",i))
-                data <- readRDS(paste0("Data/DGP_",n,"_",Model,"_",xi,"_",nu,"_",kappa,"_",x.dist,"_",i,".rds"))
-                h <- quantile(data$X,0,1,0.05)
+                data <- readRDS(paste0("Data/DGP_",ncut,"_",Model,"_",xi,"_",nu,"_",kappa,"_",x.dist,"_",i,".rds"))
+                h <- quantile(data$X,seq(0.1,0.9,0.05))
                 h <- abs(h)
-                h <- h[1:5]
-                dt <- 1:5
-                pred <- vector("list",5)
-                for (j in 1:5)
+                h <- sort(h)[2:4]
+                dt <- 1:3
+                pred <- vector("list",3)
+                for (j in 1:3)
                 {
-                    t0 <- Sys.time()
-                    fit <- XBCF.rd(data$Y, data$W, data$X, c,
-                                   Owidth = h[j],
-                                   Omin = Omin, Opct = Opct,
-                                   num_trees_mod = m, num_trees_con = m,
-                                   num_cutpoints = n,
-                                   num_sweeps = num_sweeps,
-                                   burnin = burnin, Nmin = Nmin,
-                                   p_categorical_con = p_categorical,
-                                   p_categorical_mod = p_categorical,
-                                   tau_con = 2*var(data$Y)/m,
-                                   tau_mod = 0.5*var(data$Y)/m,
-                                   parallel=F)
                     test <- -h[j]<=data$X & data$X<=h[j]
-                    pred[[j]] <- predict.XBCFrd(fit,data$W[test,],rep(0,sum(test)))
-                    pred[[j]] <- pred$tau.adj[,(burnin+1):num_sweeps]
-                    t1 <- Sys.time()
-                    dt[j] <- difftime(t1,t0)
+                    print(paste0("Test set size: ",sum(test)))
+                    if (sum(test)>10)
+                    {
+                        t0 <- Sys.time()
+                        fit.obj <- XBCF.rd(data$Y, data$W, data$X, c,
+                                           Owidth = h[j],
+                                           Omin = Omin, Opct = Opct,
+                                           num_trees_mod = ntrees,
+                                           num_trees_con = ntrees,
+                                           num_cutpoints = ncut,
+                                           num_sweeps = num_sweeps,
+                                           burnin = burnin, Nmin = Nmin,
+                                           p_categorical_con = p_categorical,
+                                           p_categorical_mod = p_categorical,
+                                           tau_con = 2*var(data$Y)/ntrees,
+                                           tau_mod = 0.5*var(data$Y)/ntrees,
+                                           parallel=F)
+                        pred[[j]] <- predict.XBCFrd(fit.obj,data$W[test,],rep(0,sum(test)))
+                        pred[[j]] <- pred[[j]]$tau.adj[,(burnin+1):num_sweeps]
+                        t1 <- Sys.time()
+                        dt[j] <- difftime(t1,t0)
+                    } else
+                    {
+                        print("Identification strip has less than 10 points; dropping current h")
+                        h[j] <- NA
+                    }
                 }
+                pred <- pred[complete.cases(h)]
+                print("Candidate estimates:")
+                print(sapply(pred,function(a) mean(colMeans(a))))
                 post.var <- sapply(pred, function(a) var(colMeans(a)))
                 pred <- pred[[which(post.var==max(post.var))]]
                 dt <- dt[which(post.var==max(post.var))]
+                print(paste0("Chosen h: ",h[which(post.var==max(post.var))]))
+                print(paste0("True tau: ",xi))
+                print(paste0("Tau estimate: ", mean(colMeans(pred))))
                 return(list(pred=pred,dt=dt))
             }
     }
@@ -86,7 +100,7 @@ if (Sys.info()["sysname"] == "Linux")
                         for (n in x.dist)
                         {
                             bart.rdd <- fit(s,i,j,k,l,m,n)
-                            saveRDS(bart.rdd,paste0("Results/bart_rdd_",i,"_",j,"_",k,"_",l,,"_",m,"_",n,".rds"))
+                            saveRDS(bart.rdd,paste0("Results/bart_rdd_",i,"_",j,"_",k,"_",l,"_",m,"_",n,".rds"))
                         }
                     }
                 }

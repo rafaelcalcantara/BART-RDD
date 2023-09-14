@@ -6,7 +6,7 @@ n <- c(500,2000)
 p <- 7
 m <- 1:4
 xi <- c(0.05,0.2)
-nu <- kappa <- c(0.25,2)
+nu <- kappa <- c(0.5,2)
 x.dist <- 1:4
 vars <- function(n,p,x.dist)
 {
@@ -58,13 +58,13 @@ tau <- function(X,W,n,p,m)
     }
     return(tau)
 }
-sig.mu <- function(W,n,p,m) sd(mu(0,W,n,p,m))
-sig.tau <- function(W,n,p,m) sd(tau(0,W,n,p,m))
-tau.bar <- function(W,n,p,m) mean(tau(0,W,n,p,m))
-mu.std <- function(X,W,n,p,m) mu(X,W,n,p,m)/sig.mu(W,n,p,m)
+sig.mu <- function(X,W,n,p,m) sd(mu(X,W,n,p,m))
+sig.tau <- function(X,W,n,p,m) sd(tau(X,W,n,p,m))
+tau.bar <- function(X,W,n,p,m) mean(tau(X,W,n,p,m))
+mu.std <- function(X,W,n,p,m) mu(X,W,n,p,m)/sig.mu(X,W,n,p,m)
 tau.std <- function(X,W,n,p,m,xi,nu)
 {
-    return(xi + nu*(tau(X,W,n,p,m)-tau.bar(W,n,p,m))/sig.tau(W,n,p,m))
+    return(xi + sqrt(nu)*tau.bar(X,W,n,p,m)*(tau(X,W,n,p,m)-tau.bar(0,W,n,p,m))/sig.tau(X,W,n,p,m))
 }
 out <- function(n,Z,mu,tau,kappa) mu + tau*Z + kappa*rnorm(n)
 ## Function to generate data

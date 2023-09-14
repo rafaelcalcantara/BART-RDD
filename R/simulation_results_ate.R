@@ -1,40 +1,47 @@
 ## Setup
 library(lattice)
-s      <- 50
-sample <- c(500,1000)
-model  <- 3:6
-xi <- nu <- kappa <- c(0.25,2)
+s      <- 10
+sample <- c(500,2000)
+model  <- c(2,4)
+xi <- c(0.05,0.2)
+nu <- kappa <- c(0.5,2)
+x.dist <- 1
 i <- 1
+n.dgps <- length(sample)*length(model)*length(xi)*length(nu)*length(kappa)*length(x.dist)
 ## BART-RDD
-res.mat <- as.data.frame(matrix(0,32,5,dimnames=list(1:32,c("BART-RDD","Model","Xi","Nu","Kappa"))))
+res.mat <- as.data.frame(matrix(0,n.dgps,7,dimnames=list(1:n.dgps,c("BART-RDD","Sample","Model","Xi","Nu","Kappa","X Dist"))))
 rmse.bart.rdd <- res.mat
 cov.bart.rdd <- res.mat
 length.bart.rdd <- res.mat
 alpha.bart.rdd <- res.mat
 interval.bart.rdd <- cbind(LI=0,UI=0,res.mat[,-1])
-distance.bart.rdd <- matrix(0,s,32)
+distance.bart.rdd <- matrix(0,n.dgps,s)
 index <- 0
-for (j in 1:length(model))
+for (i in sample)
 {
-    for (k in 1:length(xi))
+    for (j in model)
     {
-        for (l in 1:length(nu))
+        for (k in xi)
         {
-            for (m in 1:length(kappa))
+            for (l in nu)
             {
-                index <- index+1
-                dgp <- c(model[j],xi[k],nu[l],kappa[m])
-                file <- paste0("Results/bart_rdd_",sample[i],"_",model[j],"_",xi[k],"_",nu[l],"_",kappa[m])
-                bart.rdd <- readRDS(paste0(file,".rds"))
-                bart.rdd <- lapply(bart.rdd, function(x) x$pred)
-                a <- sapply(bart.rdd, function(x) mean(x<=xi[k]))
-                alpha.bart.rdd[index,] <- c(mean(a),dgp)
-                bart.rdd <- t(sapply(bart.rdd,function(x) c(mean(colMeans(x)),quantile(colMeans(x),c(0.025,0.975)))))
-                rmse.bart.rdd[index,] <- c(sqrt(mean((bart.rdd[,1]-xi[k])^2)),dgp)
-                cov.bart.rdd[index,] <- c(mean(bart.rdd[,2] <= xi[k] & xi[k] <= bart.rdd[,3]),dgp)
-                length.bart.rdd[index,] <- c(mean(bart.rdd[,3] - bart.rdd[,2]),dgp)
-                interval.bart.rdd[index,] <- c(mean(bart.rdd[,2]),mean(bart.rdd[,3]),dgp)
-                distance.bart.rdd[,index] <- apply(bart.rdd,1,function(x) ifelse(x[2]<=xi[k] & xi[k]<=x[3],0,min(abs(x[2]-xi[k]),abs(x[3]-xi[k]))))
+                for (m in kappa)
+                {
+                    for (n in x.dist)
+                    {
+                        index <- index+1
+                        dgp <- c(i,j,k,l,m,n)
+                        file <- paste0("Results/bart_rdd",paste("_",dgp,collapse="",sep=""),".rds")
+                        bart.rdd <- readRDS(file)
+                        bart.rdd <- lapply(bart.rdd, function(x) x$pred)
+                        bart.rdd <- t(sapply(bart.rdd,function(x) c(mean(colMeans(x)),quantile(colMeans(x),c(0.025,0.975)))))
+                        rmse.bart.rdd[index,] <- c(sqrt(mean((bart.rdd[,1]-k)^2)),dgp)
+                        cov.bart.rdd[index,] <- c(mean(bart.rdd[,2] <= k & k <= bart.rdd[,3]),dgp)
+                        length.bart.rdd[index,] <- c(mean(bart.rdd[,3] - bart.rdd[,2]),dgp)
+                        interval.bart.rdd[index,] <- c(mean(bart.rdd[,2]),mean(bart.rdd[,3]),dgp)
+                        ## distance.bart.rdd[,index] <- apply(bart.rdd,1,function(x) ifelse(x[2]<=xi[k] & xi[k]<=x[3],0,min(abs(x[2]-xi[k]),abs(x[3]-xi[k]))))
+                    }
+                }
             }
         }
     }

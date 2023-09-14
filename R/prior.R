@@ -9,23 +9,38 @@ library(XBART)
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
 ##
-k             <- 0.25
+s             <- 10
 n             <- 500
 c             <- 0
-Omin          <- 1
+Omin          <- 5
 Opct          <- 0.9
 ntrees        <- 10
 Nmin          <- 5
 num_sweeps    <- 100
-burnin        <- 50
+burnin        <- 20
 p_categorical <- 0
 ##
-fit <- function(s)
+opt.h.int <- function(s,h,x,w,z)
 {
-    tau <- rep(0,length(s))
-    foreach(i=1:length(s),.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+    set.seed(1)
+    ## Prior model
+    theta1 <- cbind(rnorm(s,1/2,0.5),rnorm(s,5/4,0.5),rnorm(s,0,0.5),rnorm(s,125/48,0.5),rnorm(s,0,0.5))
+    theta2 <- 0.1+cbind(rnorm(s,1/2,0.5),rnorm(s,5/4,0.5),rnorm(s,0,0.5),rnorm(s,125/48,0.5),rnorm(s,0,0.5))
+    theta <- cbind(theta1,theta2)
+### New data matrix
+    Xx <- cbind(1,x,x^2,x^3,x^4)
+### Generate sample data
+    ys <- vector("list",s)
+    ate <- theta[,6]-theta[,1]
+    for (i in 1:s)
+    {
+        ys[[i]] <- (!z)*Xx%*%theta[i,1:5] + z*Xx%*%theta[i,6:10] + rnorm(length(x))
+    }
+    foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
-            h <- abs(s[i])
+            y <- ys[[i]]
+            true.ate <- ate[i]
+            print(paste0("Sample: ",i))
             fit <- XBCF.rd(y, w, x, c,
                            Owidth = h, Omin = Omin, Opct = Opct,
                            num_trees_mod = ntrees,
@@ -38,145 +53,141 @@ fit <- function(s)
                            tau_con = 2*var(y)/ntrees,
                            tau_mod = 0.5*var(y)/ntrees,
                            random_seed=0)
-            test <- -h<=x & x<=h
-            print(paste0("i: ",i,"; test: ",sum(test)))
-            if (sum(test)>1)
-            {
-                pred <- predict.XBCFrd(fit,w[test],rep(0,sum(test)))
-                pred <- pred$tau.adj[,(burnin+1):num_sweeps]
-                pred <- colMeans(pred)
-                c(mean(pred),var(pred),k,h,
-                  mean(pred)-sd(pred),mean(pred)+sd(pred),sum(test))
-            } else
-            {
-                rep(NA,6)
-            }
+            test <- -h<=xtest & xtest<=h
+            pred <- predict.XBCFrd(fit,wtest[test,],rep(0,sum(test)))
+            pred <- pred$tau.adj
+            pred <- mean(colMeans(pred))
+            error <- (true.ate-pred)^2
+            c(Error=error,ATE=ate[i])
         }
 }
-opt.fit <- function(h)
+opt.h <- function(s,x,w,z)
 {
-    fit <- XBCF.rd(y, w, x, c,
-                   Owidth = h, Omin = Omin, Opct = Opct,
-                   num_trees_mod = ntrees,
-                   num_trees_con = ntrees,
-                   num_cutpoints = n,
-                   num_sweeps = num_sweeps,
-                   burnin = burnin, Nmin = Nmin,
-                   p_categorical_con = p_categorical,
-                   p_categorical_mod = p_categorical,
-                   tau_con = 2*var(y)/ntrees,
-                   tau_mod = 0.5*var(y)/ntrees)
-    pred <- predict.XBCFrd(fit,w,x)
-    return(pred$tau.adj.mean)
+    h <- sort(abs(quantile(x,seq(0,1,0.025))))
+    h <- round(h,2)
+    h <- unique(h)
+    h <- h[1:10]
+    ## h <- seq(min(h),max(h),length.out=10)
+    rmse <- matrix(0,s,length(h))
+    ate <- matrix(0,s,length(h))
+    for (i in 1:length(h))
+    {
+        print(paste0("h: ",i))
+        temp <- opt.h.int(s,h[i],x,w,z)
+        rmse[,i] <- do.call("rbind",temp)[,"Error"]
+        ate[,i] <- do.call("rbind",temp)[,"ATE"]
+    }
+    return(list(rmse=rmse,h=h,ate=ate))
+}
+fit <- function(h)
+{
+    foreach(i=1:length(h),.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+        {
+            print(paste0("h: ",i))
+            fit <- XBCF.rd(y, w, x, c,
+                           Owidth = h[i], Omin = Omin, Opct = Opct,
+                           num_trees_mod = ntrees,
+                           num_trees_con = ntrees,
+                           num_cutpoints = n,
+                           num_sweeps = num_sweeps,
+                           burnin = burnin, Nmin = Nmin,
+                           p_categorical_con = p_categorical,
+                           p_categorical_mod = p_categorical,
+                           tau_con = 2*var(y)/ntrees,
+                           tau_mod = 0.5*var(y)/ntrees,
+                           random_seed=0)
+            test <- -h[i]<=x & x<=h[i]
+            pred <- predict.XBCFrd(fit,w[test,],rep(0,sum(test)))
+            pred <- pred$tau.adj
+            pred <- colMeans(pred)
+            pred
+        }
 }
 ## Data 1
 x <- 2*rbeta(n,2,4)-1
-w <- rnorm(n,0,0.25)
+w <- matrix(rnorm(2*n,0,0.25),n,2)
 z <- x>=0
-mu.fun <- function(W, X){return(0.1*W + 1/(1+exp(-5*X)))} 
-tau.fun <- function(W, X) return( sin(mu.fun(W, X)) ) # make sure the treatment effect is non-zero
-y <- mu.fun(w, x)/var(mu.fun(w, x)) + (tau.fun(w, x) - mean(tau.fun(w,0)))*z/var(tau.fun(w, x)) + k*z + rnorm(n)
-s <- quantile(x,seq(0.3,0.9,0.05))
-## index <- which(s[s<0]==max(s[s<0]))
-## s <- s[(index-5):(index+5)]
-##
-tau1 <- fit(s)
-tau1 <- do.call("rbind",tau1)
-h1 <- tau1[which(tau1[,2]==max(tau1[,2],na.rm=T)),4]
-opt.pred1 <- opt.fit(h1)
-opt.pred1 <- predict(loess(y~x,data=data.frame(y=opt.pred1,x=x)))
-true.tau1 <- k+(tau.fun(w,x)-mean(tau.fun(w,0)))/var(tau.fun(w,x))
-true.tau1 <- predict(loess(y~x,data=data.frame(y=true.tau1,x=x)))
-### Plot tau hat
-xaxis <- quantile(x,seq(0.3,0.9,0.05))
-x1 <- sort(x)
-y1 <- cbind(opt.pred1,true.tau1)[order(x),]
-## Data 2
-x <- 2*rbeta(n,2,4)-0.5
-w <- rnorm(n,0,0.25)
-z <- x>=0
-mu.fun <- function(W, X){return(0.1*W + 1/(1+exp(-5*X)))} 
-tau.fun <- function(W, X) return( sin(mu.fun(W, X)) ) # make sure the treatment effect is non-zero
-y <- mu.fun(w, x)/var(mu.fun(w, x)) + (tau.fun(w, x) - mean(tau.fun(w,0)))*z/var(tau.fun(w, x)) + k*z + rnorm(n)
-s <- quantile(x,seq(0.3,0.9,0.05))
-## index <- which(s[s<0]==max(s[s<0]))
-## s <- s[(index-5):(index+5)]
-##
-tau2 <- fit(s)
-tau2 <- do.call("rbind",tau2)
-h2 <- tau2[which(tau2[,2]==max(tau2[,2],na.rm=T)),4]
-opt.pred2 <- opt.fit(h2)
-opt.pred2 <- predict(loess(y~x,data=data.frame(y=opt.pred2,x=x)))
-true.tau2 <- k+(tau.fun(w,x)-mean(tau.fun(w,0)))/var(tau.fun(w,x))
-true.tau2 <- predict(loess(y~x,data=data.frame(y=true.tau2,x=x)))
-### Plot tau hat
-xaxis <- cbind(xaxis,quantile(x,seq(0.3,0.9,0.05)))
-x2 <- sort(x)
-y2 <- cbind(opt.pred2,true.tau2)[order(x),]
-## Data 3
-x <- runif(n,-1,1)
-w <- rnorm(n,0,0.25)
-z <- x>=0
-mu.fun <- function(W, X){return(0.1*W + 1/(1+exp(-5*X)))} 
-tau.fun <- function(W, X) return( sin(mu.fun(W, X)) ) # make sure the treatment effect is non-zero
-y <- mu.fun(w, x)/var(mu.fun(w, x)) + (tau.fun(w, x) - mean(tau.fun(w,0)))*z/var(tau.fun(w, x)) + k*z + rnorm(n)
-s <- quantile(x,seq(0.3,0.9,0.05))
-## index <- which(s[s<0]==max(s[s<0]))
-## s <- s[(index-5):(index+5)]
-##
-tau3 <- fit(s)
-tau3 <- do.call("rbind",tau3)
-h3 <- tau3[which(tau3[,2]==max(tau3[,2],na.rm=T)),4]
-opt.pred3 <- opt.fit(h3)
-opt.pred3 <- predict(loess(y~x,data=data.frame(y=opt.pred3,x=x)))
-true.tau3 <- k+(tau.fun(w,x)-mean(tau.fun(w,0)))/var(tau.fun(w,x))
-true.tau3 <- predict(loess(y~x,data=data.frame(y=true.tau3,x=x)))
-### Plot tau hat
-xaxis <-cbind(xaxis,quantile(x,seq(0.3,0.9,0.05)))
-x3 <- sort(x)
-y3 <- cbind(opt.pred3,true.tau3)[order(x),]
-## Data 4
-x <- rnorm(n,0,0.25)
-w <- rnorm(n,0,0.25)
-z <- x>=0
-mu.fun <- function(W, X){return(0.1*W + 1/(1+exp(-5*X)))} 
-tau.fun <- function(W, X) return( sin(mu.fun(W, X)) ) # make sure the treatment effect is non-zero
-y <- mu.fun(w, x)/var(mu.fun(w, x)) + (tau.fun(w, x) - mean(tau.fun(w,0)))*z/var(tau.fun(w, x)) + k*z + rnorm(n)
-s <- quantile(x,seq(0.3,0.9,0.05))
-## index <- which(s[s<0]==max(s[s<0]))
-## s <- s[(index-5):(index+5)]
-##
-tau4 <- fit(s)
-tau4 <- do.call("rbind",tau4)
-h4 <- tau4[which(tau4[,2]==max(tau4[,2],na.rm=T)),4]
-opt.pred4 <- opt.fit(h4)
-opt.pred4 <- predict(loess(y~x,data=data.frame(y=opt.pred4,x=x)))
-true.tau4 <- k+(tau.fun(w,x)-mean(tau.fun(w,0)))/var(tau.fun(w,x))
-true.tau4 <- predict(loess(y~x,data=data.frame(y=true.tau4,x=x)))
-### Plot tau hat
-x4 <- sort(x)
-y4 <- cbind(opt.pred4,true.tau4)[order(x),]
-##
-## xaxis <- as.numeric(gsub("%","",names(s)))
-xaxis <- cbind(xaxis,quantile(x,seq(0.3,0.9,0.05)))
-opt.h <- c(h1,h2,h3,h4)
-##
-par(mfrow=c(2,2))
-plot(x=xaxis[,1],y=tau1[,1],col=ifelse(tau1[,2]==max(tau1[,2]),"blue","red"),type="p",pch=19,ylim=c(k-0.5,max(tau1[,1])+0.5),bty="n",xlab="X",ylab=expression(tau),main="Skewed to the left")
-abline(h=k,lty=2)
-plot(x=xaxis[,2],y=tau2[,1],col=ifelse(tau2[,2]==max(tau2[,2]),"blue","red"),type="p",pch=19,ylim=c(k-0.5,max(tau2[,1])+0.5),bty="n",xlab="X",ylab=expression(tau),main="Skewed to the right")
-abline(h=k,lty=2)
-plot(x=xaxis[,3],y=tau3[,1],col=ifelse(tau3[,2]==max(tau3[,2]),"blue","red"),type="p",pch=19,ylim=c(k-0.5,max(tau3[,1]+1)),bty="n",xlab="X",ylab=expression(tau),main="Uniform")
-abline(h=k,lty=2)
-plot(x=xaxis[,4],y=tau4[,1],col=ifelse(tau4[,2]==max(tau4[,2]),"blue","red"),type="p",pch=19,ylim=c(k-0.5,max(tau4[,1]+0.5)),bty="n",xlab="X",ylab=expression(tau),main="Gaussian")
-abline(h=k,lty=2)
-## ##
+mu.fun <- function(W, X){return(0.1*rowSums(W) + 1/(1+exp(-5*X)))} 
+tau.fun <- function(W, X) return( sin(mu.fun(W, X)) )
+y <- mu.fun(w, x) + tau.fun(w, x)*z + rnorm(n)
+h1a <- opt.h(s,x,w,z)
+h1b <- fit(h1a$h)
+###
+mse <- data.frame(h1a$rmse)
+names(mse) <- h1a$h
+h.plot <- t(sapply(h1b,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
+par(mfrow=c(1,3))
+boxplot(sqrt(mse),main="RMSE")
+plot(density(rowMeans(h1a$ate)),main="ATE")
+abline(v=mean(tau.fun(w,0)),lty=2)
+matplot(x=h1a$h,h.plot,col="blue",lty=c(1,2,2),type=c("b","l","l"),pch=21,main="Fit for true y")
+abline(h=mean(tau.fun(w,0)),lty=2)
+###
+## pdf("Figures/prior1.pdf")
 ## par(mfrow=c(2,2))
-## matplot(x=x1,y=y1,type="l",lty=1,col=c("blue","black"),xlab="X",ylab=expression(tau),main="Skewed to the left")
-## abline(v=0,lty=2)
-## matplot(x=x2,y=y2,type="l",lty=1,col=c("blue","black"),xlab="X",ylab=expression(tau),main="Skewed to the right")
-## abline(v=0,lty=2)
-## matplot(x=x3,y=y3,type="l",lty=1,col=c("blue","black"),xlab="X",ylab=expression(tau),main="Uniform")
-## abline(v=0,lty=2)
-## matplot(x=x4,y=y4,type="l",lty=1,col=c("blue","black"),xlab="X",ylab=expression(tau),main="Gaussian")
-## abline(v=0,lty=2)
+## plot(h1a$h,sqrt(colMeans(h1a$rmse)),bg=ifelse(colMeans(h1a$rmse)==min(colMeans(h1a$rmse)),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Negative")
+## plot(h1b$h,sqrt(colMeans(h1b$rmse)),bg=ifelse(colMeans(h1b$rmse)==min(colMeans(h1b$rmse)),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Positive")
+## plot(h1c$h,sqrt(colMeans(h1c$rmse)),bg=ifelse(colMeans(h1c$rmse)==min(colMeans(h1c$rmse)),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Zero")
+## dev.off()
+## ## Data 2
+## x <- 2*rbeta(n,2,4)-0.5
+## w <- matrix(rnorm(2*n,0,0.25),n,2)
+## z <- x>=0
+## mu.fun <- function(W, X){return(0.1*rowSums(W) + 1/(1+exp(-5*X)))} 
+## tau.fun <- function(W, X) return( sin(mu.fun(W, X)) ) # make sure the treatment effect is non-zero
+## y <- mu.fun(w, x) + tau.fun(w, x)*z + rnorm(n)
+## h2a <- opt.h(s,x,w,z,1)
+## h2b <- opt.h(s,x,w,z,2)
+## h2c <- opt.h(s,x,w,z,3)
+## h2d <- unlist(fit(h2a$h))
+## h2d <- abs(h2d-mean(tau.fun(w,0)))
+## ###
+## ## pdf("Figures/prior2.pdf")
+## par(mfrow=c(2,2))
+## plot(h2a$h,sqrt(colMeans(h2a$rmse)),bg=ifelse(colMeans(h2a$rmse)==min(colMeans(h2a$rmse)),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Negative")
+## plot(h2b$h,sqrt(colMeans(h2b$rmse)),bg=ifelse(colMeans(h2b$rmse)==min(colMeans(h2b$rmse)),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Positive")
+## plot(h2c$h,sqrt(colMeans(h2c$rmse)),bg=ifelse(colMeans(h2c$rmse)==min(colMeans(h2c$rmse)),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Zero")
+## plot(h2c$h,h2d,bg=ifelse(h2d==min(h2d),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Real data")
+## ## dev.off()
+## ## Data 3
+## x <- runif(n,-1,1)
+## w <- matrix(rnorm(2*n,0,0.25),n,2)
+## z <- x>=0
+## mu.fun <- function(W, X){return(0.1*rowSums(W) + 1/(1+exp(-5*X)))} 
+## tau.fun <- function(W, X) return( sin(mu.fun(W, X)) ) # make sure the treatment effect is non-zero
+## y <- mu.fun(w, x) + tau.fun(w, x)*z + rnorm(n)
+## h3a <- opt.h(s,x,w,z,1)
+## h3b <- opt.h(s,x,w,z,2)
+## h3c <- opt.h(s,x,w,z,3)
+## h3d <- unlist(fit(h3a$h))
+## h3d <- abs(h3d-mean(tau.fun(w,0)))
+## ###
+## ## pdf("Figures/prior3.pdf")
+## par(mfrow=c(2,2))
+## plot(h3a$h,sqrt(colMeans(h3a$rmse)),bg=ifelse(colMeans(h3a$rmse)==min(colMeans(h3a$rmse)),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Negative")
+## plot(h3b$h,sqrt(colMeans(h3b$rmse)),bg=ifelse(colMeans(h3b$rmse)==min(colMeans(h3b$rmse)),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Positive")
+## plot(h3c$h,sqrt(colMeans(h3c$rmse)),bg=ifelse(colMeans(h3c$rmse)==min(colMeans(h3c$rmse)),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Zero")
+## plot(h3c$h,h3d,bg=ifelse(h3d==min(h3d),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Real data")
+## ## dev.off()
+## ## Data 4
+## x <- rnorm(n,0,0.25)
+## w <- matrix(rnorm(2*n,0,0.25),n,2)
+## z <- x>=0
+## mu.fun <- function(W, X){return(0.1*rowSums(W) + 1/(1+exp(-5*X)))} 
+## tau.fun <- function(W, X) return( sin(mu.fun(W, X)) ) # make sure the treatment effect is non-zero
+## y <- mu.fun(w, x) + tau.fun(w, x)*z + rnorm(n)
+## h4a <- opt.h(s,x,w,z,1)
+## h4b <- opt.h(s,x,w,z,2)
+## h4c <- opt.h(s,x,w,z,3)
+## h4d <- unlist(fit(h4a$h))
+## h4d <- abs(h4d-mean(tau.fun(w,0)))
+## ###
+## ## pdf("Figures/prior4.pdf")
+## par(mfrow=c(2,2))
+## plot(h4a$h,sqrt(colMeans(h1a$rmse)),bg=ifelse(colMeans(h4a$rmse)==min(colMeans(h4a$rmse)),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Negative")
+## plot(h4b$h,sqrt(colMeans(h4b$rmse)),bg=ifelse(colMeans(h4b$rmse)==min(colMeans(h4b$rmse)),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Positive")
+## plot(h4c$h,sqrt(colMeans(h4c$rmse)),bg=ifelse(colMeans(h4c$rmse)==min(colMeans(h4c$rmse)),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Zero")
+## plot(h4c$h,h4d,bg=ifelse(h4d==min(h4d),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Real data")
+## ## dev.off()
+## ####
+## print("Done!")
