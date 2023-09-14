@@ -24,17 +24,16 @@ opt.h.int <- function(s,h,x,w,z)
 {
     set.seed(1)
     ## Prior model
-    theta1 <- cbind(rnorm(s,1/2,0.5),rnorm(s,5/4,0.5),rnorm(s,0,0.5),rnorm(s,125/48,0.5),rnorm(s,0,0.5))
-    theta2 <- 0.1+cbind(rnorm(s,1/2,0.5),rnorm(s,5/4,0.5),rnorm(s,0,0.5),rnorm(s,125/48,0.5),rnorm(s,0,0.5))
-    theta <- cbind(theta1,theta2)
+    theta1 <- matrix(rnorm(s*7,0.5,0.1),s,6)
+    theta2 <- matrix(rnorm(s*7,0.6,0.1),s,6)
 ### New data matrix
-    Xx <- cbind(1,x,x^2,x^3,x^4)
+    Xx <- cbind(1,x,x^2,x^3,x^4,sin(w))
 ### Generate sample data
     ys <- vector("list",s)
-    ate <- theta[,6]-theta[,1]
+    ate <- theta2[,1]-theta1[,1]+(theta2[,6]-theta1[,6])*mean(sin(w))
     for (i in 1:s)
     {
-        ys[[i]] <- (!z)*Xx%*%theta[i,1:5] + z*Xx%*%theta[i,6:10] + rnorm(length(x))
+        ys[[i]] <- (!z)*Xx%*%theta1[i,1:6] + z*Xx%*%theta2[i,1:6] + rnorm(length(x),0,0.5)
     }
     foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
@@ -79,7 +78,7 @@ opt.h <- function(s,x,w,z)
     }
     return(list(rmse=rmse,h=h,ate=ate))
 }
-fit <- function(h)
+fit <- function(h,y)
 {
     foreach(i=1:length(h),.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
@@ -105,13 +104,22 @@ fit <- function(h)
 }
 ## Data 1
 x <- 2*rbeta(n,2,4)-1
-w <- matrix(rnorm(2*n,0,0.25),n,2)
+w <- rnorm(n,0,0.25)
 z <- x>=0
-mu.fun <- function(W, X){return(0.1*rowSums(W) + 1/(1+exp(-5*X)))} 
-tau.fun <- function(W, X) return( sin(mu.fun(W, X)) )
-y <- mu.fun(w, x) + tau.fun(w, x)*z + rnorm(n)
-h1a <- opt.h(s,x,w,z)
-h1b <- fit(h1a$h)
+tau <- function(W, X) return(0.2 + sin(W) + as.numeric(X>=0))
+mu1 <- function(W, X) return(X - 0.1*X^2 + 0.5*W)
+mu2 <- function(W, X) return(0.1*W + exp(W) + 1/(1+exp(-5*X)))
+mu3 <- function(W, X) return((X<0.1)*cos(W) + abs(W) + X^2 + exp(X))
+y1 <- mu1(w, x) + tau(w, x)*z + rnorm(n,0,0.5)
+y2 <- mu2(w, x) + tau(w, x)*z + rnorm(n,0,0.5)
+y3 <- mu3(w, x) + tau(w, x)*z + rnorm(n,0,0.5)
+###
+h1 <- opt.h(s,x,w,z)
+fit1 <- fit(h1$h,y1)
+h2 <- opt.h(s,x,w,z)
+fit2 <- fit(h2$h,y2)
+h3 <- opt.h(s,x,w,z)
+fit3 <- fit(h3$h,y3)
 ###
 mse <- data.frame(h1a$rmse)
 names(mse) <- h1a$h
