@@ -9,8 +9,8 @@ library(XBART)
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
 ##
-s             <- 10
-n             <- 500
+s             <- 20
+n             <- 750
 c             <- 0
 Omin          <- 5
 Opct          <- 0.9
@@ -20,24 +20,22 @@ num_sweeps    <- 100
 burnin        <- 20
 p_categorical <- 0
 ##
-opt.h.int <- function(s,h,x,w,z,tau)
+### Prior model
+ysamp <- function(x,w,tau)
 {
-    ## Prior model
-    theta1 <- matrix(rnorm(s*6,0.5,0.1),s,6)
-    theta2 <- matrix(rnorm(s*6,0.5+tau,0.1),s,6)
-### New data matrix
-    Xx <- cbind(1,x,x^2,x^3,x^4,sin(w))
-### Generate sample data
+    theta1 <- c(0.5,0.5,0.5,0.5)
+    theta2 <- theta1+tau
+    Xx <- cbind(1,scale(x),scale(x^2),scale(sin(w)))
     ys <- vector("list",s)
-    ate <- theta2[,1]-theta1[,1]+(theta2[,6]-theta1[,6])*mean(sin(w))
-    for (i in 1:s)
-    {
-        ys[[i]] <- (!z)*Xx%*%theta1[i,1:6] + z*Xx%*%theta2[i,1:6] + rnorm(length(x),0,0.5)
-    }
+    for (i in 1:s) ys[[i]] <- (!z)*Xx%*%theta1 + z*Xx%*%theta2 + rnorm(n,0,0.5)
+    return(ys)
+}
+ate <- function(tau,w) tau + 0.1*mean(sin(w))
+opt.h.int <- function(s,h,ate,ys,x,w,z)
+{
     foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
             y <- ys[[i]]
-            true.ate <- ate[i]
             print(paste0("Sample: ",i))
             fit <- XBCF.rd(y, w, x, c,
                            Owidth = h, Omin = Omin, Opct = Opct,
@@ -53,55 +51,82 @@ opt.h.int <- function(s,h,x,w,z,tau)
                            random_seed=0)
             test <- -h<=x & x<=h
             pred <- predict.XBCFrd(fit,w[test],rep(0,sum(test)))
-            pred <- pred$tau.adj
-            pred <- mean(colMeans(pred))
-            error <- (true.ate-pred)^2
-            c(Error=error,ATE=ate[i])
+            pred$tau.adj[,(burnin+1):num_sweeps]
         }
 }
-opt.h <- function(s,x,w,z,tau)
+opt.h <- function(s,ate,y,x,w,z)
 {
     h <- sort(abs(quantile(x,seq(0,1,0.025))))
     h <- round(h,2)
     h <- unique(h)
-    h <- h[1:5]
-    ## h <- seq(min(h),max(h),length.out=10)
-    rmse <- matrix(0,s,length(h))
-    ate <- matrix(0,s,length(h))
+    h <- h[1:10]
+    out <- vector("list",length(h))
     for (i in 1:length(h))
     {
         print(paste0("h: ",i))
-        temp <- opt.h.int(s,h[i],x,w,z,tau)
-        rmse[,i] <- do.call("rbind",temp)[,"Error"]
-        ate[,i] <- do.call("rbind",temp)[,"ATE"]
+        temp <- opt.h.int(s,h[i],ate,y,x,w,z)
+        out[[i]] <- temp
     }
-    return(list(rmse=rmse,h=h,ate=ate))
+    return(out)
 }
 ## Data 1
 x <- 2*rbeta(n,2,4)-1
 w <- rnorm(n,0,0.25)
 z <- x>=0
+y1 <- ysamp(x,w,0.05)
+y2 <- ysamp(x,w,0.2)
+y3 <- ysamp(x,w,0.5)
+ate1 <- ate(0.05,w)
+ate2 <- ate(0.2,w)
+ate3 <- ate(0.5,w)
 ###
-h1 <- opt.h(s,x,w,z,0.05)
-h2 <- opt.h(s,x,w,z,0.2)
-h3 <- opt.h(s,x,w,z,0.5)
+h <- sort(abs(quantile(x,seq(0,1,0.025))))
+h <- round(h,2)
+h <- unique(h)
+h <- h[1:10]
+h1 <- opt.h(s,ate1,y1,x,w,z)
+h2 <- opt.h(s,ate2,y2,x,w,z)
+h3 <- opt.h(s,ate3,y3,x,w,z)
+saveRDS(list(h1,h2,h3),"Results/prior.rds")
 ###
-## barplot(table(h1$h[apply(rbind(h1$rmse,h2$rmse,h3$rmse),1,function(x) which(x==min(x)))]))
-par(mfrow=c(3,1))
-hist(h1$h[apply(h1$rmse,1,function(x) which(x==min(x)))],main="h",xlab="")
-hist(h2$h[apply(h2$rmse,1,function(x) which(x==min(x)))],main="h",xlab="")
-hist(h3$h[apply(h3$rmse,1,function(x) which(x==min(x,na.rm=T)))],main="h",xlab="")
+prior <- readRDS("Results/prior.rds")
+h1 <- prior[[1]]
+h2 <- prior[[2]]
+h3 <- prior[[3]]
 ###
-mse <- data.frame(h1a$rmse)
-names(mse) <- h1a$h
-h.plot <- t(sapply(h1b,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
+rmse1 <- sapply(h1,function(x) sapply(x,function(y) abs(mean(colMeans(y))-ate1)/ate1))
+rmse2 <- sapply(h2,function(x) sapply(x,function(y) abs(mean(colMeans(y))-ate2)/ate2))
+rmse3 <- sapply(h3,function(x) sapply(x,function(y) abs(mean(colMeans(y))-ate3)/ate3))
+rmse1 <- as.data.frame(rmse1)
+rmse2 <- as.data.frame(rmse2)
+rmse3 <- as.data.frame(rmse3)
+names(rmse1) <- names(rmse2) <- names(rmse3) <- h
+###
 par(mfrow=c(1,3))
-boxplot(sqrt(mse),main="RMSE")
-plot(density(rowMeans(h1a$ate)),main="ATE")
-abline(v=mean(tau.fun(w,0)),lty=2)
-matplot(x=h1a$h,h.plot,col="blue",lty=c(1,2,2),type=c("b","l","l"),pch=21,main="Fit for true y")
-abline(h=mean(tau.fun(w,0)),lty=2)
+barplot(table(h[apply(rmse1,1,function(x) which(x==min(x)))]))
+barplot(table(h[apply(rmse2,1,function(x) which(x==min(x)))]))
+barplot(table(h[apply(rmse3,1,function(x) which(x==min(x)))]))
 ###
+par(mfrow=c(1,3))
+matplot(x=h,y=t(rmse1),pch=19,col="blue",type="b",ylab="Rel. error",main=paste(expression(tau),"=0.05"),lty=2)
+matplot(x=h,y=t(rmse2),pch=19,col="blue",type="b",ylab="Rel. error",main=paste(expression(tau),"=0.2"),lty=2)
+matplot(x=h,y=t(rmse3),pch=19,col="blue",type="b",ylab="Rel. error",main=paste(expression(tau),"=0.5"),lty=2)
+## ###
+## par(mfrow=c(3,1))
+## barplot(table(h1$h[apply(h1$rmse,1,function(x) which(x==min(x)))]))
+## barplot(table(h1$h[apply(h2$rmse,1,function(x) which(x==min(x)))]))
+## barplot(table(h1$h[apply(h3$rmse,1,function(x) which(x==min(x)))]))
+## ###
+## mse <- data.frame(h1a$rmse)
+## names(mse) <- h1a$h
+## h.plot <- t(sapply(h1b,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
+## par(mfrow=c(1,3))
+## boxplot(sqrt(mse),main="RMSE")
+## plot(density(rowMeans(h1a$ate)),main="ATE")
+## abline(v=mean(tau.fun(w,0)),lty=2)
+## matplot(x=h1a$h,h.plot,col="blue",lty=c(1,2,2),type=c("b","l","l"),pch=21,main="Fit for true y")
+## abline(h=mean(tau.fun(w,0)),lty=2)
+## ###
 ## pdf("Figures/prior1.pdf")
 ## par(mfrow=c(2,2))
 ## plot(h1a$h,sqrt(colMeans(h1a$rmse)),bg=ifelse(colMeans(h1a$rmse)==min(colMeans(h1a$rmse)),"blue","red"),bty="n",xlab="h",ylab="RMSE",pch=21,main="Negative")
