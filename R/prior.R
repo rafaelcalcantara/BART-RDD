@@ -20,11 +20,11 @@ num_sweeps    <- 100
 burnin        <- 20
 p_categorical <- 0
 ##
-opt.h.int <- function(s,h,x,w,z)
+opt.h.int <- function(s,h,x,w,z,tau)
 {
     ## Prior model
     theta1 <- matrix(rnorm(s*6,0.5,0.1),s,6)
-    theta2 <- matrix(rnorm(s*6,0.6,0.1),s,6)
+    theta2 <- matrix(rnorm(s*6,0.5+tau,0.1),s,6)
 ### New data matrix
     Xx <- cbind(1,x,x^2,x^3,x^4,sin(w))
 ### Generate sample data
@@ -59,7 +59,7 @@ opt.h.int <- function(s,h,x,w,z)
             c(Error=error,ATE=ate[i])
         }
 }
-opt.h <- function(s,x,w,z)
+opt.h <- function(s,x,w,z,tau)
 {
     h <- sort(abs(quantile(x,seq(0,1,0.025))))
     h <- round(h,2)
@@ -71,72 +71,26 @@ opt.h <- function(s,x,w,z)
     for (i in 1:length(h))
     {
         print(paste0("h: ",i))
-        temp <- opt.h.int(s,h[i],x,w,z)
+        temp <- opt.h.int(s,h[i],x,w,z,tau)
         rmse[,i] <- do.call("rbind",temp)[,"Error"]
         ate[,i] <- do.call("rbind",temp)[,"ATE"]
     }
     return(list(rmse=rmse,h=h,ate=ate))
 }
-fit <- function(h,y,x)
-{
-    foreach(i=1:length(h),.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
-        {
-            print(paste0("h: ",i))
-            fit <- XBCF.rd(y, w, x, c,
-                           Owidth = h[i], Omin = Omin, Opct = Opct,
-                           num_trees_mod = ntrees,
-                           num_trees_con = ntrees,
-                           num_cutpoints = n,
-                           num_sweeps = num_sweeps,
-                           burnin = burnin, Nmin = Nmin,
-                           p_categorical_con = p_categorical,
-                           p_categorical_mod = p_categorical,
-                           tau_con = 2*var(y)/ntrees,
-                           tau_mod = 0.5*var(y)/ntrees,
-                           random_seed=0)
-            test <- -h[i]<=x & x<=h[i]
-            pred <- predict.XBCFrd(fit,w[test],rep(0,sum(test)))
-            pred <- pred$tau.adj
-            pred <- colMeans(pred)
-            pred
-        }
-}
 ## Data 1
 x <- 2*rbeta(n,2,4)-1
 w <- rnorm(n,0,0.25)
 z <- x>=0
-tau1 <- function(W, X) return(0.05 + cos(W) + as.numeric(X>=0))
-tau2 <- function(W, X) return(0.2 + cos(W) + as.numeric(X>=0))
-tau3 <- function(W, X) return(0.5 + cos(W) + as.numeric(X>=0))
-mu1 <- function(W, X) return(X - 0.1*X^2 + 0.5*W)
-mu2 <- function(W, X) return(0.1*W + exp(W) + 1/(1+exp(-5*X)))
-mu3 <- function(W, X) return((X<0.1)*cos(W) + abs(W) + X^2 + exp(X))
-y1 <- mu1(w, x) + tau1(w, x)*z + rnorm(n,0,0.5)
-y2 <- mu1(w, x) + tau2(w, x)*z + rnorm(n,0,0.5)
-y3 <- mu1(w, x) + tau3(w, x)*z + rnorm(n,0,0.5)
 ###
-## h1 <- opt.h(s,x,w,z)
-fit1 <- fit(h1$h,y1,x)
-## h2 <- opt.h(s,x,w,z)
-fit2 <- fit(h2$h,y2,x)
-## h3 <- opt.h(s,x,w,z)
-fit3 <- fit(h3$h,y3,x)
+h1 <- opt.h(s,x,w,z,0.05)
+h2 <- opt.h(s,x,w,z,0.2)
+h3 <- opt.h(s,x,w,z,0.5)
 ###
-h.plot1 <- t(sapply(fit1,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
-h.plot2 <- t(sapply(fit2,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
-h.plot3 <- t(sapply(fit3,function(x) c(mean(x),quantile(x,c(0.025,0.975),na.rm=T))))
-###
-barplot(table(h1$h[apply(rbind(h1$rmse,h2$rmse,h3$rmse),1,function(x) which(x==min(x)))]))
+## barplot(table(h1$h[apply(rbind(h1$rmse,h2$rmse,h3$rmse),1,function(x) which(x==min(x)))]))
 par(mfrow=c(3,1))
-## hist(h1$h[apply(h1$rmse,1,function(x) which(x==min(x)))],main="h",xlab="")
-matplot(x=h1$h,h.plot1,col="blue",bg="blue",lty=c(1,2,2),type=c("b","l","l"),pch=21,main="")
-abline(h=mean(tau1(w,0)),lty=2)
-## hist(h2$h[apply(h2$rmse,1,function(x) which(x==min(x)))],main="h",xlab="")
-matplot(x=h2$h,h.plot2,col="blue",bg="blue",lty=c(1,2,2),type=c("b","l","l"),pch=21,main="")
-abline(h=mean(tau2(w,0)),lty=2)
-## hist(h3$h[apply(h3$rmse,1,function(x) which(x==min(x,na.rm=T)))],main="h",xlab="")
-matplot(x=h3$h,h.plot3,col="blue",bg="blue",lty=c(1,2,2),type=c("b","l","l"),pch=21,main="")
-abline(h=mean(tau3(w,0)),lty=2)
+hist(h1$h[apply(h1$rmse,1,function(x) which(x==min(x)))],main="h",xlab="")
+hist(h2$h[apply(h2$rmse,1,function(x) which(x==min(x)))],main="h",xlab="")
+hist(h3$h[apply(h3$rmse,1,function(x) which(x==min(x,na.rm=T)))],main="h",xlab="")
 ###
 mse <- data.frame(h1a$rmse)
 names(mse) <- h1a$h
