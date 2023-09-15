@@ -9,7 +9,7 @@ library(XBART)
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
 ##
-s             <- 20
+s             <- 10
 n             <- 500
 c             <- 0
 Omin          <- 5
@@ -22,7 +22,6 @@ p_categorical <- 0
 ##
 opt.h.int <- function(s,h,x,w,z)
 {
-    set.seed(1)
     ## Prior model
     theta1 <- matrix(rnorm(s*6,0.5,0.1),s,6)
     theta2 <- matrix(rnorm(s*6,0.6,0.1),s,6)
@@ -103,27 +102,23 @@ fit <- function(h,y,x)
         }
 }
 ## Data 1
-x1 <- 2*rbeta(n,2,4)-1
-x2 <- 2*rbeta(n,2,4)-0.5
-x3 <- rnorm(n,0,0.1)
+x <- 2*rbeta(n,2,4)-1
 w <- rnorm(n,0,0.25)
-z1 <- x1>=0
-z2 <- x2>=0
-z3 <- x3>=0
+z <- x>=0
 tau <- function(W, X) return(0.2 + sin(W) + as.numeric(X>=0))
 mu1 <- function(W, X) return(X - 0.1*X^2 + 0.5*W)
 mu2 <- function(W, X) return(0.1*W + exp(W) + 1/(1+exp(-5*X)))
 mu3 <- function(W, X) return((X<0.1)*cos(W) + abs(W) + X^2 + exp(X))
-y1 <- mu2(w, x1) + tau(w, x1)*z1 + rnorm(n,0,0.5)
-y2 <- mu2(w, x2) + tau(w, x2)*z2 + rnorm(n,0,0.5)
-y3 <- mu2(w, x3) + tau(w, x3)*z3 + rnorm(n,0,0.5)
+y1 <- mu1(w, x) + tau(w, x)*z1 + rnorm(n,0,0.5)
+y2 <- mu2(w, x) + tau(w, x)*z2 + rnorm(n,0,0.5)
+y3 <- mu3(w, x) + tau(w, x)*z3 + rnorm(n,0,0.5)
 ###
-h1 <- opt.h(s,x1,w,z1)
-fit1 <- fit(h1$h,y1,x1)
-h2 <- opt.h(s,x2,w,z2)
-fit2 <- fit(h2$h,y2,x2)
-h3 <- opt.h(s,x3,w,z3)
-fit3 <- fit(h3$h,y3,x3)
+h1 <- opt.h(s,x,w,z)
+fit1 <- fit(h1$h,y1,x)
+h2 <- opt.h(s,x,w,z)
+fit2 <- fit(h2$h,y2,x)
+h3 <- opt.h(s,x,w,z)
+fit3 <- fit(h3$h,y3,x)
 ###
 h.plot1 <- t(sapply(fit1,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
 h.plot2 <- t(sapply(fit2,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
