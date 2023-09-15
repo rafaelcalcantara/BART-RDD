@@ -9,7 +9,7 @@ library(XBART)
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
 ##
-s             <- 10
+s             <- 20
 n             <- 500
 c             <- 0
 Omin          <- 5
@@ -24,8 +24,8 @@ opt.h.int <- function(s,h,x,w,z)
 {
     set.seed(1)
     ## Prior model
-    theta1 <- matrix(rnorm(s*7,0.5,0.1),s,6)
-    theta2 <- matrix(rnorm(s*7,0.6,0.1),s,6)
+    theta1 <- matrix(rnorm(s*6,0.5,0.1),s,6)
+    theta2 <- matrix(rnorm(s*6,0.6,0.1),s,6)
 ### New data matrix
     Xx <- cbind(1,x,x^2,x^3,x^4,sin(w))
 ### Generate sample data
@@ -52,8 +52,8 @@ opt.h.int <- function(s,h,x,w,z)
                            tau_con = 2*var(y)/ntrees,
                            tau_mod = 0.5*var(y)/ntrees,
                            random_seed=0)
-            test <- -h<=xtest & xtest<=h
-            pred <- predict.XBCFrd(fit,wtest[test,],rep(0,sum(test)))
+            test <- -h<=x & x<=h
+            pred <- predict.XBCFrd(fit,w[test],rep(0,sum(test)))
             pred <- pred$tau.adj
             pred <- mean(colMeans(pred))
             error <- (true.ate-pred)^2
@@ -78,7 +78,7 @@ opt.h <- function(s,x,w,z)
     }
     return(list(rmse=rmse,h=h,ate=ate))
 }
-fit <- function(h,y)
+fit <- function(h,y,x)
 {
     foreach(i=1:length(h),.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
         {
@@ -96,30 +96,48 @@ fit <- function(h,y)
                            tau_mod = 0.5*var(y)/ntrees,
                            random_seed=0)
             test <- -h[i]<=x & x<=h[i]
-            pred <- predict.XBCFrd(fit,w[test,],rep(0,sum(test)))
+            pred <- predict.XBCFrd(fit,w[test],rep(0,sum(test)))
             pred <- pred$tau.adj
             pred <- colMeans(pred)
             pred
         }
 }
 ## Data 1
-x <- 2*rbeta(n,2,4)-1
+x1 <- 2*rbeta(n,2,4)-1
+x2 <- 2*rbeta(n,2,4)-0.5
+x3 <- rnorm(n,0,0.1)
 w <- rnorm(n,0,0.25)
-z <- x>=0
+z1 <- x1>=0
+z2 <- x2>=0
+z3 <- x3>=0
 tau <- function(W, X) return(0.2 + sin(W) + as.numeric(X>=0))
 mu1 <- function(W, X) return(X - 0.1*X^2 + 0.5*W)
 mu2 <- function(W, X) return(0.1*W + exp(W) + 1/(1+exp(-5*X)))
 mu3 <- function(W, X) return((X<0.1)*cos(W) + abs(W) + X^2 + exp(X))
-y1 <- mu1(w, x) + tau(w, x)*z + rnorm(n,0,0.5)
-y2 <- mu2(w, x) + tau(w, x)*z + rnorm(n,0,0.5)
-y3 <- mu3(w, x) + tau(w, x)*z + rnorm(n,0,0.5)
+y1 <- mu2(w, x1) + tau(w, x1)*z1 + rnorm(n,0,0.5)
+y2 <- mu2(w, x2) + tau(w, x2)*z2 + rnorm(n,0,0.5)
+y3 <- mu2(w, x3) + tau(w, x3)*z3 + rnorm(n,0,0.5)
 ###
-h1 <- opt.h(s,x,w,z)
-fit1 <- fit(h1$h,y1)
-h2 <- opt.h(s,x,w,z)
-fit2 <- fit(h2$h,y2)
-h3 <- opt.h(s,x,w,z)
-fit3 <- fit(h3$h,y3)
+h1 <- opt.h(s,x1,w,z1)
+fit1 <- fit(h1$h,y1,x1)
+h2 <- opt.h(s,x2,w,z2)
+fit2 <- fit(h2$h,y2,x2)
+h3 <- opt.h(s,x3,w,z3)
+fit3 <- fit(h3$h,y3,x3)
+###
+h.plot1 <- t(sapply(fit1,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
+h.plot2 <- t(sapply(fit2,function(x) c(mean(x),quantile(x,c(0.025,0.975)))))
+h.plot3 <- t(sapply(fit3,function(x) c(mean(x),quantile(x,c(0.025,0.975),na.rm=T))))
+par(mfrow=c(3,2))
+hist(h1$h[apply(h1$rmse,1,function(x) which(x==min(x)))],main="h",xlab="")
+matplot(x=h1$h,h.plot1,col="blue",bg="blue",lty=c(1,2,2),type=c("b","l","l"),pch=21,main="")
+abline(h=mean(tau(w,0)),lty=2)
+hist(h2$h[apply(h2$rmse,1,function(x) which(x==min(x)))],main="h",xlab="")
+matplot(x=h2$h,h.plot2,col="blue",bg="blue",lty=c(1,2,2),type=c("b","l","l"),pch=21,main="")
+abline(h=mean(tau(w,0)),lty=2)
+hist(h3$h[apply(h3$rmse,1,function(x) which(x==min(x,na.rm=T)))],main="h",xlab="")
+matplot(x=h3$h,h.plot3,col="blue",bg="blue",lty=c(1,2,2),type=c("b","l","l"),pch=21,main="")
+abline(h=mean(tau(w,0)),lty=2)
 ###
 mse <- data.frame(h1a$rmse)
 names(mse) <- h1a$h
