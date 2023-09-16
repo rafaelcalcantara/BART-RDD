@@ -9,7 +9,7 @@ library(XBART)
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
 ##
-s             <- 20
+s             <- 10
 n             <- 750
 c             <- 0
 Omin          <- 5
@@ -21,16 +21,17 @@ burnin        <- 20
 p_categorical <- 0
 ##
 ### Prior model
-ysamp <- function(x,w,tau)
+ysamp <- function(x,w,U,tau)
 {
-    theta1 <- c(0.5,0.5,0.5,0.5)
-    theta2 <- theta1+tau
-    Xx <- cbind(1,scale(x),scale(x^2),scale(sin(w)))
+    theta1 <- rep(0.5,5)
+    theta2 <- c(tau,tau,tau)
+    muX <- cbind(1,scale(x),scale(x^2),scale(sin(w)),U)
+    tauX <- cbind(1,scale(sqrt(U)),scale(w))
     ys <- vector("list",s)
-    for (i in 1:s) ys[[i]] <- (!z)*Xx%*%theta1 + z*Xx%*%theta2 + rnorm(n,0,0.5)
+    for (i in 1:s) ys[[i]] <- muX%*%theta1 + z*tauX%*%theta2 + rnorm(n,0,0.5)
     return(ys)
 }
-ate <- function(tau,w) tau + 0.1*mean(sin(w))
+ate <- function(tau,w,U) tau*(1 + mean(scale(sqrt(U))) + mean(scale(w)))
 opt.h.int <- function(s,h,ate,ys,x,w,z)
 {
     foreach(i=1:s,.multicombine=T,.export=c("n","c","Omin","h","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
@@ -54,12 +55,8 @@ opt.h.int <- function(s,h,ate,ys,x,w,z)
             pred$tau.adj[,(burnin+1):num_sweeps]
         }
 }
-opt.h <- function(s,ate,y,x,w,z)
+opt.h <- function(s,ate,y,x,w,z,h)
 {
-    h <- sort(abs(quantile(x,seq(0,1,0.025))))
-    h <- round(h,2)
-    h <- unique(h)
-    h <- h[1:10]
     out <- vector("list",length(h))
     for (i in 1:length(h))
     {
@@ -70,30 +67,32 @@ opt.h <- function(s,ate,y,x,w,z)
     return(out)
 }
 ## Data 1
-x <- 2*rbeta(n,2,4)-1
+U <- runif(n,0,1)
+x <- U + 2*rbeta(n,2,4)-1.5
 w <- rnorm(n,0,0.25)
 z <- x>=0
-y1 <- ysamp(x,w,0.05)
-y2 <- ysamp(x,w,0.2)
-y3 <- ysamp(x,w,0.5)
-ate1 <- ate(0.05,w)
-ate2 <- ate(0.2,w)
-ate3 <- ate(0.5,w)
+y1 <- ysamp(x,w,U,0.05)
+y2 <- ysamp(x,w,U,0.2)
+y3 <- ysamp(x,w,U,0.5)
+ate1 <- ate(0.05,w,U)
+ate2 <- ate(0.2,w,U)
+ate3 <- ate(0.5,w,U)
 ###
 h <- sort(abs(quantile(x,seq(0,1,0.025))))
 h <- round(h,2)
 h <- unique(h)
 h <- h[1:10]
-h1 <- opt.h(s,ate1,y1,x,w,z)
-h2 <- opt.h(s,ate2,y2,x,w,z)
-h3 <- opt.h(s,ate3,y3,x,w,z)
+h <- seq(0.05,0.2,0.025)
+h1 <- opt.h(s,ate1,y1,x,w,z,h)
+h2 <- opt.h(s,ate2,y2,x,w,z,h)
+h3 <- opt.h(s,ate3,y3,x,w,z,h)
 saveRDS(list(h1,h2,h3),"Results/prior.rds")
-###
-prior <- readRDS("Results/prior.rds")
-h1 <- prior[[1]]
-h2 <- prior[[2]]
-h3 <- prior[[3]]
-###
+## ###
+## prior <- readRDS("Results/prior.rds")
+## h1 <- prior[[1]]
+## h2 <- prior[[2]]
+## h3 <- prior[[3]]
+## ###
 rmse1 <- sapply(h1,function(x) sapply(x,function(y) abs(mean(colMeans(y))-ate1)/ate1))
 rmse2 <- sapply(h2,function(x) sapply(x,function(y) abs(mean(colMeans(y))-ate2)/ate2))
 rmse3 <- sapply(h3,function(x) sapply(x,function(y) abs(mean(colMeans(y))-ate3)/ate3))
