@@ -10,25 +10,29 @@ no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
 ##
 s             <- 10
-n             <- 750
-c             <- 0
+n             <- 1000
+c             <- 0.8
 Omin          <- 5
 Opct          <- 0.9
 ntrees        <- 10
 Nmin          <- 5
-num_sweeps    <- 100
+num_sweeps    <- 120
 burnin        <- 20
-p_categorical <- 0
+p_categorical <- 1
 ##
 ### Prior model
-ysamp <- function(x,w,U,tau)
+ysamp <- function(x,w,tau)
 {
-    theta1 <- rep(0.5,5)
-    theta2 <- c(tau,tau,tau)
-    muX <- cbind(1,scale(x),scale(x^2),scale(sin(w)),U)
-    tauX <- cbind(1,scale(sqrt(U)),scale(w))
+    ## theta1 <- rep(0.5,5)
+    ## theta2 <- c(tau,tau,tau)
+    ## muX <- cbind(1,scale(x),scale(x^2),scale(sin(w)),U)
+    ## tauX <- cbind(1,scale(sqrt(U)),scale(w))
     ys <- vector("list",s)
-    for (i in 1:s) ys[[i]] <- muX%*%theta1 + z*tauX%*%theta2 + rnorm(n,0,0.5)
+    for (i in 1:s)
+    {
+        ux <- pnorm(qnorm(x) - rnorm(n,0,0.1))
+        ys[[i]] <- qnorm(0.5 + ux/2.25) + (tau+3*w)*z
+    }
     return(ys)
 }
 ate <- function(tau,w,U) tau*(1 + mean(scale(sqrt(U))) + mean(scale(w)))
@@ -67,16 +71,21 @@ opt.h <- function(s,ate,y,x,w,z,h)
     return(out)
 }
 ## Data 1
-U <- runif(n,0,1)
-x <- U + 2*rbeta(n,2,4)-1.5
-w <- rnorm(n,0,0.25)
-z <- x>=0
-y1 <- ysamp(x,w,U,0.05)
-y2 <- ysamp(x,w,U,0.2)
-y3 <- ysamp(x,w,U,0.5)
-ate1 <- ate(0.05,w,U)
-ate2 <- ate(0.2,w,U)
-ate3 <- ate(0.5,w,U)
+## u <- runif(n,0,1)
+## x <- rbeta(n,15*u,15*(1-u))
+x <- pnorm(rnorm(n,0,1) + rnorm(n,0,0.1))
+z <- as.numeric(x>0.8)
+## w <- rbinom(n,1,pnorm(rnorm(n,x,0.1)))
+w <- rbinom(n,1,0.6)
+## w <- rnorm(n,0,0.1)
+## y <- 10*qnorm(0.5 + u/2.25) + 3*z
+y1 <- ysamp(x,w,3)
+## y2 <- ysamp(x,w,U,0.2)
+## y3 <- ysamp(x,w,U,0.5)
+## ate1 <- ate(0.05,w,U)
+ate1 <- 3+3*mean(w)
+## ate2 <- ate(0.2,w,U)
+## ate3 <- ate(0.5,w,U)
 ###
 h <- sort(abs(quantile(x,seq(0,1,0.025))))
 h <- round(h,2)
@@ -84,9 +93,9 @@ h <- unique(h)
 h <- h[1:10]
 h <- seq(0.05,0.2,0.025)
 h1 <- opt.h(s,ate1,y1,x,w,z,h)
-h2 <- opt.h(s,ate2,y2,x,w,z,h)
-h3 <- opt.h(s,ate3,y3,x,w,z,h)
-saveRDS(list(h1,h2,h3),"Results/prior.rds")
+## h2 <- opt.h(s,ate2,y2,x,w,z,h)
+## h3 <- opt.h(s,ate3,y3,x,w,z,h)
+## saveRDS(list(h1,h2,h3),"Results/prior.rds")
 ## ###
 ## prior <- readRDS("Results/prior.rds")
 ## h1 <- prior[[1]]
@@ -94,22 +103,49 @@ saveRDS(list(h1,h2,h3),"Results/prior.rds")
 ## h3 <- prior[[3]]
 ## ###
 rmse1 <- sapply(h1,function(x) sapply(x,function(y) abs(mean(colMeans(y))-ate1)/ate1))
-rmse2 <- sapply(h2,function(x) sapply(x,function(y) abs(mean(colMeans(y))-ate2)/ate2))
-rmse3 <- sapply(h3,function(x) sapply(x,function(y) abs(mean(colMeans(y))-ate3)/ate3))
+## rmse2 <- sapply(h2,function(x) sapply(x,function(y) abs(mean(colMeans(y))-ate2)/ate2))
+## rmse3 <- sapply(h3,function(x) sapply(x,function(y) abs(mean(colMeans(y))-ate3)/ate3))
 rmse1 <- as.data.frame(rmse1)
-rmse2 <- as.data.frame(rmse2)
-rmse3 <- as.data.frame(rmse3)
-names(rmse1) <- names(rmse2) <- names(rmse3) <- h
+## rmse2 <- as.data.frame(rmse2)
+## rmse3 <- as.data.frame(rmse3)
+## names(rmse1) <- names(rmse2) <- names(rmse3) <- h
+names(rmse1) <- h
+ate.hat <- sapply(h1,function(x) sapply(x, function(y) mean(colMeans(y))))
+ate.hat <- data.frame(ate.hat)
+names(ate.hat) <- h
 ###
-par(mfrow=c(1,3))
+cate.hat1 <- matrix(0,s,length(h))
+for (i in 1:length(h))
+{
+    cate.hat1[,i] <- sapply(h1[[i]],function(a) mean(colMeans(a[w[x<=h[i] & x>=-h[i]]==1,])))
+}
+cate.hat1 <- data.frame(cate.hat1)
+names(cate.hat1) <- h
+cate.hat0 <- matrix(0,s,length(h))
+for (i in 1:length(h))
+{
+    cate.hat0[,i] <- sapply(h1[[i]],function(a) mean(colMeans(a[w[x<=h[i] & x>=-h[i]]==0,])))
+}
+cate.hat0 <- data.frame(cate.hat0)
+names(cate.hat0) <- h
+## par(mfrow=c(1,3))
 barplot(table(h[apply(rmse1,1,function(x) which(x==min(x)))]))
-barplot(table(h[apply(rmse2,1,function(x) which(x==min(x)))]))
-barplot(table(h[apply(rmse3,1,function(x) which(x==min(x)))]))
+## barplot(table(h[apply(rmse2,1,function(x) which(x==min(x)))]))
+## barplot(table(h[apply(rmse3,1,function(x) which(x==min(x)))]))
 ###
-par(mfrow=c(1,3))
-matplot(x=h,y=t(rmse1),pch=19,col="blue",type="b",ylab="Rel. error",main=paste(expression(tau),"=0.05"),lty=2)
-matplot(x=h,y=t(rmse2),pch=19,col="blue",type="b",ylab="Rel. error",main=paste(expression(tau),"=0.2"),lty=2)
-matplot(x=h,y=t(rmse3),pch=19,col="blue",type="b",ylab="Rel. error",main=paste(expression(tau),"=0.5"),lty=2)
+## par(mfrow=c(1,3))
+matplot(x=h,y=t(rmse1),pch=19,col="blue",type="b",ylab="Rel. error",main=paste(expression(tau),"=3"),lty=2)
+## matplot(x=h,y=t(rmse2),pch=19,col="blue",type="b",ylab="Rel. error",main=paste(expression(tau),"=0.2"),lty=2)
+## matplot(x=h,y=t(rmse3),pch=19,col="blue",type="b",ylab="Rel. error",main=paste(expression(tau),"=0.5"),lty=2)
+## ###
+boxplot(ate.hat)
+abline(h=ate1,lty=2)
+## ###
+par(mfrow=c(1,2))
+boxplot(cate.hat1,main="w=1")
+abline(h=6,lty=2)
+boxplot(cate.hat0,main="w=0")
+abline(h=3,lty=2)
 ## ###
 ## par(mfrow=c(3,1))
 ## barplot(table(h1$h[apply(h1$rmse,1,function(x) which(x==min(x)))]))
