@@ -23,12 +23,12 @@ burnin        <- 20
 p_categorical <- 2
 ##
 ### DGP
-sig <- 0.05
 ## x <- matrix(rnorm(n*s2,-0.2,1),n,s2)
 ## x <- matrix(rnorm(n*s2,0,1),n,s2)
 ## x <- matrix(rnorm(n*s2,0.2,1),n,s2)
 ## x <- matrix(2*rbeta(n*s2,2,4)-1,n,s2)
 ## p <- apply(x,2,function(i) (i-min(i))/(max(i)-min(i)))
+sig <- 0.1
 u <- runif(n,0,1)
 w <- vector("list",s2)
 for (i in 1:s2)
@@ -42,8 +42,8 @@ for (i in 1:s2)
 x <- matrix(rnorm(n*s2,u-0.5,0.5),n,s2)
 z <- apply(x,2,function(i) as.numeric(i>=c))
 e <- matrix(rnorm(n*s2,0,sig),n,s2)
-mu <- function(x,w) 0.1*w[,3]*w[,4]*sin(w[,1]+w[,2]) + 0.2*w[,3]*w[,4] + 0.1*w[,3]*w[,4]*x + 0.1*w[,3]*w[,4]*(x+0.5)^2 + 0.2*w[,3]*w[,4]*x^3
-tau <- function(x,w) 0.01*w[,3]*w[,4]*cos(w[,1]+w[,2]) + 0.05*w[,3]*w[,4] - 0.2*w[,3]*w[,4]*x + 0.05*w[,3]*w[,4]*(x+0.5)^2 - 0.1*w[,3]*w[,4]*x^3
+mu <- function(x,w) 0.1*w[,3]*w[,4]*sin(w[,1]+w[,2]) + 0.2*w[,3]*w[,4] + 0.1*w[,3]*w[,4]*x + 0.1*w[,3]*w[,4]*(x+0.1)^2 + 0.2*w[,3]*w[,4]*x^3
+tau <- function(x,w) 0.01*w[,3]*w[,4]*cos(w[,1]+w[,2]) + 0.05*w[,3]*w[,4] - 0.2*w[,3]*w[,4]*x + 0.05*w[,3]*w[,4]*(x+0.1)^2 - 0.1*w[,3]*w[,4]*x^3
 y <- matrix(0,n,s2)
 for (i in 1:s2) y[,i] <- mu(x[,i],w[[i]]) + tau(x[,i],w[[i]])*z[,i]
 ## Plotting data and functions
