@@ -14,52 +14,62 @@ s             <- 500
 n             <- 500
 c             <- 0
 ### DGP
-sig <- 0.1
+sig1 <- 0.04
+sig2 <- 0.03
+sig3 <- 0.02
 u1 <- u2 <- u3 <- runif(n,0,1)
 w1 <- w2 <- w3 <- vector("list",s)
 for (i in 1:s)
 {
-    W1 <- rnorm(n,u1,0.15)
+    W1 <- runif(n,u1,u1+1)
     W2 <- runif(n,0,0.5)
-    W3 <- rbinom(n,4,u1)+1
-    W4 <- rbinom(n,1,0.7)+0.5
+    W3 <- rbinom(n,2,u1)+1
+    W4 <- rbinom(n,1,0.6)+1
     w1[[i]] <- cbind(W1,W2,W3,W4)
 }
 for (i in 1:s)
 {
-    W1 <- rnorm(n,u2,0.15)
+    W1 <- runif(n,u2,u2+1)
     W2 <- runif(n,0,0.5)
-    W3 <- rbinom(n,4,u2)+1
-    W4 <- rbinom(n,1,0.7)+0.5
+    W3 <- rbinom(n,2,u2)+1
+    W4 <- rbinom(n,1,0.6)+1
     w2[[i]] <- cbind(W1,W2,W3,W4)
 }
 for (i in 1:s)
 {
-    W1 <- rnorm(n,u3,0.15)
+    W1 <- runif(n,u3,u3+1)
     W2 <- runif(n,0,0.5)
-    W3 <- rbinom(n,4,u3)+1
-    W4 <- rbinom(n,1,0.7)+0.5
+    W3 <- rbinom(n,2,u3)+1
+    W4 <- rbinom(n,1,0.6)+1
     w3[[i]] <- cbind(W1,W2,W3,W4)
 }
-x1 <- matrix(rnorm(n*s,u1-0.5,0.5),n,s)
-x2 <- matrix(rnorm(n*s,u2-0.5,0.5),n,s)
-x3 <- matrix(rnorm(n*s,u3-0.5,0.5),n,s)
+x1 <- matrix(2*rbeta(n*s,2,4)-u1-0.2,n,s)
+x2 <- matrix(2*rbeta(n*s,2,4)-u2-0.2,n,s)
+x3 <- matrix(2*rbeta(n*s,2,4)-u3-0.2,n,s)
 z1 <- apply(x1,2,function(i) as.numeric(i>=c))
 z2 <- apply(x2,2,function(i) as.numeric(i>=c))
 z3 <- apply(x3,2,function(i) as.numeric(i>=c))
-e1 <- e2 <- e3 <- matrix(rnorm(n*s,0,sig),n,s)
+e1 <- matrix(rnorm(n*s,0,sig1),n,s)
+e2 <- matrix(rnorm(n*s,0,sig2),n,s)
+e3 <- matrix(rnorm(n*s,0,sig3),n,s)
 mu <- function(x,w,m)
 {
-    if(m==1) out <- 0.1*sin(w[,1]+w[,2]) + 0.2 + 0.1*x + 0.1*x^2 + 0.2*x^3
-    if(m==2) out <- 0.1*w[,4]*sin(w[,1]+w[,2]) + 0.2 + 0.05*w[,4] + 0.1*w[,4]*x + 0.1*w[,4]*x^2 + 0.2*w[,4]*x^3
-    if(m==3) out <- 0.1*w[,3]*w[,4]*sin(w[,1]+w[,2]) + 0.2 + 0.05*w[,3]*w[,4] + 0.1*w[,3]*w[,4]*x + 0.1*w[,3]*w[,4]*x^2 + 0.2*w[,3]*w[,4]*x^3
+    w34 <- (-1)^(w[,4])*w[,3]
+    w34 <- 0.1 + (w34-min(w34))/(max(w34)-min(w34))
+    w34 <- round(w34,digits=1)
+    if(m==1) out <- 0.01*sin((w[,1]+w[,2])*pi) + 1 + 0.1*x - 0.1*x^2 + 0.1*x^3
+    if(m==2) out <- 0.01*w[,4]*sin((w[,1]+w[,2])*pi) + 1 + 0.1*w[,4] + 0.1*w[,4]*x - 0.1*w[,4]*x^2 + 0.1*w[,4]*x^3
+    if(m==3) out <- 0.01*w34*sin((w[,1]+w[,2])*pi) + 1 + 0.1*w34 + 0.1*w34*x - 0.1*w34*x^2 + 0.1*w34*x^3
     return(out)
 }
 tau <- function(x,w,m)
 {
-    if(m==1) out <- 0.01*cos(w[,1]+w[,2]) + 0.05 - 0.2*x + 0.05*(x+0.1)^2 - 0.1*x^3
-    if(m==2) out <- 0.01*w[,4]*cos(w[,1]+w[,2]) + 0.05*w[,4] - 0.2*w[,4]*x + 0.05*w[,4]*(x+0.1)^2 - 0.1*w[,4]*x^3
-    if(m==3) out <- 0.01*w[,3]*w[,4]*cos(w[,1]+w[,2]) + 0.05*w[,3]*w[,4] - 0.2*w[,3]*w[,4]*x + 0.05*w[,3]*w[,4]*(x+0.1)^2 - 0.1*w[,3]*w[,4]*x^3
+    w34 <- (-1)^(w[,4])*w[,3]
+    w34 <- 0.1 + (w34-min(w34))/(max(w34)-min(w34))
+    w34 <- round(w34,digits=1)
+    if(m==1) out <- 0.01*cos((w[,1]+w[,2])*pi) + 0.03 - 0.2*x + 0.1*x^2 - 0.01*x^3
+    if(m==2) out <- 0.01*w[,4]*cos((w[,1]+w[,2])*pi) + 0.03*w[,4] - 0.2*w[,4]*x + 0.1*w[,4]*x^2 - 0.01*w[,4]*x^3
+    if(m==3) out <- 0.01*w34*cos((w[,1]+w[,2])*pi) + 0.03*w34 - 0.2*w34*x + 0.1*w34*x^2 - 0.01*w34*x^3
     return(out)
 }
 y1 <- matrix(0,n,s)
@@ -67,9 +77,9 @@ y2 <- matrix(0,n,s)
 y3 <- matrix(0,n,s)    
 for (i in 1:s)
 {
-    y1[,i] <- mu(x1[,i],w1[[i]],1) + tau(x1[,i],w1[[i]],1)*z1[,i]
-    y2[,i] <- mu(x2[,i],w2[[i]],2) + tau(x2[,i],w2[[i]],2)*z2[,i]
-    y3[,i] <- mu(x3[,i],w3[[i]],3) + tau(x3[,i],w3[[i]],3)*z3[,i]
+    y1[,i] <- mu(x1[,i],w1[[i]],1) + tau(x1[,i],w1[[i]],1)*z1[,i] + e1[,i]
+    y2[,i] <- mu(x2[,i],w2[[i]],2) + tau(x2[,i],w2[[i]],2)*z2[,i] + e2[,i]
+    y3[,i] <- mu(x3[,i],w3[[i]],3) + tau(x3[,i],w3[[i]],3)*z3[,i] + e3[,i]
 }
 ## Plotting data and functions
 X1 <- x1[,1]
@@ -78,23 +88,48 @@ X3 <- x3[,1]
 Y1 <- y1[,1]
 Y2 <- y2[,1]
 Y3 <- y3[,1]
+Z1 <- z1[,1]
+Z2 <- z2[,1]
+Z3 <- z3[,1]
+m1 <- mu(X1,w1[[1]],1)
+m2 <- mu(X2,w2[[1]],2)
+m3 <- mu(X3,w3[[1]],3)
 t1 <- tau(X1,w1[[1]],1)
 t2 <- tau(X2,w2[[1]],2)
 t3 <- tau(X3,w3[[1]],3)
+w34 <- (-1)^(w3[[1]][,4])*w3[[1]][,3]
+w34 <- 0.1 + (w34-min(w34))/(max(w34)-min(w34))
+w34 <- as.factor(w34)
+###
+hist(X1,main="",freq=F,xlab="X")
+###
+par(mfrow=c(2,2))
+hist(w1[[1]][,1],main="",freq=F,xlab=expression(W[1]))
+hist(w1[[1]][,2],main="",freq=F,xlab=expression(W[2]))
+barplot(table(w1[[1]][,3]),main="",xlab=expression(W[3]))
+barplot(table(w1[[1]][,4]),main="",xlab=expression(W[4]))
 ###
 par(mfrow=c(2,3))
 plot(X1,t1,xlab="X",ylab=expression(tau),bty="n",pch=20)
 abline(v=c,lty=2)
-plot(X2,t2,xlab="X",ylab=expression(tau),bty="n",pch=20,col=w2[[1]][,4]+0.5)
+plot(X2,t2,xlab="X",ylab=expression(tau),bty="n",pch=20,col=w2[[1]][,4])
 abline(v=c,lty=2)
-plot(X3,t3,xlab="X",ylab=expression(tau),bty="n",pch=20,col=w3[[1]][,3]*w3[[1]][,4]*2)
+plot(X3,t3,xlab="X",ylab=expression(tau),bty="n",pch=20,col=w34)
 abline(v=c,lty=2)
 ###
-plot(X1,Y1,xlab="X",ylab="Y",bty="n",pch=20,col=z1[,1]+1)
+plot(X1,m1+t1*Z1,xlab="X",ylab="E(Y)",bty="n",pch=20)
 abline(v=c,lty=2)
-plot(X2,Y2,xlab="X",ylab="Y",bty="n",pch=20,col=z2[,1]+1)
+plot(X2,m2+t2*Z2,xlab="X",ylab="E(Y)",bty="n",pch=20,col=w2[[1]][,4])
 abline(v=c,lty=2)
-plot(X3,Y3,xlab="X",ylab="Y",bty="n",pch=20,col=z3[,1]+1)
+plot(X3,m3+t3*Z3,xlab="X",ylab="E(Y)",bty="n",pch=20,col=w34)
+abline(v=c,lty=2)
+###
+par(mfrow=c(1,3))
+plot(X1,Y1,xlab="X",ylab="Y",bty="n",pch=20,col=Z1+1)
+abline(v=c,lty=2)
+plot(X2,Y2,xlab="X",ylab="Y",bty="n",pch=20,col=Z2+1)
+abline(v=c,lty=2)
+plot(X3,Y3,xlab="X",ylab="Y",bty="n",pch=20,col=Z3+1)
 abline(v=c,lty=2)
 ###
 y <- y + e
@@ -208,3 +243,4 @@ plot(x[,1],y[,1],bty="n",pch=20,col=z[,1]+1,xlab="X",ylab="Y")
 ##         }
 ##     }
 ## }
+
