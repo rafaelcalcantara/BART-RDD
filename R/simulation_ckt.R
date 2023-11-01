@@ -22,7 +22,7 @@ ckt.time <- system.time({
     ckt <- ckt.fit(s,y,x,w)
 })
 saveRDS(list(fit=ckt,time=ckt.time),"Results/ckt_1.rds")
-rm(y,x,w,z,s,n,ckt.time,ckt.fit)
+rm(y,x,w,z,s,n,ckt.time,ckt)
 ## DGP2
 list2env(readRDS("Data/dgp2.rds"),globalenv())
 s <- ncol(x)
@@ -31,7 +31,7 @@ ckt.time <- system.time({
     ckt <- ckt.fit(s,y,x,w)
 })
 saveRDS(list(fit=ckt,time=ckt.time),"Results/ckt_2.rds")
-rm(y,x,w,z,s,n,ckt.time,ckt.fit)
+rm(y,x,w,z,s,n,ckt.time,ckt)
 ## DGP3
 list2env(readRDS("Data/dgp3.rds"),globalenv())
 s <- ncol(x)
@@ -40,6 +40,6 @@ ckt.time <- system.time({
     ckt <- ckt.fit(s,y,x,w)
 })
 saveRDS(list(fit=ckt,time=ckt.time),"Results/ckt_3.rds")
-rm(y,x,w,z,s,n,ckt.time,ckt.fit)
+rm(y,x,w,z,s,n,ckt.time,ckt)
 ##
 print("Done!")

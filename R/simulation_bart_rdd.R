@@ -5,7 +5,6 @@ library(foreach)
 library(doParallel)
 devtools::install_github("JingyuHe/XBART@XBCF-RDD")
 library(XBART)
-library(rdrobust)
 ### Parallelization
 no_cores <- detectCores() - 1
 registerDoParallel(no_cores)

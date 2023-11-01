@@ -16,9 +16,9 @@ s <- 1000
 n <- 500
 c <- 0
 ### DGP
-sig1 <- 0.05
-sig2 <- 0.05
-sig3 <- 0.05
+sig1 <- 1
+sig2 <- 1
+sig3 <- 1
 u1 <- u2 <- u3 <- matrix(runif(n*s,0,1),n,s)
 w1 <- w2 <- w3 <- vector("list",s)
 for (i in 1:s)
@@ -70,8 +70,8 @@ tau <- function(x,w,m)
     w34 <- 0.1 + (w34-min(w34))/(max(w34)-min(w34))
     w34 <- round(w34,digits=1)
     if(m==1) out <- 0.025*cos((w[,1]+w[,2])*pi) + 0.05 - 2.8*x + 1.4*x^2 - 0.14*x^3
-    if(m==2) out <- 0.0125*w[,4]*cos((w[,1]+w[,2])*pi) + 0.05 - 1.8*w[,4]*x + 0.9*w[,4]*x^2 - 0.09*w[,4]*x^3
-    if(m==3) out <- 0.05*w34*cos((w[,1]+w[,2])*pi) + 0.05 - 3.4*w34*x + 1.7*w34*x^2 - 0.17*w34*x^3
+    if(m==2) out <- 0.0125*w[,4]*cos((w[,1]+w[,2])*pi) + 0.03 + 0.03*w[,4] - 1.8*w[,4]*x + 0.9*w[,4]*x^2 - 0.09*w[,4]*x^3
+    if(m==3) out <- 0.05*w34*cos((w[,1]+w[,2])*pi) + 0.03 + 0.06*w34 - 3.4*w34*x + 1.7*w34*x^2 - 0.17*w34*x^3
     return(out)
 }
 y1 <- y2 <- y3 <- cate1 <- cate2 <- cate3 <- matrix(0,n,s)

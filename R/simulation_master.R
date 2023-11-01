@@ -1,0 +1,6 @@
+source("R/simulation_bart_rdd.R")
+source("R/simulation_bcf.R")
+source("R/simulation_sbart.R")
+source("R/simulation_tbart.R")
+source("R/simulation_ckt.R")
+print("Simulation master done!")
