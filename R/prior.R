@@ -11,7 +11,7 @@ no_cores <- detectCores() - 1
 registerDoParallel(no_cores)
 ##
 s1            <- 11
-s2            <- 30
+s2            <- 10
 n             <- 500
 c             <- 0
 Omin          <- 5
@@ -22,15 +22,15 @@ num_sweeps    <- 120
 burnin        <- 20
 p_categorical <- 1
 ### DGP
-x <- matrix(rnorm(n*s2,-0.2,1),n,s2)
-## x <- matrix(rnorm(n*s2,0,1),n,s2)
+## x <- matrix(rnorm(n*s2,-0.2,1),n,s2)
+x <- matrix(rnorm(n*s2,0,1),n,s2)
 ## x <- matrix(rnorm(n*s2,0.2,1),n,s2)
-sig <- 2.15
+sig <- 1
 w <- matrix(rbinom(n*s2,3,0.7),n,s2)+1
 z <- apply(x,2,function(i) as.numeric(i>=c))
 e <- matrix(rnorm(n*s2,0,sig),n,s2)
-mu <- function(x,w) 0.1*w + 0.2*w + 0.1*w*x + 0.1*w*x^2 + 0.2*w*x^3
-tau <- function(x,w) 0.03*w - 0.2*w*x + 0.05*w*x^2 - 0.1*w*x^3
+mu <- function(x,w) 0.3*w + 0.1*w*x + 0.1*w*(x+0.05)^2 + 0.2*w*x^3
+tau <- function(x,w) 0.05 + 0.01*w - 0.2*w*x + 0.05*w*(x+0.01)^2 - 0.1*w*x^3
 y <- matrix(0,n,s2)
 for (i in 1:s2) y[,i] <- mu(x[,i],w[,i]) + tau(x[,i],w[,i])*z[,i]
 ## Plotting data and functions
@@ -46,8 +46,8 @@ abline(v=0,lty=2)
 dev.off()
 ## Prior predictive
 pars <- runif(6,0,0.3)
-mu.prior <- function(x,w) as.vector(cbind(1,x,x^2+0.1)%*%pars[1:3])
-tau.prior <- function(x,w) as.vector(cbind(1,x,x^2+0.1)%*%pars[4:6])
+mu.prior <- function(x,w) as.vector(cbind(1,x,x^2)%*%pars[1:3])
+tau.prior <- function(x,w) as.vector(cbind(1,x,x^2)%*%pars[4:6])
 ys <- vector("list",s2)
 for (i in 1:s2) ys[[i]] <- mu.prior(x[,i],w[,i]) + tau.prior(x[,i],w[,i])*z[,i] + matrix(rnorm(n*s1,0,0.5),n,s1)
 pdf("Figures/prior_synthetic.pdf")
@@ -126,7 +126,7 @@ fit <- function(s,h,y,x,w,z)
                            tau_con = 2*var(ys)/ntrees,
                            tau_mod = 0.5*var(ys)/ntrees)
             test <- -hs+c<=xs & xs<=hs+c
-            pred <- predict.XBCFrd(fit,ws[test,],rep(c,sum(test)))
+            pred <- predict.XBCFrd(fit,ws[test],rep(c,sum(test)))
             pred$tau.adj[,(burnin+1):num_sweeps]
         }
 }

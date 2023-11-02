@@ -16,9 +16,9 @@ s <- 1000
 n <- 500
 c <- 0
 ### DGP
-sig1 <- 4
-sig2 <- 4
-sig3 <- 4
+sig1 <- 1
+sig2 <- 1
+sig3 <- 1
 u1 <- u2 <- u3 <- matrix(runif(n*s,0,1),n,s)
 w1 <- w2 <- w3 <- vector("list",s)
 for (i in 1:s)
@@ -104,14 +104,19 @@ w34 <- (-1)^(w3[[1]][,4])*w3[[1]][,3]
 w34 <- 0.1 + (w34-min(w34))/(max(w34)-min(w34))
 w34 <- as.factor(w34)
 ###
+pdf("Figures/sim_x.pdf")
 hist(X1,main="",freq=F,xlab="X")
+dev.off()
 ###
+pdf("Figures/sim_w.pdf")
 par(mfrow=c(2,2))
 hist(w1[[1]][,1],main="",freq=F,xlab=expression(W[1]))
 hist(w1[[1]][,2],main="",freq=F,xlab=expression(W[2]))
 barplot(table(w1[[1]][,3]),main="",xlab=expression(W[3]))
 barplot(table(w1[[1]][,4]),main="",xlab=expression(W[4]))
+dev.off()
 ###
+pdf("Figures/sim_mu_tau.pdf")
 par(mfrow=c(2,3))
 plot(X1,t1,xlab="X",ylab=expression(tau),bty="n",pch=20)
 abline(v=c,lty=2)
@@ -126,7 +131,9 @@ plot(X2,m2+t2*Z2,xlab="X",ylab="E(Y)",bty="n",pch=20,col=w2[[1]][,4])
 abline(v=c,lty=2)
 plot(X3,m3+t3*Z3,xlab="X",ylab="E(Y)",bty="n",pch=20,col=w34)
 abline(v=c,lty=2)
+dev.off()
 ###
+pdf("Figures/sim_y.pdf")
 par(mfrow=c(1,3))
 plot(X1,Y1,xlab="X",ylab="Y",bty="n",pch=20,col=Z1+1)
 abline(v=c,lty=2)
@@ -134,6 +141,7 @@ plot(X2,Y2,xlab="X",ylab="Y",bty="n",pch=20,col=Z2+1)
 abline(v=c,lty=2)
 plot(X3,Y3,xlab="X",ylab="Y",bty="n",pch=20,col=Z3+1)
 abline(v=c,lty=2)
+dev.off()
 ## Saving data
 saveRDS(list(y=y1,x=x1,w=w1,z=z1,c=c,cate=cate1), "Data/dgp1.rds")
 saveRDS(list(y=y2,x=x2,w=w2,z=z2,c=c,cate=cate2), "Data/dgp2.rds")
