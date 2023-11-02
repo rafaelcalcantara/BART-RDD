@@ -16,9 +16,9 @@ s <- 1000
 n <- 500
 c <- 0
 ### DGP
-sig1 <- 1
-sig2 <- 1
-sig3 <- 1
+sig1 <- 4
+sig2 <- 4
+sig3 <- 4
 u1 <- u2 <- u3 <- matrix(runif(n*s,0,1),n,s)
 w1 <- w2 <- w3 <- vector("list",s)
 for (i in 1:s)

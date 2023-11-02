@@ -24,7 +24,7 @@ fit <- function(s,y,x,w,z)
             ws <- w[[i]]
             xs <- x[,i]
             zs <- z[,i]
-            fit <- XBCF.continuous(y=ys, Z=zs, X_con = cbind(xs,ws), X_mod = cbind(xs,ws),
+            fit <- XBCF.discrete(y=ys, Z=zs, X_con = cbind(xs,ws), X_mod = cbind(xs,ws),
                            num_trees_mod = ntrees,
                            num_trees_con = ntrees,
                            num_cutpoints = n,
@@ -34,7 +34,7 @@ fit <- function(s,y,x,w,z)
                            p_categorical_mod = p_categorical,
                            tau_con = 2*var(ys)/ntrees,
                            tau_mod = 0.5*var(ys)/ntrees)
-            pred <- predict.XBCFcontinuous(fit,X_con = cbind(xs,ws), X_mod = cbind(xs,ws),Z=zs)
+            pred <- predict.XBCFdiscrete(fit,X_con = cbind(xs,ws), X_mod = cbind(xs,ws),Z=zs,pihat=zs,burnin=burnin)
             pred$tau.adj[,(burnin+1):num_sweeps]
         }
 }

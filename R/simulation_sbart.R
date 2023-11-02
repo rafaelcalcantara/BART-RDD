@@ -13,7 +13,7 @@ ntrees        <- 10
 Nmin          <- 5
 num_sweeps    <- 120
 burnin        <- 20
-p_categorical <- 2
+p_categorical <- 3
 ### Functions
 fit <- function(s,y,x,w,z)
 {
