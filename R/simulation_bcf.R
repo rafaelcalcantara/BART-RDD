@@ -34,7 +34,7 @@ fit <- function(s,y,x,w,z)
                            p_categorical_mod = p_categorical,
                            tau_con = 2*var(ys)/ntrees,
                            tau_mod = 0.5*var(ys)/ntrees)
-            pred <- predict.XBCFdiscrete(fit,X_con = cbind(xs,ws), X_mod = cbind(xs,ws),Z=zs,pihat=zs,burnin=burnin)
+            pred <- predict.XBCFdiscrete(fit,X_con = cbind(0,ws), X_mod = cbind(0,ws),Z=zs,pihat=zs,burnin=burnin)
             pred$tau.adj[,(burnin+1):num_sweeps]
         }
 }

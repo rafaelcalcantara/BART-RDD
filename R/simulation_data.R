@@ -1,25 +1,15 @@
-#### NOTES
-##### TEST DIFFERENT DIST OF X
+## Reading command line arguments to generate DGP
+args <- commandArgs(trailingOnly=TRUE)
+sig <- as.numeric(args[1])
+k <- as.numeric(args[2])
 ## Setup
 set.seed(0)
-library(parallel)
-library(foreach)
-library(doParallel)
-devtools::install_github("JingyuHe/XBART@XBCF-RDD")
-library(XBART)
-library(rdrobust)
-## Parallelization
-no_cores <- detectCores() - 1
-registerDoParallel(no_cores)
-##
 s <- 1000
 n <- 500
 c <- 0
 ### DGP
-sig1 <- 1
-sig2 <- 1
-sig3 <- 1
 u1 <- u2 <- u3 <- matrix(runif(n*s,0,1),n,s)
+sig1 <- sig2 <- sig3 <- sig
 w1 <- w2 <- w3 <- vector("list",s)
 for (i in 1:s)
 {
@@ -45,9 +35,9 @@ for (i in 1:s)
     W4 <- rbinom(n,1,0.6)+1
     w3[[i]] <- cbind(W1,W2,W3,W4)
 }
-x1 <- matrix(2*rbeta(n*s,2,4)-u1[,i]-0.2,n,s)
-x2 <- matrix(2*rbeta(n*s,2,4)-u2[,i]-0.2,n,s)
-x3 <- matrix(2*rbeta(n*s,2,4)-u3[,i]-0.2,n,s)
+x1 <- matrix(2*rbeta(n*s,2,4)-u1-0.2,n,s)
+x2 <- matrix(2*rbeta(n*s,2,4)-u2-0.2,n,s)
+x3 <- matrix(2*rbeta(n*s,2,4)-u3-0.2,n,s)
 z1 <- apply(x1,2,function(i) as.numeric(i>=c))
 z2 <- apply(x2,2,function(i) as.numeric(i>=c))
 z3 <- apply(x3,2,function(i) as.numeric(i>=c))
@@ -77,11 +67,11 @@ tau <- function(x,w,m)
 y1 <- y2 <- y3 <- cate1 <- cate2 <- cate3 <- matrix(0,n,s)
 for (i in 1:s)
 {
-    y1[,i] <- mu(x1[,i],w1[[i]],1) + tau(x1[,i],w1[[i]],1)*z1[,i] + 0.5*u1[,i] + e1[,i]
+    y1[,i] <- mu(x1[,i],w1[[i]],1) + tau(x1[,i],w1[[i]],1)*z1[,i] + k*u1[,i] + e1[,i]
     cate1[,i] <- tau(0,w1[[i]],1)
-    y2[,i] <- mu(x2[,i],w2[[i]],2) + tau(x2[,i],w2[[i]],2)*z2[,i] + 0.5*u2[,i] + e2[,i]
+    y2[,i] <- mu(x2[,i],w2[[i]],2) + tau(x2[,i],w2[[i]],2)*z2[,i] + k*u2[,i] + e2[,i]
     cate2[,i] <- tau(0,w2[[i]],2)
-    y3[,i] <- mu(x3[,i],w3[[i]],3) + tau(x3[,i],w3[[i]],3)*z3[,i] + 0.5*u3[,i] + e3[,i]
+    y3[,i] <- mu(x3[,i],w3[[i]],3) + tau(x3[,i],w3[[i]],3)*z3[,i] + k*u3[,i] + e3[,i]
     cate3[,i] <- tau(0,w3[[i]],3)
 }
 ## Plotting data and functions
