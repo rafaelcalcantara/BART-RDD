@@ -1,0 +1,10 @@
+## ATE
+ate.sig1.k0 <- readRDS("Tables/ate_res_1_0.rds")
+ate.sig1.k1 <- readRDS("Tables/ate_res_1_1.rds")
+ate.sig1.k2 <- readRDS("Tables/ate_res_1_2.rds")
+ate.sig4.k0 <- readRDS("Tables/ate_res_4_0.rds")
+ate.sig4.k1 <- readRDS("Tables/ate_res_4_1.rds")
+ate.sig4.k2 <- readRDS("Tables/ate_res_4_2.rds")
+ate.sig16.k0 <- readRDS("Tables/ate_res_16_0.rds")
+ate.sig16.k1 <- readRDS("Tables/ate_res_16_1.rds")
+ate.sig16.k2 <- readRDS("Tables/ate_res_16_2.rds")

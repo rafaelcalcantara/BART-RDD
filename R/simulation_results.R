@@ -1,3 +1,9 @@
+## Reading command line arguments to save results
+args <- commandArgs(trailingOnly=TRUE)
+sig <- as.numeric(args[1])
+k <- as.numeric(args[2])
+##
+res.all <- readRDS(paste0("Results/results_",sig,"_",k,".rds"))
 ## Data
 d.1 <- readRDS("Data/dgp1.rds")
 d.2 <- readRDS("Data/dgp2.rds")
@@ -15,7 +21,7 @@ ate.3 <- colMeans(cate.3)
 ## BART-RDD
 ### DGP1
 #### ATE
-res <- readRDS("Results/bart_rdd_1.rds")
+res <- res.all$bart.rdd.1
 bart.fit.1 <- res$fit
 ate.bart.1 <- colMeans(sapply(bart.fit.1,colMeans))
 rmse.bart.1 <- sqrt(mean((ate.bart.1-ate.1)^2))
@@ -33,7 +39,7 @@ cov.cate.bart.1 <- mean(sapply(1:s, function(i) mean(ci.cate.bart.1[[i]][,1] <= 
 size.cate.bart.1 <- mean(sapply(1:s, function(i) mean(ci.cate.bart.1[[i]][,2]-ci.cate.bart.1[[i]][,1])))
 ### DGP2
 #### ATE
-res <- readRDS("Results/bart_rdd_2.rds")
+res <- res.all$bart.rdd.2
 bart.fit.2 <- res$fit
 ate.bart.2 <- colMeans(sapply(bart.fit.2,colMeans))
 rmse.bart.2 <- sqrt(mean((ate.bart.2-ate.2)^2))
@@ -51,7 +57,7 @@ cov.cate.bart.2 <- mean(sapply(1:s, function(i) mean(ci.cate.bart.2[[i]][,1] <= 
 size.cate.bart.2 <- mean(sapply(1:s, function(i) mean(ci.cate.bart.2[[i]][,2]-ci.cate.bart.2[[i]][,1])))
 ### DGP3
 #### ATE
-res <- readRDS("Results/bart_rdd_3.rds")
+res <- res.all$bart.rdd.3
 bart.fit.3 <- res$fit
 ate.bart.3 <- colMeans(sapply(bart.fit.3,colMeans))
 rmse.bart.3 <- sqrt(mean((ate.bart.3-ate.3)^2))
@@ -70,7 +76,7 @@ size.cate.bart.3 <- mean(sapply(1:s, function(i) mean(ci.cate.bart.3[[i]][,2]-ci
 ## BCF
 ### DGP1
 #### ATE
-res <- readRDS("Results/bcf_1.rds")
+res <- res.all$bcf.1
 bcf.fit.1 <- res$fit
 ate.bcf.1 <- colMeans(sapply(bcf.fit.1,colMeans))
 rmse.bcf.1 <- sqrt(mean((ate.bcf.1-ate.1)^2))
@@ -87,7 +93,7 @@ cov.cate.bcf.1 <- mean(sapply(1:s, function(i) mean(ci.cate.bcf.1[[i]][,1] <= ca
 size.cate.bcf.1 <- mean(sapply(1:s, function(i) mean(ci.cate.bcf.1[[i]][,2]-ci.cate.bcf.1[[i]][,1])))
 ### DGP2
 #### ATE
-res <- readRDS("Results/bcf_2.rds")
+res <- res.all$bcf.2
 bcf.fit.2 <- res$fit
 ate.bcf.2 <- colMeans(sapply(bcf.fit.2,colMeans))
 rmse.bcf.2 <- sqrt(mean((ate.bcf.2-ate.2)^2))
@@ -104,7 +110,7 @@ cov.cate.bcf.2 <- mean(sapply(1:s, function(i) mean(ci.cate.bcf.2[[i]][,1] <= ca
 size.cate.bcf.2 <- mean(sapply(1:s, function(i) mean(ci.cate.bcf.2[[i]][,2]-ci.cate.bcf.2[[i]][,1])))
 ### DGP3
 #### ATE
-res <- readRDS("Results/bcf_3.rds")
+res <- res.all$bcf.3
 bcf.fit.3 <- res$fit
 ate.bcf.3 <- colMeans(sapply(bcf.fit.3,colMeans))
 rmse.bcf.3 <- sqrt(mean((ate.bcf.3-ate.3)^2))
@@ -122,7 +128,7 @@ size.cate.bcf.3 <- mean(sapply(1:s, function(i) mean(ci.cate.bcf.3[[i]][,2]-ci.c
 ## SBART
 ### DGP1
 #### ATE
-res <- readRDS("Results/sbart_1.rds")
+res <- res.all$sbart.1
 sbart.fit.1 <- res$fit
 ate.sbart.1 <- colMeans(sapply(sbart.fit.1,colMeans))
 rmse.sbart.1 <- sqrt(mean((ate.sbart.1-ate.1)^2))
@@ -139,7 +145,7 @@ cov.cate.sbart.1 <- mean(sapply(1:s, function(i) mean(ci.cate.sbart.1[[i]][,1] <
 size.cate.sbart.1 <- mean(sapply(1:s, function(i) mean(ci.cate.sbart.1[[i]][,2]-ci.cate.sbart.1[[i]][,1])))
 ### DGP2
 #### ATE
-res <- readRDS("Results/sbart_2.rds")
+res <- res.all$sbart.2
 sbart.fit.2 <- res$fit
 ate.sbart.2 <- colMeans(sapply(sbart.fit.2,colMeans))
 rmse.sbart.2 <- sqrt(mean((ate.sbart.2-ate.2)^2))
@@ -156,7 +162,7 @@ cov.cate.sbart.2 <- mean(sapply(1:s, function(i) mean(ci.cate.sbart.2[[i]][,1] <
 size.cate.sbart.2 <- mean(sapply(1:s, function(i) mean(ci.cate.sbart.2[[i]][,2]-ci.cate.sbart.2[[i]][,1])))
 ### DGP3
 #### ATE
-res <- readRDS("Results/sbart_3.rds")
+res <- res.all$sbart.3
 sbart.fit.3 <- res$fit
 ate.sbart.3 <- colMeans(sapply(sbart.fit.3,colMeans))
 rmse.sbart.3 <- sqrt(mean((ate.sbart.3-ate.3)^2))
@@ -174,7 +180,7 @@ size.cate.sbart.3 <- mean(sapply(1:s, function(i) mean(ci.cate.sbart.3[[i]][,2]-
 ## TBART
 ### DGP1
 #### ATE
-res <- readRDS("Results/tbart_1.rds")
+res <- res.all$tbart.1
 tbart.fit.1 <- res$fit
 ate.tbart.1 <- sapply(tbart.fit.1,mean)
 rmse.tbart.1 <- sqrt(mean((ate.tbart.1-ate.1)^2))
@@ -186,7 +192,7 @@ cov.tbart.1 <- mean(ci.tbart.1[,1] <= ate.1 & ate.1 <= ci.tbart.1[,2])
 size.tbart.1 <- mean(ci.tbart.1[,2]-ci.tbart.1[,1])
 ### DGP2
 #### ATE
-res <- readRDS("Results/tbart_2.rds")
+res <- res.all$tbart.2
 tbart.fit.2 <- res$fit
 ate.tbart.2 <- sapply(tbart.fit.2,mean)
 rmse.tbart.2 <- sqrt(mean((ate.tbart.2-ate.2)^2))
@@ -198,7 +204,7 @@ cov.tbart.2 <- mean(ci.tbart.2[,1] <= ate.2 & ate.2 <= ci.tbart.2[,2])
 size.tbart.2 <- mean(ci.tbart.2[,2]-ci.tbart.2[,1])
 ### DGP3
 #### ATE
-res <- readRDS("Results/tbart_3.rds")
+res <- res.all$tbart.3
 tbart.fit.3 <- res$fit
 ate.tbart.3 <- sapply(tbart.fit.3,mean)
 rmse.tbart.3 <- sqrt(mean((ate.tbart.3-ate.3)^2))
@@ -210,7 +216,7 @@ cov.tbart.3 <- mean(ci.tbart.3[,1] <= ate.3 & ate.3 <= ci.tbart.3[,2])
 size.tbart.3 <- mean(ci.tbart.3[,2]-ci.tbart.3[,1])
 ## CKT
 ### DGP1
-res <- readRDS("Results/ckt_1.rds")
+res <- res.all$ckt.1
 ckt.fit.1 <- res$fit
 ate.ckt.1 <- sapply(ckt.fit.1, function(i) i$coef[3])
 rmse.ckt.1 <- sqrt(mean((ate.ckt.1-ate.1)^2))
@@ -221,7 +227,7 @@ ci.ckt.1 <- t(ci.ckt.1)
 cov.ckt.1 <- mean(ci.ckt.1[,1] <= ate.1 & ate.1 <= ci.ckt.1[,2])
 size.ckt.1 <- mean(ci.ckt.1[,2]-ci.ckt.1[,1])
 ### DGP2
-res <- readRDS("Results/ckt_2.rds")
+res <- res.all$ckt.2
 ckt.fit.2 <- res$fit
 ate.ckt.2 <- sapply(ckt.fit.2, function(i) i$coef[3])
 rmse.ckt.2 <- sqrt(mean((ate.ckt.2-ate.2)^2))
@@ -232,7 +238,7 @@ ci.ckt.2 <- t(ci.ckt.2)
 cov.ckt.2 <- mean(ci.ckt.2[,1] <= ate.2 & ate.2 <= ci.ckt.2[,2])
 size.ckt.2 <- mean(ci.ckt.2[,2]-ci.ckt.2[,1])
 ### DGP3
-res <- readRDS("Results/ckt_3.rds")
+res <- res.all$ckt.3
 ckt.fit.3 <- res$fit
 ate.ckt.3 <- sapply(ckt.fit.3, function(i) i$coef[3])
 rmse.ckt.3 <- sqrt(mean((ate.ckt.3-ate.3)^2))
@@ -259,7 +265,7 @@ ate.res <- data.frame(BART.RDD=c(rmse.bart.1,bias.bart.1,var.bart.1,cov.bart.1,s
                             rmse.ckt.2,bias.ckt.2,var.ckt.2,cov.ckt.2,size.ckt.2,
                             rmse.ckt.3,bias.ckt.3,var.ckt.3,cov.ckt.3,size.ckt.3))
 rownames(ate.res) <- paste(c("RMSE","Bias","Variance","Coverage","Size"),c(rep(1,5),rep(2,5),rep(3,5)),sep=".")
-saveRDS(round(ate.res,3),"Tables/ate_res.rds")
+saveRDS(round(ate.res,3),paste0("Tables/ate_res_",sig,"_",k,".rds"))
 ###
 cate.res <- data.frame(BART.RDD=c(rmse.cate.bart.1,cov.cate.bart.1,size.cate.bart.1,
                                   rmse.cate.bart.2,cov.cate.bart.2,size.cate.bart.2,
@@ -271,6 +277,6 @@ cate.res <- data.frame(BART.RDD=c(rmse.cate.bart.1,cov.cate.bart.1,size.cate.bar
                                rmse.cate.sbart.2,cov.cate.sbart.2,size.cate.sbart.2,
                                rmse.cate.sbart.3,cov.cate.sbart.3,size.cate.sbart.3))
 rownames(cate.res) <- paste(c("RMSE","Coverage","Size"),c(rep(1,3),rep(2,3),rep(3,3)),sep=".")
-saveRDS(round(cate.res,3),"Tables/cate_res.rds")
+saveRDS(round(cate.res,3),paste0("Tables/cate_res_",sig,"_",k,".rds"))
 ##
 print("Done!")
