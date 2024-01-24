@@ -1,6 +1,5 @@
 ## Setup
 set.seed(0)
-library(doParallel)
 ## devtools::install_github("JingyuHe/XBART@XBCF-RDD")
 library(XBART)
 setwd("~/../Git/BART-RDD")
@@ -10,23 +9,20 @@ if (length(list.files("Results")[grep("bart_rdd_",list.files("Results"))])!=0) #
   files <- paste0("Results/",list.files("Results")[grep("bart_rdd_",list.files("Results"))])
   for (i in files) file.remove(i)
 }
-### Parallelization
-no_cores <- detectCores()-1
 ### Parameters
-Omin          <- 5
+Omin          <- 1
 Opct          <- 0.9
-ntrees        <- 10
+ntrees        <- 5
 Nmin          <- 5
 num_sweeps    <- 120
 burnin        <- 20
-p_categorical <- 2
 ### Functions
 fit <- function(i)
 {
   print(paste0("Sample: ",i))
   ys <- data$y[,i]
   hs <- h[i]
-  ws <- data$w[[i]]
+  ifelse(is.list(data$w),ws <- data$w[[i]],ws <- subset(data$w,select=i))
   xs <- data$x[,i]
   fit <- XBART::XBCF.rd(ys, ws, xs, c,
                         Owidth = hs, Omin = Omin, Opct = Opct,

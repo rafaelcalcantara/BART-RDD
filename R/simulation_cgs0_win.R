@@ -1,7 +1,6 @@
 ## Setup
 set.seed(0)
 library(bayesrdd)
-library(doParallel)
 setwd("~/../Git/BART-RDD")
 if (!dir.exists("Results")) dir.create("Results") ## Create results folder
 if (length(list.files("Results")[grep("cgs0_",list.files("Results"))])!=0) ## Clean up folder
@@ -9,8 +8,6 @@ if (length(list.files("Results")[grep("cgs0_",list.files("Results"))])!=0) ## Cl
   files <- paste0("Results/",list.files("Results")[grep("cgs0_",list.files("Results"))])
   for (i in files) file.remove(i)
 }
-### Parallelization
-no_cores <- detectCores()-1
 ## Parameters
 p <- c(.9,.1)
 mz <- c(4, 3)

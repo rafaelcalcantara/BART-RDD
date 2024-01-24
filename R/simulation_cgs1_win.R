@@ -1,7 +1,6 @@
 ## Setup
 set.seed(0)
 library(bayesrdd)
-library(doParallel)
 setwd("~/../Git/BART-RDD")
 if (!dir.exists("Results")) dir.create("Results") ## Create results folder
 if (length(list.files("Results")[grep("cgs1_",list.files("Results"))])!=0) ## Clean up folder
@@ -9,13 +8,11 @@ if (length(list.files("Results")[grep("cgs1_",list.files("Results"))])!=0) ## Cl
   files <- paste0("Results/",list.files("Results")[grep("cgs1_",list.files("Results"))])
   for (i in files) file.remove(i)
 }
-### Parallelization
-no_cores <- detectCores()-1
 ## Parameters
 p <- c(.9,.1)
 mz <- c(4, 3)
 mztau <- c(3, 2)
-mw <- rep(20,2)
+mw <- rep(5,2)
 lamstmean0_ <- rep(1,5)
 lamstsd0_ <- 5*rep(3,5)
 s2mean0_ <- .3
@@ -25,9 +22,10 @@ fit <- function(i)
 {
   print(paste0("Sample: ",i))
   library(bayesrdd)
+  print("TEST")
   ys <- data$y[,i]
   xs <- data$x[,i]
-  ws <- data$w[[i]]
+  ifelse(is.list(data$w),ws <- data$w[[i]],ws <- subset(data$w,select=i))
   bayesrdd::bayesrddest(y = ys,
                         z = xs,
                         V = ws[,3:4],

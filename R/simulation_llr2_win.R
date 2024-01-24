@@ -1,6 +1,5 @@
 ## Setup
 set.seed(0)
-library(doParallel)
 setwd("~/../Git/BART-RDD")
 if (!dir.exists("Results")) dir.create("Results") ## Create results folder
 if (length(list.files("Results")[grep("llr2_",list.files("Results"))])!=0) ## Clean up folder
@@ -8,13 +7,12 @@ if (length(list.files("Results")[grep("llr2_",list.files("Results"))])!=0) ## Cl
   files <- paste0("Results/",list.files("Results")[grep("llr2_",list.files("Results"))])
   for (i in files) file.remove(i)
 }
-### Parallelization
-no_cores <- detectCores()-1
 ### Functions
 fit <- function(i)
 {
   print(paste0("Sample: ",i))
-  rdrobust::rdrobust(data$y[,i],data$x[,i],c=c,covs=cbind(data$w[[i]],data$w[[i]][,3:4]*data$x[,i]))
+  ws <- ifelse(is.list(data$w),data$w[[i]],data$w[,i])
+  rdrobust::rdrobust(data$y[,i],data$x[,i],c=c,covs=cbind(ws,data$w[[i]][,3:4]*data$x[,i]))
 }
 ##
 ### BEGIN LOOP

@@ -1,7 +1,6 @@
 set.seed(7)
 library(XBART)
 setwd("~/../Git/BART-RDD/")
-files <- length(list.files("Data"))
 ### Parameters
 Omin          <- 5
 Opct          <- 0.9
@@ -33,8 +32,8 @@ mu <- function(x=NULL,w=NULL,het=NULL,nonlin=NULL)
 }
 tau <- function(x=NULL,w=NULL,het=NULL,ate=NULL)
 {
-  if (het==1) out <- 0.025*cos((w[,1]+w[,2])*pi) + ate - 2.8*x + 1.4*x^2 - 0.14*x^3
-  if (het==2) out <- 0.0125*(w[,4]-mean(w[,4]))*cos((w[,1]+w[,2])*pi) + ate + ate*(w[,4]-mean(w[,4])) - 1.8*w[,4]*x + 0.9*w[,4]*x^2 - 0.09*w[,4]*x^3
+  if (het==1) out <- (2*w[,1] + w[,2]^2 + 10/(5-exp(-10*w[,2])) - 4.35) + 0.025*cos((w[,1]+w[,2])*pi) + ate - 2.8*x + 1.4*x^2 - 0.14*x^3
+  if (het==2) out <- 2*(w[,4]-mean(w[,4]))*w[,1] + (w[,4]-mean(w[,4]))*w[,2]^2 + (w[,4]-mean(w[,4]))*10/(5-exp(-10*w[,2])) + 0.0125*(w[,4]-mean(w[,4]))*cos((w[,1]+w[,2])*pi) + ate + ate*(w[,4]-mean(w[,4])) - 1.8*w[,4]*x + 0.9*w[,4]*x^2 - 0.09*w[,4]*x^3
   if (het==3)
   {
     f <- rep(0,length(x))
@@ -47,7 +46,7 @@ tau <- function(x=NULL,w=NULL,het=NULL,ate=NULL)
       if (w[i,3]==2 & w[i,4]==2) f[i] <- 0.93
       if (w[i,3]==3 & w[i,4]==2) f[i] <- 1.1
     }
-    out <- 0.1*(f-mean(f))*cos((w[,1]+w[,2])*pi) + ate + 1.5*ate*(f-mean(f)) - 3.4*f*x + 1.7*f*x^2 - 0.17*f*x^3
+    out <- 2*(f-mean(f))*w[,1] + (f-mean(f))*w[,2]^2 + (f-mean(f))*10/(5-exp(-10*w[,2])) + 0.1*(f-mean(f))*cos((w[,1]+w[,2])*pi) + ate + 1.5*ate*(f-mean(f)) - 3.4*f*x + 1.7*f*x^2 - 0.17*f*x^3
   }
   return(out)
 }
@@ -55,26 +54,47 @@ tau <- function(x=NULL,w=NULL,het=NULL,ate=NULL)
 n <- 1000
 s <- 1
 c <- 0
-t <- 1
-het <- 3
-nonlin <- 0
+t <- 0.1
+het <- 1
+nonlin <- 1
 u <- matrix(runif(n*s),n,s)
-x <- 2*rbeta(n,2,4)-u-0.2
+## x <- 2*rbeta(n,2,4)-u+0.2
 ## x <- rnorm(n,c-0.5+u,0.5)
 ## x <- runif(n,c-2,c+2)
-z <- as.numeric(x>c)
-w1 <- matrix(runif(n*s,as.numeric(u),as.numeric(u+1)),n,s)
-w2 <- matrix(runif(n*s,0,0.5),n,s)
-w3 <- matrix(rbinom(n*s,2,as.numeric(u))+1,n,s)
+## x <- 2*rbeta(n,2,4)-1
+## w1 <- matrix(runif(n*s,as.numeric(u),as.numeric(u+1)),n,s)
+## w1 <- 0.5 - x
+w1 <- matrix(runif(n*s,0,1),n,s)
+w2 <- matrix(runif(n*s,0,2),n,s)
+## w3 <- matrix(rbinom(n*s,2,as.numeric(u))+1,n,s)
+w3 <- matrix(rbinom(n*s,2,0.7),n,s)
 w4 <- matrix(rbinom(n*s,1,0.6)+1,n,s)
 w <- cbind(w1,w2,w3,w4)
+p <- function(w) pnorm(rowSums(w),1.5,0.5)
+x <- qnorm(p(cbind(w1,w2)),0,0.2)
+z <- as.numeric(x>c)
 y <- mu(x,w,het,nonlin) + tau(x,w,het,t)*z + rnorm(n,0,0.5*sd(mu(x,w,het,nonlin)+tau(x,w,het,t)*z))
 h <- 0.5*sd(x)
-xtest <- x[c-sd(x)<x & x<c+sd(x)]
+xtest <- x[c-2*sd(x)<x & x<c+2*sd(x)]
 xtest <- c(aggregate(xtest[xtest<c],list(cut(xtest[xtest<c],2)),mean)[,2],
            c,
            aggregate(xtest[c<xtest],list(cut(xtest[c<xtest],2)),mean)[,2])
 ate <- sapply(xtest,function(i) mean(tau(rep(i,n),w,het,t)))
+### Plot data
+summary(tau(rep(c,n),w,het,t))
+cor(x,tau(x,w,het,t))
+cor(w1,tau(x,w,het,t))
+cor(w2,tau(x,w,het,t))
+cor(w3,tau(x,w,het,t))
+cor(w4,tau(x,w,het,t))
+cor(x,w1)
+par(mfrow=c(2,3))
+plot(x,tau(x,w,het,t))
+plot(w1,tau(x,w,het,t))
+plot(w2,tau(x,w,het,t))
+plot(w3,tau(x,w,het,t))
+plot(w4,tau(x,w,het,t))
+plot(x,w1)
 ## BART-RDD
 fit <- XBART::XBCF.rd(y, w, x, c,
                       Owidth = h, Omin = Omin, Opct = Opct,

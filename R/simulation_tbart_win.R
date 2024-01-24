@@ -1,6 +1,5 @@
 ## Setup
 set.seed(0)
-library(doParallel)
 ## devtools::install_github("JingyuHe/XBART@XBCF-RDD")
 library(XBART)
 setwd("~/../Git/BART-RDD")
@@ -10,20 +9,17 @@ if (length(list.files("Results")[grep("tbart_",list.files("Results"))])!=0) ## C
   files <- paste0("Results/",list.files("Results")[grep("tbart_",list.files("Results"))])
   for (i in files) file.remove(i)
 }
-### Parallelization
-no_cores <- detectCores()-1
 ### Parameters
-ntrees        <- 10
+ntrees        <- 5
 Nmin          <- 5
 num_sweeps    <- 120
 burnin        <- 20
-p_categorical <- 2
 ### Functions
 fit <- function(i)
 {
   print(paste0("Sample: ",i))
   ys <- data$y[,i]
-  ws <- data$w[[i]]
+  ifelse(is.list(data$w),ws <- data$w[[i]],ws <- subset(data$w,select=i))
   xs <- data$x[,i]
   zs <- data$z[,i]
   fit1 <- XBART::XBART(ys[zs==1], cbind(xs,ws)[zs==1,], num_trees = ntrees,
@@ -36,9 +32,9 @@ fit <- function(i)
                 burnin = burnin, Nmin = Nmin,
                 p_categorical = p_categorical,
                 tau = var(ys[zs==0])/ntrees, parallel=F)
-  pred1 <- XBART::predict.XBART(fit1,cbind(rep(0,sum(zs==1)),ws[zs==1,]))[,(burnin+1):num_sweeps]
-  pred0 <- XBART::predict.XBART(fit0,cbind(rep(0,sum(zs==0)),ws[zs==0,]))[,(burnin+1):num_sweeps]
-  colMeans(pred1)-colMeans(pred0)
+  pred1 <- XBART::predict.XBART(fit1,cbind(rep(0,n),ws))[,(burnin+1):num_sweeps]
+  pred0 <- XBART::predict.XBART(fit0,cbind(rep(0,n),ws))[,(burnin+1):num_sweeps]
+  pred1-pred0
 }
 ##
 ### BEGIN LOOP

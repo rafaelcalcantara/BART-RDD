@@ -1,20 +1,345 @@
 ## Setup
+set.seed(7)
 library(parallel)
 library(foreach)
 library(doParallel)
-devtools::install_github("JingyuHe/XBART@XBCF-RDD")
+# devtools::install_github("JingyuHe/XBART@XBCF-RDD")
 library(XBART)
 library(rdrobust)
+library(bayesrdd)
 library(rpart)
 library(rpart.plot)
 library(xtable)
-###
-setwd("~/Documents/Git/XBCF-RDD/")
+## Parallelization
+no_cores <- detectCores() - 2
+##
+s1            <- no_cores
+Omin          <- 1
+Opct          <- 0.9
+ntrees        <- 5
+Nmin          <- 5
+num_sweeps    <- 120
+burnin        <- 20
+p_categorical <- 5
+### Read data
+setwd("~/../Git/BART-RDD/")
 data <- read.csv("Application/gpa.csv")
 y <- data$nextGPA
 x <- data$X
 w <- data[,4:11]
 c <- 0
+n <- nrow(data)
+z <- as.numeric(x>c)
+### Summary statistics
+#### Tables
+sum.stat <- function(dat) t(apply(dat,2,function(i) c(Mean=mean(i),SD=sd(i),Min=min(i),Max=max(i),Cor=cor(dat[,1],i))))
+sum0 <- sum.stat(cbind(y,x,w))
+sum1 <- by(cbind(y,x,w[,1:5]),data$loc_campus1,sum.stat)[[2]]
+sum2 <- by(cbind(y,x,w[,1:5]),data$loc_campus2,sum.stat)[[2]]
+sum3 <- by(cbind(y,x,w[,1:5]),data$loc_campus3,sum.stat)[[2]]
+sum.tab <- lapply(1:7, function(i) round(rbind(sum0[i,],sum1[i,],sum2[i,],sum3[i,]),3))
+sum.tab <- lapply(1:7, function(i) cbind(Sample=c("Full","Campus 1","Campus 2","Campus 3"),sum.tab[[i]]))
+sum.tab <- do.call("rbind",sum.tab)
+sum.tab <- cbind(unlist(lapply(c("Y","X",names(w)[1:5]), function(i) c(i,rep("",3)))),sum.tab)
+obs <- c(n,table(data$loc_campus1)[2],table(data$loc_campus2)[2],table(data$loc_campus3)[2])
+stargazer::stargazer(sum.tab,summary=F,rownames = F,
+                     label = "tab:sum.stat", title = "Summary statistics",
+                     table.placement = "!htpb", font.size = "small",
+                     notes = c("\\tiny Sample size:",paste(c("\\tiny Total:","Campus 1:","Campus 2:","Campus 3:"),obs,collapse="; ")))
+#### Plots
+##### W
+l0 <- lapply(1:ncol(w), function(i) predict(loess(w~x,data=data.frame(w=w[x<c & x>-0.5,i],x=x[x<c & x>-0.5])),se=T)[1:2])
+l0 <- lapply(l0,function(i) cbind(i$fit,i$fit-1.96*i$se.fit,i$fit+1.96*i$se.fit))
+l1 <- lapply(1:ncol(w), function(i) predict(loess(w~x,data=data.frame(w=w[x>c & x<0.5,i],x=x[x>c & x<0.5])),se=T)[1:2])
+l1 <- lapply(l1,function(i) cbind(i$fit,i$fit-1.96*i$se.fit,i$fit+1.96*i$se.fit))
+##### Y
+yhat0 <- predict(loess(y~x,data=data.frame(y=y[x<c & x>-0.5],x=x[x<c & x>-0.5])),se=T)[1:2]
+yhat0 <- cbind(yhat0$fit,yhat0$fit-1.96*yhat0$se.fit,yhat0$fit+1.96*yhat0$se.fit)
+yhat1 <- predict(loess(y~x,data=data.frame(y=y[x>c & x<0.5],x=x[x>c & x<0.5])),se=T)[1:2]
+yhat1 <- cbind(yhat1$fit,yhat1$fit-1.96*yhat1$se.fit,yhat1$fit+1.96*yhat1$se.fit)
+#####
+xplot <- x[x>-0.5 & x<0.5]
+pdf("Figures/application_summary.pdf")
+par(mfrow=c(3,3))
+matplot(xplot,rbind(yhat0,yhat1),xlab="X",ylab="Y",bty="n",type="n")
+matlines(sort(xplot[xplot<c]),yhat0[order(xplot[xplot<c]),],col=1,lty=c(1,2,2))
+matlines(sort(xplot[xplot>c]),yhat1[order(xplot[xplot>c]),],col=1,lty=c(1,2,2))
+abline(v=c,lty=2)
+for (i in 1:ncol(w))
+{
+  matplot(xplot,rbind(l0[[i]],l1[[i]]),xlab="X",ylab=colnames(w)[i],bty="n",type="n")
+  matlines(sort(xplot[xplot<c]),l0[[i]][order(xplot[xplot<c]),],col=1,lty=c(1,2,2))
+  matlines(sort(xplot[xplot>c]),l1[[i]][order(xplot[xplot>c]),],col=1,lty=c(1,2,2))
+  abline(v=c,lty=2)
+}
+dev.off()
+### Prior elicitation
+pars <- runif(6,0.05,0.3)
+mu.prior <- function(x) as.vector(cbind(1,x,x^2)%*%pars[1:3])
+tau.prior <- function(x) as.vector(cbind(1,x,x^2)%*%pars[4:6])
+ys <- matrix(0,nrow(data),s1)
+for (i in 1:s1)
+{
+  ys[,i] <- mu.prior(x) + tau.prior(x)*z + rnorm(n,0,sd(mu.prior(x) + tau.prior(x)*z)*0.5)
+  
+}
+h.grid <- sapply(c(0.1,0.25,0.5,0.75,1),function(i) i*sd(x))
+fit <- function(i)
+{
+  print(paste0("Sample: ",i))
+  ys1 <- ys[,i]
+  fit <- XBART::XBCF.rd(ys1, w, x, c,
+                        Owidth = hs, Omin = Omin, Opct = Opct,
+                        num_trees_mod = ntrees,
+                        num_trees_con = ntrees,
+                        num_cutpoints = n,
+                        num_sweeps = num_sweeps,
+                        burnin = burnin, Nmin = Nmin,
+                        p_categorical_con = p_categorical,
+                        p_categorical_mod = p_categorical,
+                        tau_con = 2*var(ys1)/ntrees,
+                        tau_mod = 0.5*var(ys1)/ntrees)
+  test <- -hs+c<=x & x<=hs+c
+  pred <- XBART::predict.XBCFrd(fit,w[test,],rep(c,sum(test)))
+  pred$tau.adj[,(burnin+1):num_sweeps]
+}
+rmse <- rep(0,length(h.grid))
+ate <- tau.prior(0)
+for (i in 1:length(h.grid))
+{
+  print(paste0("h: ",h.grid[i]))
+  hs <- h.grid[i]
+  cl <- makeCluster(no_cores,type="SOCK")
+  registerDoParallel(cl)
+  clusterExport(cl,varlist=ls())
+  time <- system.time({
+    out <- parLapply(cl,1:s1,fit)
+  })
+  stopCluster(cl)
+  rmse[i] <- sqrt(mean((colMeans(sapply(out,colMeans))-ate)^2))
+  print(time)
+  gc()
+}
+h <- h.grid[which(h.grid==min(h.grid))]
+rmse.tab <- cbind(h=h.grid,RMSE=rmse)
+rmse.tab <- round(rmse.tab,3)
+table(-h<x & x<h)
+stargazer::stargazer(rmse.tab,summary = F,rownames = F,font.size = "small",
+                     label="tab:rmse.data",title="Results from prior elicitation")
+### Summary for identification strip
+# h <-h.grid[1]
+sum.stat.h <- function(dat,id0,id1) 
+{
+  out <- round(cbind(t(apply(dat[id0,],2,function(i) c(Mean=mean(i),SD=sd(i)))),
+                     t(apply(dat[id1,],2,function(i) c(Mean=mean(i),SD=sd(i))))), 3)
+  return(out)
+}
+id0 <- -h < x & x < 0
+id1 <- 0 < x & x< h
+sum0 <- sum.stat.h(cbind(y,x,w),id0,id1)
+sum1 <- sum.stat.h(cbind(y,x,w[,1:5])[data$loc_campus1==1,],id0[data$loc_campus1==1],id1[data$loc_campus1==1])
+sum2 <- sum.stat.h(cbind(y,x,w[,1:5])[data$loc_campus2==1,],id0[data$loc_campus2==1],id1[data$loc_campus2==1])
+sum3 <- sum.stat.h(cbind(y,x,w[,1:5])[data$loc_campus3==1,],id0[data$loc_campus3==1],id1[data$loc_campus3==1])
+sum.tab <- lapply(1:7, function(i) rbind(sum0[i,],sum1[i,],sum2[i,],sum3[i,]))
+sum.tab <- lapply(1:7, function(i) cbind(Sample=c("Full","Campus 1","Campus 2","Campus 3"),sum.tab[[i]]))
+sum.tab <- do.call("rbind",sum.tab)
+sum.tab <- cbind(unlist(lapply(c("Y","X",names(w)[1:5]), function(i) c(i,rep("",3)))),sum.tab)
+sum.tab <- rbind(colnames(sum.tab),sum.tab)
+colnames(sum.tab) <- c("","","(1)","","(2)","")
+obs0 <- c(sum(id0),table(data$loc_campus1[id0])[2],table(data$loc_campus2[id0])[2],table(data$loc_campus3[id0])[2])
+obs1 <- c(sum(id1),table(data$loc_campus1[id1])[2],table(data$loc_campus2[id1])[2],table(data$loc_campus3[id1])[2])
+stargazer::stargazer(sum.tab,summary=F,rownames = F,
+                     label = "tab:sum.stat.h", title = "Summary statistics - identification strip",
+                     table.placement = "!htpb", font.size = "small",
+                     notes = c("\\tiny Sample size (control/treatment):",
+                               paste(c("\\tiny Total:","Campus 1:","Campus 2:","Campus 3:"),
+                                     paste(obs0,obs1,sep="/"),collapse="; ")))
+### Fitting the model
+burnin <- 50
+num_sweeps <- 550
+fit <- XBART::XBCF.rd(y, w, x, c,
+                      Owidth = h, Omin = Omin, Opct = Opct,
+                      num_trees_mod = ntrees,
+                      num_trees_con = ntrees,
+                      num_cutpoints = n,
+                      num_sweeps = num_sweeps,
+                      burnin = burnin, Nmin = Nmin,
+                      p_categorical_con = p_categorical,
+                      p_categorical_mod = p_categorical,
+                      tau_con = 2*var(y)/ntrees,
+                      tau_mod = 0.5*var(y)/ntrees,
+                      parallel = T, nthread = no_cores)
+test <- -h+c<=x & x<=h+c
+pred <- XBART::predict.XBCFrd(fit,w[test,],rep(c,sum(test)))
+pred <- pred$tau.adj[,(burnin+1):num_sweeps]
+saveRDS(pred,"Results/bart_rdd_posterior.rds")
+pred <- readRDS("Results/bart_rdd_posterior.rds")
+### Other estimators
+#### Local polynomial
+llr <- rdrobust::rdrobust(y,x,c,covs=w[,1:7],masspoints = F)
+#### BCF
+fit <- XBART::XBCF.discrete(y=y, Z=z, X_con = as.matrix(cbind(x,w)), X_mod = as.matrix(cbind(x,w)),
+                      num_trees_mod = ntrees,
+                      num_trees_con = ntrees,
+                      num_cutpoints = n,
+                      num_sweeps = num_sweeps,
+                      burnin = burnin, Nmin = Nmin,
+                      p_categorical_con = p_categorical,
+                      p_categorical_mod = p_categorical,
+                      tau_con = 2*var(y)/ntrees,
+                      tau_mod = 0.5*var(y)/ntrees,
+                      parallel = T, nthread = no_cores)
+pred.bcf <- XBART::predict.XBCFdiscrete(fit,X_con = as.matrix(cbind(0,w)), X_mod = as.matrix(cbind(0,w)),Z=z,pihat=z,burnin=burnin)
+pred.bcf <- pred.bcf$tau.adj[,(burnin+1):num_sweeps]
+saveRDS(pred.bcf,"Results/bcf_posterior.rds")
+pred.bcf <- readRDS("Results/bcf_posterior.rds")
+#### SBART
+fit <- XBART::XBART(y, as.matrix(cbind(x,w,z)), num_trees = ntrees,
+                    num_cutpoints = n, num_sweeps = num_sweeps,
+                    burnin = burnin, Nmin = Nmin,
+                    p_categorical = p_categorical,
+                    tau = var(y)/ntrees, parallel=T, nthread = no_cores)
+pred1 <- XBART::predict.XBART(fit,cbind(rep(0,n),as.matrix(w),rep(1,n)))[,(burnin+1):num_sweeps]
+pred0 <- XBART::predict.XBART(fit,cbind(rep(0,n),as.matrix(w),rep(0,n)))[,(burnin+1):num_sweeps]
+pred.sbart <- pred1-pred0
+saveRDS(pred.sbart,"Results/sbart_posterior.rds")
+pred.sbart <- readRDS("Results/sbart_posterior.rds")
+#### TBART
+fit1 <- XBART::XBART(y[z==1], as.matrix(cbind(x,w))[z==1,], num_trees = ntrees,
+                     num_cutpoints = sum(z==1), num_sweeps = num_sweeps,
+                     burnin = burnin, Nmin = Nmin,
+                     p_categorical = p_categorical,
+                     tau = var(y[z==1])/ntrees, parallel=T, nthread = no_cores)
+fit0 <- XBART::XBART(y[z==0], as.matrix(cbind(x,w))[z==0,], num_trees = ntrees,
+                     num_cutpoints = sum(z==0), num_sweeps = num_sweeps,
+                     burnin = burnin, Nmin = Nmin,
+                     p_categorical = p_categorical,
+                     tau = var(y[z==0])/ntrees, parallel=T, nthread = no_cores)
+pred1 <- XBART::predict.XBART(fit1,cbind(rep(0,n),as.matrix(w)))[,(burnin+1):num_sweeps]
+pred0 <- XBART::predict.XBART(fit0,cbind(rep(0,n),as.matrix(w)))[,(burnin+1):num_sweeps]
+pred.tbart <- pred1-pred0
+saveRDS(pred.tbart,"Results/tbart_posterior.rds")
+pred.tbart <- readRDS("Results/tbart_posterior.rds")
+#### CGS
+cgs.sample <- -1 < x & x < 1
+p <- c(.9,.1)
+mz <- c(4,3)
+mztau <- c(3,2)
+mw <- rep(5,3)
+lamstmean0_ <- rep(1,6)
+lamstsd0_ <- 5*rep(1,6)
+s2mean0_ <- .3
+s2sd0_ <- 1
+pred.cgs <- bayesrddest(y = y[cgs.sample],
+                        z = x[cgs.sample],
+                        V = as.matrix(w)[,4:8],
+                        W = as.matrix(w)[,1:3],
+                        tau = c,
+                        p = p,
+                        mw = mw,
+                        mz = mz,
+                        mztau = mztau,
+                        beta0_ = rep(0,15),
+                        lamstmean0_ = lamstmean0_,
+                        lamstsd0_ = lamstsd0_,
+                        s2mean0_ = s2mean0_,
+                        s2sd0_ = s2sd0_,
+                        distribution = "gaussian",
+                        hetero = FALSE,
+                        n0=100, m=1000)
+saveRDS(pred.cgs,"Results/pred_cgs.rds")
+pred.cgs <- readRDS("Results/pred_cgs.rds")
+### ATE
+ate.post <- colMeans(pred)
+ate.sum <- cbind(Mean=mean(ate.post), SD=sd(ate.post),
+                 `2.5%`=quantile(ate.post,0.025),`97.5%`=quantile(ate.post,0.975),
+                 Median=median(ate.post),Min=min(ate.post),Max=max(ate.post))
+ate.sum <- round(ate.sum,3)
+stargazer::stargazer(ate.sum,summary=F,rownames = F,
+                     label="tab:ate.results",
+                     title="BART-RDD posterior summary for the ATE",
+                     font.size = "small")
+ate.bcf <- colMeans(pred.bcf)
+ate.sbart <- colMeans(pred.sbart)
+ate.tbart <- colMeans(pred.tbart)
+ate.other <- cbind(BCF=c(round(mean(ate.bcf),3),paste0("(",round(quantile(ate.bcf,0.025),3),",",round(quantile(ate.bcf,0.975),3),")")),
+                   `S-BART`=c(round(mean(ate.sbart),3),paste0("(",round(quantile(ate.sbart,0.025),3),",",round(quantile(ate.sbart,0.975),3),")")),
+                   `T-BART`=c(round(mean(ate.tbart),3),paste0("(",round(quantile(ate.tbart,0.025),3),",",round(quantile(ate.tbart,0.975),3),")")),
+                   LLR=c(round(llr$Estimate[2],3),paste0("(",round(llr$ci[2,1],3),",",round(llr$ci[2,2],3),")")),
+                   CGS=c(round(mean(pred.cgs$atem),3),paste0("(",round(quantile(pred.cgs$atem,0.025),3),",",round(quantile(pred.cgs$atem,0.975),3),")")))
+stargazer::stargazer(ate.other, summary = F, rownames = F,
+                     label="tab:ate.others",
+                     title="ATE point estimate and 95% confidence interval for different estimators",
+                     font.size = "small")
+###
+cate <- rpart(y~.,data.frame(y=rowMeans(pred),w[test,]),control = rpart.control(cp=0.03))
+cate.campus1 <- rpart(y~.,data.frame(y=rowMeans(pred)[data$loc_campus1[test]==1],w[test & data$loc_campus1==1,]),control = rpart.control(cp=0.1))
+cate.campus2 <- rpart(y~.,data.frame(y=rowMeans(pred)[data$loc_campus2[test]==1],w[test & data$loc_campus2==1,]),control = rpart.control(cp=0.047))
+cate.campus3 <- rpart(y~.,data.frame(y=rowMeans(pred)[data$loc_campus3[test]==1],w[test & data$loc_campus3==1,]),control = rpart.control(cp=0.04))
+pdf("Figures/cate_gpa.pdf")
+par(mfrow=c(2,2))
+rpart.plot(cate,main="Full sample")
+rpart.plot(cate.campus1,main="Campus 1")
+rpart.plot(cate.campus2,main="Campus 2")
+rpart.plot(cate.campus3,main="Campus 3")
+dev.off()
+####
+cate.hspct.leq.37.campus1 <- do.call("cbind",by(pred,data$hsgrade_pct[test] < 37
+                                           & data$loc_campus1[test] == 1, colMeans))
+cate.hspct.leq.36.campus2 <- do.call("cbind",by(pred,data$hsgrade_pct[test] < 36
+                                                & data$loc_campus2[test] == 1, colMeans))
+cate.age.leq.19.campus3 <- do.call("cbind",by(pred,data$age_at_entry[test] < 19
+                                                & data$loc_campus3[test] == 1, colMeans))
+cate.hspct.geq.37.campus1 <- do.call("cbind",by(pred,data$hsgrade_pct[test] >= 37
+                                                & data$loc_campus1[test] == 1, colMeans))
+cate.hspct.geq.36.campus2 <- do.call("cbind",by(pred,data$hsgrade_pct[test] >= 36
+                                                & data$loc_campus2[test] == 1, colMeans))
+cate.age.geq.19.campus3 <- do.call("cbind",by(pred,data$age_at_entry[test] >= 19
+                                                & data$loc_campus3[test] == 1, colMeans))
+cate.campus <- do.call("cbind",by(pred,as.factor(data$loc_campus1+2*data$loc_campus2+3*data$loc_campus3)[test],colMeans))
+####
+pct1 <- mean((cate.hspct.leq.37.campus1[,2]-cate.hspct.geq.37.campus1[,2])>0)
+pct2 <- mean((cate.hspct.leq.36.campus2[,2]-cate.hspct.geq.36.campus2[,2])>0)
+pct3 <- mean((cate.age.leq.19.campus3[,2]-cate.age.geq.19.campus3[,2])>0)
+pct4 <- mean((cate.campus[,2]-cate.campus[,1])>0)
+pct5 <- mean((cate.campus[,3]-cate.campus[,1])>0)
+pct6 <- mean((cate.campus[,3]-cate.campus[,2])>0)
+pct1;pct2;pct3;pct4;pct5;pct6
+####
+d1 <- density(cate.hspct.leq.37.campus1[,2]-cate.hspct.geq.37.campus1[,2])
+d2 <- density(cate.hspct.leq.36.campus2[,2]-cate.hspct.geq.36.campus2[,2])
+d3 <- density(cate.age.leq.19.campus3[,2]-cate.age.geq.19.campus3[,2])
+d4 <- density(cate.campus[,2]-cate.campus[,1])
+d5 <- density(cate.campus[,3]-cate.campus[,1])
+d6 <- density(cate.campus[,3]-cate.campus[,2])
+pdf("Figures/cate_difference.pdf")
+par(mfrow=c(2,2))
+plot(d1,bty="n",main="Campus 1 - hsgrade_pct > 37",ylab="",xlab="Difference in subgroup average treatment effect")
+polygon(c(0,d1$x[d1$x>0]),c(0,d1$y[d1$x>0]),col=rgb(96/256,96/256,96/256,0.4),border=1)
+plot(d2,bty="n",main="Campus 2 - hsgrade_pct > 36",ylab="",xlab="Difference in subgroup average treatment effect")
+polygon(c(0,d2$x[d2$x>0]),c(0,d2$y[d2$x>0]),col=rgb(96/256,96/256,96/256,0.4),border=1)
+plot(d3,bty="n",main="Campus 3 - age_at_entry > 19",ylab="",xlab="Difference in subgroup average treatment effect")
+polygon(c(0,d3$x[d3$x>0]),c(0,d3$y[d3$x>0]),col=rgb(96/256,96/256,96/256,0.4),border=1)
+plot(d4,type="n",bty="n",
+     xlim=c(min(d4$x,d5$x,d6$x),max(d4$x,d5$x,d6$x)),
+     ylim=c(min(d4$y,d5$y,d6$y),max(d4$y,d5$y,d6$y)),
+     main="",
+     ylab="",xlab="Difference in campus average treatment effect")
+lines(d4,col=rgb(1,0,0))
+lines(d5,col=rgb(0,1,0))
+lines(d6,col=rgb(0,0,1))
+polygon(c(0,d4$x[d4$x>0]),c(0,d4$y[d4$x>0]),col=rgb(1,0,0,0.1),border=rgb(1,0,0))
+polygon(c(0,d5$x[d5$x>0]),c(0,d5$y[d5$x>0]),col=rgb(0,1,0,0.1),border=rgb(0,1,0))
+polygon(c(0,d6$x[d6$x>0]),c(0,d6$y[d6$x>0]),col=rgb(0,0,1,0.1),border=rgb(0,0,1))
+legend("topleft",legend=c("2 - 1","3 - 1","3 - 2"),
+       col=c(rgb(1,0,0),rgb(0,1,0),rgb(0,0,1)),lty=1,cex=0.75)
+dev.off()
+####
+cate.hspct.geq.43.campus3 <- do.call("cbind",by(pred,data$hsgrade_pct[test] >= 43
+                                           & data$loc_campus3[test] != 1, colMeans))
+####
+plot(density(cate.hspct.leq.43.campus1[,2]-cate.hspct.geq.43.campus3[,2]))
+###
 ## sample <- -0.3<=x & x<=0.3 ## For XBCF and loess plot
 ## ## Plot data
 ## png("Figures/gpa_data.png")
