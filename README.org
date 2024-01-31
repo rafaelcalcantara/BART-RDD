@@ -29,8 +29,8 @@ the package is not available in CRAN as of yet, this means
 the package cannot be compiled on Linux. For this reason,
 all the analysis in our paper was run on Windows.
 
-Folder [[https://github.com/rafaelcalcantara/BART-RDD/blob/main/Previous%20papers/previous_papers.org]["Previous papers"]] presents a summary of simulations
-in a handful of relevant methodological RDD papers.
+File [[https://github.com/rafaelcalcantara/BART-RDD/blob/main/Previous%20papers/previous_papers.pdf]["Previous papers"]] presents a summary of simulations in
+a handful of relevant methodological RDD papers.
 ** Data reanalysis
 To discuss implementation of bart-RDD to real datasets we
 perform a reanalysis of the data studied by [[https://www.aeaweb.org/articles?id=10.1257/app.2.2.95][Lindo, Sanders

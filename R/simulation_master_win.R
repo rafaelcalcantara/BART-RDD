@@ -1,4 +1,5 @@
 setwd("~/../Git/BART-RDD/")
+source("R/simulation_data.R")
 library(doParallel)
 ### Parallelization
 no_cores <- detectCores()-2
