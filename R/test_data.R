@@ -151,11 +151,11 @@ pdf("Figures/sim_dgp_1.pdf")
 par(mfrow=c(2,3))
 for (i in c(3,6,9))
 {
-  plot(out[[i]]$x[,1],mu(out[[i]]$x[,1],out[[i]]$w[[1]],out[[i]]$het,ate,c),bty="n",col=out[[i]]$z[,1]+1,pch=20,xlab="",ylab=expression(mu))
+  plot(out[[i]]$x[,1],mu(out[[i]]$x[,1],out[[i]]$w[[1]],out[[i]]$het,ate,c),bty="n",col=out[[i]]$z[,1]+1,pch=20,xlab="X",ylab=expression(mu))
 }
 for (i in c(3,6,9))
 {
-  plot(out[[i]]$x[,1],tau(out[[i]]$x[,1],out[[i]]$w[[1]],out[[i]]$het,ate,c),bty="n",col=out[[i]]$z[,1]+1,pch=20,xlab="",ylab=expression(tau))
+  plot(out[[i]]$x[,1],tau(out[[i]]$x[,1],out[[i]]$w[[1]],out[[i]]$het,ate,c),bty="n",col=out[[i]]$z[,1]+1,pch=20,xlab="X",ylab=expression(tau))
 }
 dev.off()
 ###

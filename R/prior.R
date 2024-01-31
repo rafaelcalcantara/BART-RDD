@@ -12,11 +12,11 @@ s1            <- 5*no_cores
 s2            <- 1
 n             <- 500
 c             <- 0
-Omin          <- 5
+Omin          <- 1
 Opct          <- 0.9
 ntrees        <- 5
 Nmin          <- 5
-num_sweeps    <- 250
+num_sweeps    <- 550
 burnin        <- 50
 p_categorical <- 1
 ### DGP
@@ -123,9 +123,9 @@ fit <- function(i)
   pred$tau.adj[,(burnin+1):num_sweeps]
 }
 ####
-h1 <- round(rbind(0.1*apply(x1,2,sd),0.25*apply(x1,2,sd),0.5*apply(x1,2,sd),apply(x1,2,sd),2*apply(x1,2,sd)),2)
-h2 <- round(rbind(0.1*apply(x2,2,sd),0.25*apply(x2,2,sd),0.5*apply(x2,2,sd),apply(x2,2,sd),2*apply(x2,2,sd)),2)
-h3 <- round(rbind(0.1*apply(x3,2,sd),0.25*apply(x3,2,sd),0.5*apply(x3,2,sd),apply(x3,2,sd),2*apply(x3,2,sd)),2)
+h1 <- round(rbind(0.1*apply(x1,2,sd),0.25*apply(x1,2,sd),0.5*apply(x1,2,sd),apply(x1,2,sd)),2)
+h2 <- round(rbind(0.1*apply(x2,2,sd),0.25*apply(x2,2,sd),0.5*apply(x2,2,sd),apply(x2,2,sd)),2)
+h3 <- round(rbind(0.1*apply(x3,2,sd),0.25*apply(x3,2,sd),0.5*apply(x3,2,sd),apply(x3,2,sd)),2)
 ####
 rmse1 <- rmse2 <- rmse3 <- matrix(0,ncol(h1),nrow(h1))
 for (i in 1:s2)
@@ -195,9 +195,15 @@ for (i in 1:s2)
   }
 }
 ###
-rmse <- rbind(rmse1,rmse2,rmse3)
-colnames(rmse) <- paste("h",1:5,sep="")
-h.tab <- data.frame(DGP1=h1,DGP2=h2,DGP2=h3)
+rmse <- data.frame(DGP1=rmse1[1,],DGP2=rmse2[1,],DGP3=rmse3[1,],row.names = paste("h",1:4,sep="_"))
+rmse <- round(rmse,3)
+h.tab <- data.frame(DGP1=h1,DGP2=h2,DGP3=h3,row.names = paste("h",1:4,sep="_"))
+rmse.tab <- rbind(rep(c("h","RMSE"),3),
+                  c(h.tab[1,1],rmse[1,1],h.tab[1,2],rmse[1,2],h.tab[1,3],rmse[1,3]),
+                  c(h.tab[2,1],rmse[2,1],h.tab[2,2],rmse[2,2],h.tab[2,3],rmse[2,3]),
+                  c(h.tab[3,1],rmse[3,1],h.tab[3,2],rmse[3,2],h.tab[3,3],rmse[3,3]),
+                  c(h.tab[4,1],rmse[4,1],h.tab[4,2],rmse[4,2],h.tab[4,3],rmse[4,3]))
+colnames(rmse.tab) <- c("DGP1","","DGP2","","DGP3","")
 ###
 y <- y1[,1]
 x <- x1[,1]
@@ -241,17 +247,17 @@ for (i in 1:length(Omin.grid))
 ##
 pdf("Figures/prior_omin1.pdf")
 par(mfrow=c(2,2))
-matplot(est.omin[[1]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Omin",main="Opct = 0.7")
-matplot(est.omin[[2]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Omin",main="Opct = 0.9")
-matplot(Opct,est.opct[[1]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Opct",main="Omin = 1")
-matplot(Opct,est.opct[[2]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Opct",main="Omin = 10")
+matplot(est.omin[[1]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(N[Omin]),main=expression(paste(alpha," = 0.7")))
+matplot(est.omin[[2]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(N[Omin]),main=expression(paste(alpha," = 0.9")))
+matplot(Opct,est.opct[[1]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(alpha),main=expression(paste(N[Omin]," = 1")))
+matplot(Opct,est.opct[[2]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(alpha),main=expression(paste(N[Omin]," = 10")))
 dev.off()
 pdf("Figures/prior_het_omin1.pdf")
 par(mfrow=c(2,2))
-matplot(het.omin[,1],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Omin",main="Opct = 0.7")
-matplot(het.omin[,2],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Omin",main="Opct = 0.9")
-matplot(Opct,het.opct[,1],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Opct",main="Omin = 1")
-matplot(Opct,het.opct[,2],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Opct",main="Omin = 10")
+matplot(het.omin[,1],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(N[Omin]),main=expression(paste(alpha," = 0.7")))
+matplot(het.omin[,2],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(N[Omin]),main=expression(paste(alpha," = 0.9")))
+matplot(Opct,het.opct[,1],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(alpha),main=expression(paste(N[Omin]," = 1")))
+matplot(Opct,het.opct[,2],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(alpha),main=expression(paste(N[Omin]," = 10")))
 dev.off()
 ###
 y <- y2[,1]
@@ -296,17 +302,17 @@ for (i in 1:length(Omin.grid))
 ##
 pdf("Figures/prior_omin2.pdf")
 par(mfrow=c(2,2))
-matplot(est.omin[[1]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Omin",main="Opct = 0.7")
-matplot(est.omin[[2]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Omin",main="Opct = 0.9")
-matplot(Opct,est.opct[[1]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Opct",main="Omin = 1")
-matplot(Opct,est.opct[[2]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Opct",main="Omin = 10")
+matplot(est.omin[[1]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(N[Omin]),main=expression(paste(alpha," = 0.7")))
+matplot(est.omin[[2]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(N[Omin]),main=expression(paste(alpha," = 0.9")))
+matplot(Opct,est.opct[[1]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(alpha),main=expression(paste(N[Omin]," = 1")))
+matplot(Opct,est.opct[[2]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(alpha),main=expression(paste(N[Omin]," = 10")))
 dev.off()
 pdf("Figures/prior_het_omin2.pdf")
 par(mfrow=c(2,2))
-matplot(het.omin[,1],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Omin",main="Opct = 0.7")
-matplot(het.omin[,2],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Omin",main="Opct = 0.9")
-matplot(Opct,het.opct[,1],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Opct",main="Omin = 1")
-matplot(Opct,het.opct[,2],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Opct",main="Omin = 10")
+matplot(het.omin[,1],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(N[Omin]),main=expression(paste(alpha," = 0.7")))
+matplot(het.omin[,2],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(N[Omin]),main=expression(paste(alpha," = 0.9")))
+matplot(Opct,het.opct[,1],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(alpha),main=expression(paste(N[Omin]," = 1")))
+matplot(Opct,het.opct[,2],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(alpha),main=expression(paste(N[Omin]," = 10")))
 dev.off()
 ###
 y <- y3[,1]
@@ -351,18 +357,20 @@ for (i in 1:length(Omin.grid))
 ##
 pdf("Figures/prior_omin3.pdf")
 par(mfrow=c(2,2))
-matplot(est.omin[[1]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Omin",main="Opct = 0.7")
-matplot(est.omin[[2]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Omin",main="Opct = 0.9")
-matplot(Opct,est.opct[[1]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Opct",main="Omin = 1")
-matplot(Opct,est.opct[[2]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Opct",main="Omin = 10")
+matplot(est.omin[[1]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(N[Omin]),main=expression(paste(alpha," = 0.7")))
+matplot(est.omin[[2]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(N[Omin]),main=expression(paste(alpha," = 0.9")))
+matplot(Opct,est.opct[[1]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(alpha),main=expression(paste(N[Omin]," = 1")))
+matplot(Opct,est.opct[[2]],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(alpha),main=expression(paste(N[Omin]," = 10")))
 dev.off()
 pdf("Figures/prior_het_omin3.pdf")
 par(mfrow=c(2,2))
-matplot(het.omin[,1],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Omin",main="Opct = 0.7")
-matplot(het.omin[,2],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Omin",main="Opct = 0.9")
-matplot(Opct,het.opct[,1],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Opct",main="Omin = 1")
-matplot(Opct,het.opct[,2],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab="Opct",main="Omin = 10")
+matplot(het.omin[,1],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(N[Omin]),main=expression(paste(alpha," = 0.7")))
+matplot(het.omin[,2],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(N[Omin]),main=expression(paste(alpha," = 0.9")))
+matplot(Opct,het.opct[,1],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(alpha),main=expression(paste(N[Omin]," = 1")))
+matplot(Opct,het.opct[,2],col=1,type=c("b","l","l"),pch=20,lty=c(1,2,2),bty="n",ylab="",xlab=expression(alpha),main=expression(paste(N[Omin]," = 10")))
 dev.off()
 ###
-stargazer::stargazer(h.tab,summary = F,rownames = F)
-stargazer::stargazer(rmse,summary=F,rownames = F)
+stargazer::stargazer(rmse.tab,summary = F,rownames = F,
+                     title="Candidate $h$ values and RMSE for each (X,W) sample",
+                     label="tab:rmse.prior",
+                     font.size = "small")

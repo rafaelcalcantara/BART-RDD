@@ -1,58 +1,37 @@
-* Code for the XBCF-RDD paper
+* Code for the BART-RDD paper
 The analysis performed in this paper consists of:
 ** Simulation experiments
-We compare the performance of XBCF-RDD with the following
+We compare the performance of BART-RDD with the following
 methods:
-1. [[https://www.cambridge.org/core/services/aop-cambridge-core/content/view/339D96B3F14F48A6B51AEC6DE9C16131/S0266466622000019a.pdf/nonparametric_bayes_analysis_of_the_sharp_and_fuzzy_regression_discontinuity_designs.pdf][Nonparametric bayes analysis of the sharp and fuzzy
-   regression discontinuity designs - Chib, Greenberg and
-   Simoni (2014)]]
-2. [[https://academic.oup.com/ectj/advance-article/doi/10.1093/ectj/utac029/6957254][Inference in regression discontinuity designs with
-   high-dimensional covariates - Kreiss and Rothe (2022)]]
-
-First, we consider the simulated DGPs studied by each of
-those papers. We also consider a third DGP inspired by
-[[https://www.tandfonline.com/doi/full/10.1080/07350015.2017.1421544][Frolich and Huber (2019)]]. The ~simulations.R~ script runs
-this analysis. The scripts named ~simulations_x.R~ obtain
-the LATE point estimate and 95% intervals for each method in
-~x=("xbcf-rdd","cgs","kr")~ for each one of the DGPs
-above. The script ~simulations_setup.R~ defines helper
-functions for some of the methods and functions to generate
-each of the DGPs above.
+1. [[https://direct.mit.edu/rest/article-abstract/101/3/442/58514/Regression-Discontinuity-Designs-Using-Covariates][Regression Discontinuity Designs Using Covariates -
+   Calonico, Cattaneo, Farrell and Titiunik (2019)]]
+2. [[https://www.cambridge.org/core/services/aop-cambridge-core/content/view/339D96B3F14F48A6B51AEC6DE9C16131/S0266466622000019a.pdf/nonparametric_bayes_analysis_of_the_sharp_and_fuzzy_regression_discontinuity_designs.pdf][Nonparametric
+   bayes analysis of the sharp and fuzzy regression
+   discontinuity designs - Chib, Greenberg and Simoni
+   (2014)]]
+3. [[https://projecteuclid.org/journals/annals-of-applied-statistics/volume-4/issue-1/BART-Bayesian-additive-regression-trees/10.1214/09-AOAS285.full][BART: Bayesian Additive Regression Trees -
+Chipman, George and McCulloch (2010)]]
+4. [[https://projecteuclid.org/journals/bayesian-analysis/volume-15/issue-3/Bayesian-Regression-Tree-Models-for-Causal-Inference--Regularization-Confounding/10.1214/19-BA1195.full][Bayesian Regression Tree Models for Causal
+Inference: Regularization, Confounding, and Heterogeneous
+Effects - Hahn, Murray and Carvalho (2020)]]
 
 The original code from each of those papers can be found on:
-1. [[http://apps.olin.wustl.edu/faculty/chib/rpackages/rdd/][Chib, Greenberg and Simoni R package]]
-2. [[https://github.com/akreiss/HighDimRD/blob/master/README.md][Kreiss and Rothe code]]
+1. [[https://github.com/rdpackages-replication/CCFT_2019_RESTAT][Calonico, Cattaneo, Farrell and Titiunik Github Repo]]
+2. [[http://apps.olin.wustl.edu/faculty/chib/rpackages/rdd/][Chib, Greenberg and Simoni R package]]
+3. [[https://github.com/JingyuHe/XBART/tree/XBCF-RDD][XBART repo, contains code for XBART, XBCF and BART-RDD]]
 
-It is worth noting that the method of CGS is only made
-available through Windows and Mac binary files of their R
-package on Siddhartha Chib's webpage. Since the package is
-not available in CRAN as of yet, this means the package
-cannot be compiled on Linux. This is why we check the OS in
-the simulation scripts before running each method. CGS was
-run on a Windows machine while all the others were run on a
-Linux machine.
+It is worth noting that the method of Chib, Greenberg and
+Simoni is only made available through Windows and Mac binary
+files of their R package on Siddhartha Chib's webpage. Since
+the package is not available in CRAN as of yet, this means
+the package cannot be compiled on Linux. For this reason,
+all the analysis in our paper was run on Windows.
 
-The datasets considered can be ranked in terms of the
-complexity of the underlying prognostic and treatment
-functions:
-
-1. CGS: prognostic and treatment functions are only affected
-   by the running variable
-2. FH: prognostic function affected by running variable and
-   covariates but treatment function only affected by
-   covariates
-3. KR: prognostic and treatment functions are affected by
-   both the running variable and the additional covariates
-
-For the CGS dataset, we considered two specifications for
-each method: one that only includes the running variable and
-one that also includes irrelevant covariates.
+Folder [[file:Previous papers]] presents a summary of
+simulations in a handful of relevant methodological RDD
+papers.
 ** Data reanalysis
-To discuss implementation of XBCF-RDD to real datasets we
-perform a reanalysis of the data studied by [[https://www.aeaweb.org/articles?id=10.1257/aer.20190759][Ambrus, Field
-and Gonzalez (2020)]]. We focus on their investigation about
-the impact of a cholera outbreak in 1854 London on housing
-prices in the vicinity of a `contamination area' defined by
-the distance to a contaminated water pump. The previous link
-contains the paper, data and code for their analysis. From
-that, we only study the ~Merged_1853_1864_data.dta~ dataset.
+To discuss implementation of bart-RDD to real datasets we
+perform a reanalysis of the data studied by [[https://www.aeaweb.org/articles?id=10.1257/app.2.2.95][Lindo, Sanders
+and Oreopoulos (2010)]]. Their paper and replication files
+can be found on the link.
