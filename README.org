@@ -3,17 +3,19 @@ The analysis performed in this paper consists of:
 ** Simulation experiments
 We compare the performance of BART-RDD with the following
 methods:
-1. [[https://direct.mit.edu/rest/article-abstract/101/3/442/58514/Regression-Discontinuity-Designs-Using-Covariates][Regression Discontinuity Designs Using Covariates -
-   Calonico, Cattaneo, Farrell and Titiunik (2019)]]
+1. [[https://direct.mit.edu/rest/article-abstract/101/3/442/58514/Regression-Discontinuity-Designs-Using-Covariates][Regression
+   Discontinuity Designs Using Covariates - Calonico,
+   Cattaneo, Farrell and Titiunik (2019)]]
 2. [[https://www.cambridge.org/core/services/aop-cambridge-core/content/view/339D96B3F14F48A6B51AEC6DE9C16131/S0266466622000019a.pdf/nonparametric_bayes_analysis_of_the_sharp_and_fuzzy_regression_discontinuity_designs.pdf][Nonparametric
    bayes analysis of the sharp and fuzzy regression
    discontinuity designs - Chib, Greenberg and Simoni
    (2014)]]
-3. [[https://projecteuclid.org/journals/annals-of-applied-statistics/volume-4/issue-1/BART-Bayesian-additive-regression-trees/10.1214/09-AOAS285.full][BART: Bayesian Additive Regression Trees -
-Chipman, George and McCulloch (2010)]]
-4. [[https://projecteuclid.org/journals/bayesian-analysis/volume-15/issue-3/Bayesian-Regression-Tree-Models-for-Causal-Inference--Regularization-Confounding/10.1214/19-BA1195.full][Bayesian Regression Tree Models for Causal
-Inference: Regularization, Confounding, and Heterogeneous
-Effects - Hahn, Murray and Carvalho (2020)]]
+3. [[https://projecteuclid.org/journals/annals-of-applied-statistics/volume-4/issue-1/BART-Bayesian-additive-regression-trees/10.1214/09-AOAS285.full][BART: Bayesian Additive Regression Trees - Chipman,
+   George and McCulloch (2010)]]
+4. [[https://projecteuclid.org/journals/bayesian-analysis/volume-15/issue-3/Bayesian-Regression-Tree-Models-for-Causal-Inference--Regularization-Confounding/10.1214/19-BA1195.full][Bayesian
+   Regression Tree Models for Causal Inference:
+   Regularization, Confounding, and Heterogeneous Effects -
+   Hahn, Murray and Carvalho (2020)]]
 
 The original code from each of those papers can be found on:
 1. [[https://github.com/rdpackages-replication/CCFT_2019_RESTAT][Calonico, Cattaneo, Farrell and Titiunik Github Repo]]
@@ -27,9 +29,8 @@ the package is not available in CRAN as of yet, this means
 the package cannot be compiled on Linux. For this reason,
 all the analysis in our paper was run on Windows.
 
-Folder [[file:Previous papers]] presents a summary of
-simulations in a handful of relevant methodological RDD
-papers.
+Folder [[file:Previous papers/previous_papers.org][Previous papers]] presents a summary of simulations in
+a handful of relevant methodological RDD papers.
 ** Data reanalysis
 To discuss implementation of bart-RDD to real datasets we
 perform a reanalysis of the data studied by [[https://www.aeaweb.org/articles?id=10.1257/app.2.2.95][Lindo, Sanders
