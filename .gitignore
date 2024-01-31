@@ -1,10 +1,11 @@
 Data/
 Results/
+Tables/
+Figures/
+*.sh
 .Rhistory
 nohup.out
 *~
-Tables/
-Figures/
 Rplots.pdf
 Previous papers/previous_papers.org
 *_ignore.R
