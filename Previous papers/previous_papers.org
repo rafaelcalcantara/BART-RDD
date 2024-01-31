@@ -1,4 +1,28 @@
 #+PROPERTY: header-args:R :tangle yes :exports results :cache yes
+# Fonts
+#+latex_header: \usepackage{bbm}
+# Math
+#+latex_header: \usepackage{amsfonts,amsmath,mathtools}
+#+latex_header: \usepackage[linesnumbered,ruled]{algorithm2e}
+#+latex_header: \usepackage{dsfont}
+# Figures and tables
+#+latex_header: \usepackage{graphicx}
+#+latex_header: \usepackage{caption}
+#+latex_header: \usepackage{subcaption}
+#+latex_header: \usepackage{multirow}
+# Bibliography
+#+latex_header: \usepackage{natbib}
+# New commands
+#+latex_header: \newcommand{\res}{\mathbf{r}}
+#+latex_header: \newcommand{\w}{\mathbf{w}}
+#+latex_header: \newcommand{\m}{\mathbf{m}}
+#+latex_header: \newcommand{\x}{\mathbf{x}}
+#+latex_header: \newcommand{\C}{\mathbb{C}}
+#+latex_header: \newcommand{\E}{\mathbb{E}}
+#+latex_header: \newcommand{\N}{\mathrm{N}}
+#+latex_header: \newtheorem{assumption}{Assumption}[section]
+#+latex_header: \newtheorem{theorem}{Theorem}[section]
+#+latex_header: \newcommand{\indep}{\perp \!\!\! \perp}
 * Previous RDD papers
 It is worth noting that most of the papers write the DGPs in
 terms of $E[Y_1|X]=\mu_1(x)$ and $E[Y_0|X]=\mu_0(x)$. While
