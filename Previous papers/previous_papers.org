@@ -1,3 +1,4 @@
+#+PROPERTY: header-args:R :tangle yes :exports results :cache yes
 * Previous RDD papers
 It is worth noting that most of the papers write the DGPs in
 terms of $E[Y_1|X]=\mu_1(x)$ and $E[Y_0|X]=\mu_0(x)$. While
@@ -496,7 +497,7 @@ $W,\varepsilon$ are sampled jointly.
 
 This is what the errors and data looks like:
 
-#+BEGIN_SRC R :session *kr* :results output file graphics :file KR2023.pdf
+#+BEGIN_SRC R :results output file graphics :file KR2023.pdf
   set.seed(0)
   n <- 500
   p <- 200
