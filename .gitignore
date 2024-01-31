@@ -3,7 +3,13 @@ Results/
 .Rhistory
 nohup.out
 *~
-Tables/application*
+Tables/
+Figures/
 Rplots.pdf
 Previous papers/previous_papers.org
 *_ignore.R
+Application/cost_sharing.rds
+Application/headstart.csv
+Application/konda_data_for_analysis.dta
+Application/pollution.rds
+Application/search.rds

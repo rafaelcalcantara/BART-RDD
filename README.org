@@ -1,5 +1,35 @@
 * Code for the BART-RDD paper
-The analysis performed in this paper consists of:
+** File structure
+Folder `R' contains all the R codes for the paper.
+
+File `partition_examples.R' generates figure 1 in the paper.
+
+File `prior.R' generates the figures and tables from the
+prior elicitation section.
+
+File `simulation_data.R' generates the data for the
+simulation analysis as described in the paper.
+
+Files `simulation_x_win.R' generate the results for
+estimator x. CGS0 and CGS1 mean, respectively, CGS without
+and with covariates, while LLR0, LLR1 and LLR2 mean,
+respectively, LLR without covariates, with covariates but no
+interactions between W and X and with covariates and
+interactions between W and X. Only CGS1 and LLR1 are
+reported in the paper since the results changed very little
+qualitatively with these different variations.
+
+File `simulation_master_win.R' calls the data generation
+script and each estimator script individually to produce the
+full results for the simulation experiments.
+
+File `simulation_results_win.R' read the outputs of the
+master script and produce the tables and figures for the
+simulation exercise.
+
+File `application.R' reads the probation data and produces
+all the tables and figures in the empirical application
+section of the paper.
 ** Simulation experiments
 We compare the performance of BART-RDD with the following
 methods:
