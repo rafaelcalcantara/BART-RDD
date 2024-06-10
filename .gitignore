@@ -9,6 +9,9 @@ nohup.out
 Rplots.pdf
 Previous papers/previous_papers.org
 *_ignore.R
+*_ignore.rds
+*_ignore.dta
+*_ignore.csv
 Application/cost_sharing.rds
 Application/headstart.csv
 Application/konda_data_for_analysis.dta
