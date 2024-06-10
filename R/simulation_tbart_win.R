@@ -32,8 +32,10 @@ fit <- function(i)
                 burnin = burnin, Nmin = Nmin,
                 p_categorical = p_categorical,
                 tau = var(ys[zs==0])/ntrees, parallel=F)
-  pred1 <- XBART::predict.XBART(fit1,cbind(rep(0,n),ws))[,(burnin+1):num_sweeps]
-  pred0 <- XBART::predict.XBART(fit0,cbind(rep(0,n),ws))[,(burnin+1):num_sweeps]
+  test <- -Owidth+c<=xs & xs<=Owidth+c
+  test.sample <- cbind(c,ws)[test,]
+  pred1 <- XBART::predict.XBART(fit1,test.sample)[,(burnin+1):num_sweeps]
+  pred0 <- XBART::predict.XBART(fit0,test.sample)[,(burnin+1):num_sweeps]
   pred1-pred0
 }
 ##
@@ -46,7 +48,9 @@ for (i in 1:files)
   n <- nrow(data$y)
   s <- ncol(data$y)
   c <- data$c
-  h <- apply(data$x,2,sd)*0.5
+  # test <- readRDS(paste0("Data/test_dgp_",i,".rds"))
+  # test.w <- test$w
+  # test.sample <- cbind(c,test.w)
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
   clusterExport(cl,varlist=ls())

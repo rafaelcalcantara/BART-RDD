@@ -24,6 +24,9 @@ for (i in 1:files)
   n <- nrow(data$y)
   s <- ncol(data$y)
   c <- data$c
+  # test <- readRDS(paste0("Data/test_dgp_",i,".rds"))
+  # test.w <- test$w
+  # test.sample <- cbind(c,test.w)
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
   clusterExport(cl,varlist=ls())

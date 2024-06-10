@@ -10,8 +10,8 @@ if (length(list.files("Results")[grep("bart_rdd_",list.files("Results"))])!=0) #
   for (i in files) file.remove(i)
 }
 ### Parameters
-Omin          <- 1
-Opct          <- 0.9
+Omin          <- 10
+Opct          <- 0.6
 ntrees        <- 5
 Nmin          <- 5
 num_sweeps    <- 120
@@ -21,11 +21,10 @@ fit <- function(i)
 {
   print(paste0("Sample: ",i))
   ys <- data$y[,i]
-  hs <- h[i]
   ifelse(is.list(data$w),ws <- data$w[[i]],ws <- subset(data$w,select=i))
   xs <- data$x[,i]
   fit <- XBART::XBCF.rd(ys, ws, xs, c,
-                        Owidth = hs, Omin = Omin, Opct = Opct,
+                        Owidth = Owidth, Omin = Omin, Opct = Opct,
                         num_trees_mod = ntrees,
                         num_trees_con = ntrees,
                         num_cutpoints = n,
@@ -35,7 +34,7 @@ fit <- function(i)
                         p_categorical_mod = p_categorical,
                         tau_con = 2*var(ys)/ntrees,
                         tau_mod = 0.5*var(ys)/ntrees)
-  test <- -hs+c<=xs & xs<=hs+c
+  test <- -Owidth+c<=xs & xs<=Owidth+c
   pred <- XBART::predict.XBCFrd(fit,ws[test,],rep(c,sum(test)))
   pred$tau.adj[,(burnin+1):num_sweeps]
 }
@@ -49,7 +48,9 @@ for (i in 1:files)
   n <- nrow(data$y)
   s <- ncol(data$y)
   c <- data$c
-  h <- apply(data$x,2,sd)*0.5
+  # test <- readRDS(paste0("Data/test_dgp_",i,".rds"))
+  # test.w <- test$w
+  # test.sample <- cbind(c,test.w)
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
   clusterExport(cl,varlist=ls())

@@ -32,7 +32,9 @@ fit <- function(i)
                               p_categorical_mod = p_categorical,
                               tau_con = 2*var(ys)/ntrees,
                               tau_mod = 0.5*var(ys)/ntrees)
-  pred <- XBART::predict.XBCFdiscrete(fit,X_con = cbind(0,ws), X_mod = cbind(0,ws),Z=zs,pihat=zs,burnin=burnin)
+  test <- -Owidth+c<=xs & xs<=Owidth+c
+  test.sample <- cbind(c,ws)[test,]
+  pred <- XBART::predict.XBCFdiscrete(fit,X_con = test.sample, X_mod = test.sample,Z=zs[test],pihat=zs[test],burnin=burnin)
   pred$tau.adj[,(burnin+1):num_sweeps]
 }
 ##
@@ -45,7 +47,9 @@ for (i in 1:files)
   n <- nrow(data$y)
   s <- ncol(data$y)
   c <- data$c
-  h <- apply(data$x,2,sd)*0.5
+  # test <- readRDS(paste0("Data/test_dgp_",i,".rds"))
+  # test.w <- test$w
+  # test.sample <- cbind(c,test.w)
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
   clusterExport(cl,varlist=ls())

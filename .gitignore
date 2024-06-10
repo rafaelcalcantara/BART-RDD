@@ -14,3 +14,4 @@ Application/headstart.csv
 Application/konda_data_for_analysis.dta
 Application/pollution.rds
 Application/search.rds
+*.RData
