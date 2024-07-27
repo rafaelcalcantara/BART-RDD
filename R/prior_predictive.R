@@ -30,22 +30,17 @@ fit <- function(i)
   pred <- XBART::predict.XBCFrd(fit,w[test,],rep(c,sum(test)))
   mean(colMeans(pred$tau.adj[,(burnin+1):num_sweeps]))
 }
-### Function to plot data
-plotit <- function(X,Y,z,c,om) {
-  plot(X,Y,col=z+1,pch=19,bty="n",main=bquote(omega==.(om)))
-  abline(v=c, lty=2)
-}
 ### Prior predictive
 #### Setup
-mu.prior <- function(x,w,omega) 0.3*rowSums(w) + (1+2*x-x^2+0.5*x^3)/5+(1-abs(x-c))*sin(omega*x)/10
+mu.prior <- function(x,w,omega) rowMeans(w) + 1/(1+exp(-5*x)) + (1-abs(x-c))*sin(omega*x)/10
 tau.prior <- function(x,tau.bar) tau.bar - log(x+1)/50
-omega <- 5
-ate <- 0.5
+omega <- 0
+ate <- 0.4
 N <- 1000
 c <- 0
 s <- 20 ## no of samples of th synthetic DGP
 Omin <- c(1,5,10)
-Opct <- seq(0.6,0.9,0.1)
+Opct <- seq(0.6,0.9,length=3)
 h <- seq(0.05,0.2,length=4)
 #### Loop
 params <- c("N","ATE","Omega","Omin","Opct","h")
@@ -57,6 +52,7 @@ for (i in N)
   z <- as.numeric(x>=c)
   w <- cbind(runif(i,-0.1,0.1),rnorm(i,0,0.2),rbinom(i,1,0.4)-0.4,rbinom(i,1,dnorm(x,c,0.5)))
   w[,4] <- w[,4]-mean(w[,4])
+  ## plot(x,mu.prior(x,w,omega[3])+tau.prior(x,0.25)*z+rnorm(N),col=z+1,pch=19)
   for (j in 1:length(ate))
   {
     taubar <- ate[j]
@@ -64,7 +60,7 @@ for (i in N)
     {
       ome <- omega[k]
       Ey <- mu.prior(x,w,ome) + tau.prior(x,taubar)*z
-      ys <-  Ey + matrix(rnorm(i*s,0,0.5),i,s)
+      ys <-  Ey + matrix(rnorm(i*s,0,1),i,s)
       for (l in 1:length(Omin))
       {
         Om <- Omin[l]
@@ -127,20 +123,33 @@ for(i in 1:length(ate))
 var <- apply(var,2,as.numeric)
 var <- data.frame(var)
 ### Plots
-boxplot(rmse[,"RMSE"]~rmse[,"h"],xlab="h",ylab="RMSE")
-boxplot(var[,"Variance"]~rmse[,"h"],xlab="h",ylab="Variance")
-####
-plot.res <- function(n,ate,omin,opct)
-{
-  p <- subset(rmse, N==n & ATE==ate & Omin==omin & Opct==opct, select=c("Omega","h","RMSE"))
-  p <- reshape(p,timevar="h",idvar="Omega",direction="wide")
-  matplot(omega,p[,-1],type="b",lty=1,pch=19,col=1:length(h),bty="n",ylab="RMSE",
-          xlab=bquote(omega), ylim = c(min(p[,-1]),max(p[,-1])+0.1),
-          main=paste(params[c(1,2,4,5)],c(n,ate,omin,opct),sep=": ",collapse="; "))
-  legend("topleft",legend=h,title="h",lty=1,pch=19,col=1:length(h),ncol=2,cex=0.7)
-}
-plot.new()
-par(mfrow=c(1,2))
-plot.res(1000,1,5,0.7)
-plot.res(1000,1,5,0.9)
-par(mfrow=c(1,1))
+# par(bty="L",mfrow=c(2,2))
+# boxplot(RMSE~h,data=subset(rmse,Omega==0))
+# boxplot(RMSE~h,data=subset(rmse,Omega==5))
+# boxplot(RMSE~Omin,data=subset(rmse,Omega==0))
+# boxplot(RMSE~Omin,data=subset(rmse,Omega==5))
+# boxplot(RMSE~Opct,data=subset(rmse,Omega==0))
+# boxplot(RMSE~Opct,data=subset(rmse,Omega==5))
+# par(mfrow=c(2,2))
+# plot(aggregate(RMSE~h,data=rmse,mean),type="b",lty=2)
+# plot(aggregate(RMSE~Omin,data=rmse,mean),type="b",lty=2)
+# plot(aggregate(RMSE~Opct,data=rmse,mean),type="b",lty=2)
+# boxplot(Variance~h,data=var)
+# boxplot(Variance~Omin,data=var)
+# boxplot(Variance~Opct,data=var)
+# ###
+rmse.plot <- reshape(subset(rmse,select=c("Omin","Opct","h","RMSE")),direction="wide",timevar = "Omin",idvar=c("h","Opct"))
+rmse.plot <- reshape(rmse.plot,direction="wide",timevar = "Opct",idvar="h")
+plot.labels <- substring(colnames(rmse.plot)[-1],6)
+plot.labels <- sapply(strsplit(plot.labels,"\\."), function(i) paste(i[1],paste0(i[2:3],collapse="."),sep="; "))
+col <- rainbow(ncol(rmse.plot)-1)
+pdf("Figures/prior_predictive.pdf")
+par(mfrow=c(1,1),bty="L")
+matplot(x=rmse.plot[,1],rmse.plot[,-1],type="b",lty=2,col=rep(1:3,3),
+        pch=c(15,15,15,16,16,16,17,17,17),
+        cex.axis=0.75,cex.lab=0.75,cex=0.75,
+        ylab="RMSE",xlab="h")
+legend("top",title=expression(N[Omin]),legend=Omin,bty="n",cex=0.65,ncol=3,lty=2,
+       col=c(1,3,2),lwd=2)
+legend("topright",title=bquote(alpha),legend=Opct,bty="n",cex=0.65,pt.cex=0.85,ncol=3,pch=c(0:2))
+dev.off()

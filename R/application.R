@@ -1,4 +1,4 @@
-## Setup
+## Setup-------------------------------------------------------------
 set.seed(7)
 library(parallel)
 library(foreach)
@@ -13,9 +13,6 @@ library(xtable)
 ## Parallelization
 no_cores <- detectCores() - 2
 ##
-s1            <- no_cores
-Omin          <- 1
-Opct          <- 0.9
 ntrees        <- 5
 Nmin          <- 5
 num_sweeps    <- 120
@@ -30,7 +27,7 @@ w <- data[,4:11]
 c <- 0
 n <- nrow(data)
 z <- as.numeric(x>c)
-### Summary statistics
+### Summary statistics-----------------------------------------------
 #### Tables
 sum.stat <- function(dat) t(apply(dat,2,function(i) c(Mean=mean(i),SD=sd(i),Min=min(i),Max=max(i),Cor=cor(dat[,1],i))))
 sum0 <- sum.stat(cbind(y,x,w))
@@ -57,7 +54,7 @@ yhat0 <- predict(loess(y~x,data=data.frame(y=y[x<c & x>-0.5],x=x[x<c & x>-0.5]))
 yhat0 <- cbind(yhat0$fit,yhat0$fit-1.96*yhat0$se.fit,yhat0$fit+1.96*yhat0$se.fit)
 yhat1 <- predict(loess(y~x,data=data.frame(y=y[x>c & x<0.5],x=x[x>c & x<0.5])),se=T)[1:2]
 yhat1 <- cbind(yhat1$fit,yhat1$fit-1.96*yhat1$se.fit,yhat1$fit+1.96*yhat1$se.fit)
-#####
+####
 xplot <- x[x>-0.5 & x<0.5]
 pdf("Figures/application_summary.pdf")
 par(mfrow=c(3,3))
@@ -73,23 +70,24 @@ for (i in 1:ncol(w))
   abline(v=c,lty=2)
 }
 dev.off()
-### Prior elicitation
-pars <- runif(6,0.05,0.3)
-mu.prior <- function(x) as.vector(cbind(1,x,x^2)%*%pars[1:3])
-tau.prior <- function(x) as.vector(cbind(1,x,x^2)%*%pars[4:6])
-ys <- matrix(0,nrow(data),s1)
-for (i in 1:s1)
-{
-  ys[,i] <- mu.prior(x) + tau.prior(x)*z + rnorm(n,0,sd(mu.prior(x) + tau.prior(x)*z)*0.5)
-  
-}
-h.grid <- sapply(c(0.1,0.25,0.5,0.75,1),function(i) i*sd(x))
+### Prior elicitation------------------------------------------------
+mu.prior <- function(x,w) rowMeans(w) + 1/(1+exp(-5*x)) + (1-abs(x-c))*sin(x)/10
+tau.prior <- function(x,tau.bar) tau.bar - log(abs(x)+1)/50
+N <- nrow(data)
+ate <- 0.4
+c <- 0
+s <- no_cores ## no of samples of th synthetic DGP
+Omin <- c(5,10)
+Opct <- c(0.6,0.7,0.8)
+h <- seq(0.05,0.15,length=3)
+ys <- mu.prior(x,w) + tau.prior(x,ate)*z + matrix(rnorm(n*s,0,1),N,s)
+sample <- -0.2 < x & x < 0.2
 fit <- function(i)
 {
   print(paste0("Sample: ",i))
   ys1 <- ys[,i]
-  fit <- XBART::XBCF.rd(ys1, w, x, c,
-                        Owidth = hs, Omin = Omin, Opct = Opct,
+  fit <- XBART::XBCF.rd(ys1[sample], w[sample,], x[sample], c,
+                        Owidth = hs, Omin = Om, Opct = Op,
                         num_trees_mod = ntrees,
                         num_trees_con = ntrees,
                         num_cutpoints = n,
@@ -99,35 +97,56 @@ fit <- function(i)
                         p_categorical_mod = p_categorical,
                         tau_con = 2*var(ys1)/ntrees,
                         tau_mod = 0.5*var(ys1)/ntrees)
-  test <- -hs+c<=x & x<=hs+c
-  pred <- XBART::predict.XBCFrd(fit,w[test,],rep(c,sum(test)))
-  pred$tau.adj[,(burnin+1):num_sweeps]
+  test <- -hs+c<=x[sample] & x[sample]<=hs+c
+  pred <- XBART::predict.XBCFrd(fit,w[sample,][test,],rep(c,sum(test)))
+  colMeans(pred$tau.adj[,(burnin+1):num_sweeps])
 }
-rmse <- rep(0,length(h.grid))
-ate <- tau.prior(0)
-for (i in 1:length(h.grid))
+params <- c("Omin","Opct","h")
+for (l in 1:length(Omin))
 {
-  print(paste0("h: ",h.grid[i]))
-  hs <- h.grid[i]
-  cl <- makeCluster(no_cores,type="SOCK")
-  registerDoParallel(cl)
-  clusterExport(cl,varlist=ls())
-  time <- system.time({
-    out <- parLapply(cl,1:s1,fit)
-  })
-  stopCluster(cl)
-  rmse[i] <- sqrt(mean((colMeans(sapply(out,colMeans))-ate)^2))
-  print(time)
-  gc()
+  Om <- Omin[l]
+  for (m in 1:length(Opct))
+  {
+    Op <- Opct[m]
+    for (n in 1:length(h))
+    {
+      hs <- h[n]
+      print(paste(params,c(Om,Op,hs),sep=": "))
+      ## Fit the model
+      cl <- makeCluster(no_cores,type="SOCK")
+      registerDoParallel(cl)
+      clusterExport(cl,varlist=ls())
+      time <- system.time({
+        out <- parSapply(cl,1:s,fit)
+      })
+      stopCluster(cl)
+      print(time)
+      assign(paste(params,c(Om,Op,hs),sep=".",collapse="_"),out)
+    }
+  }
 }
-h <- h.grid[which(h.grid==min(h.grid))]
-rmse.tab <- cbind(h=h.grid,RMSE=rmse)
-rmse.tab <- round(rmse.tab,3)
-table(-h<x & x<h)
-stargazer::stargazer(rmse.tab,summary = F,rownames = F,font.size = "small",
+n <- N
+rmse <- sapply(mget(ls(pattern="Omin.")), function(i) (colMeans(i)-ate)^2)
+rmse <- sqrt(colMeans(rmse))
+prior.grid <- do.call("rbind",strsplit(names(rmse),"_"))
+prior.grid[,1] <- sapply(strsplit(prior.grid[,1],"Omin."), function(i) i[[2]])
+prior.grid[,2] <- sapply(strsplit(prior.grid[,2],"Opct."), function(i) i[[2]])
+prior.grid[,3] <- sapply(strsplit(prior.grid[,3],"h."), function(i) i[[2]])
+colnames(prior.grid) <- c("Omin","Opct","h")
+rmse.tab <- cbind(prior.grid,rmse)
+rmse.tab <- apply(rmse.tab,2,as.numeric)
+rmse.tab <- rmse.tab[order(rmse),]
+Omin <- rmse.tab[1,1]
+Opct <- rmse.tab[1,2]
+h <- rmse.tab[1,3]
+table(c-h<x & x<c+h)
+table(c-h<x & x<c)
+table(c<x & x<c+h)
+stargazer::stargazer(round(rmse.tab,3),summary = F,rownames = F,font.size = "small",
                      label="tab:rmse.data",title="Results from prior elicitation")
-### Summary for identification strip
-# h <-h.grid[1]
+save.image("Results/application_prior.RData")
+### Summary for identification strip---------------------------------
+load("Results/application_prior.RData")
 sum.stat.h <- function(dat,id0,id1) 
 {
   out <- round(cbind(t(apply(dat[id0,],2,function(i) c(Mean=mean(i),SD=sd(i)))),
@@ -156,7 +175,7 @@ stargazer::stargazer(sum.tab,summary=F,rownames = F,
                                      paste(obs0,obs1,sep="/"),collapse="; ")))
 ### Fitting the model
 burnin <- 50
-num_sweeps <- 550
+num_sweeps <- 150
 fit <- XBART::XBCF.rd(y, w, x, c,
                       Owidth = h, Omin = Omin, Opct = Opct,
                       num_trees_mod = ntrees,
@@ -177,22 +196,22 @@ pred <- readRDS("Results/bart_rdd_posterior.rds")
 ### Other estimators
 #### Local polynomial
 llr <- rdrobust::rdrobust(y,x,c,covs=w[,1:7],masspoints = F)
-#### BCF
-fit <- XBART::XBCF.discrete(y=y, Z=z, X_con = as.matrix(cbind(x,w)), X_mod = as.matrix(cbind(x,w)),
-                      num_trees_mod = ntrees,
-                      num_trees_con = ntrees,
-                      num_cutpoints = n,
-                      num_sweeps = num_sweeps,
-                      burnin = burnin, Nmin = Nmin,
-                      p_categorical_con = p_categorical,
-                      p_categorical_mod = p_categorical,
-                      tau_con = 2*var(y)/ntrees,
-                      tau_mod = 0.5*var(y)/ntrees,
-                      parallel = T, nthread = no_cores)
-pred.bcf <- XBART::predict.XBCFdiscrete(fit,X_con = as.matrix(cbind(0,w)), X_mod = as.matrix(cbind(0,w)),Z=z,pihat=z,burnin=burnin)
-pred.bcf <- pred.bcf$tau.adj[,(burnin+1):num_sweeps]
-saveRDS(pred.bcf,"Results/bcf_posterior.rds")
-pred.bcf <- readRDS("Results/bcf_posterior.rds")
+# #### BCF
+# fit <- XBART::XBCF.discrete(y=y, Z=z, X_con = as.matrix(cbind(x,w)), X_mod = as.matrix(cbind(x,w)),
+#                             num_trees_mod = ntrees,
+#                             num_trees_con = ntrees,
+#                             num_cutpoints = n,
+#                             num_sweeps = num_sweeps,
+#                             burnin = burnin, Nmin = Nmin,
+#                             p_categorical_con = p_categorical,
+#                             p_categorical_mod = p_categorical,
+#                             tau_con = 2*var(y)/ntrees,
+#                             tau_mod = 0.5*var(y)/ntrees,
+#                             parallel = T, nthread = no_cores)
+# pred.bcf <- XBART::predict.XBCFdiscrete(fit,X_con = as.matrix(cbind(0,w)), X_mod = as.matrix(cbind(0,w)),Z=z,pihat=z,burnin=burnin)
+# pred.bcf <- pred.bcf$tau.adj[,(burnin+1):num_sweeps]
+# saveRDS(pred.bcf,"Results/bcf_posterior.rds")
+# pred.bcf <- readRDS("Results/bcf_posterior.rds")
 #### SBART
 fit <- XBART::XBART(y, as.matrix(cbind(x,w,z)), num_trees = ntrees,
                     num_cutpoints = n, num_sweeps = num_sweeps,
@@ -259,11 +278,15 @@ stargazer::stargazer(ate.sum,summary=F,rownames = F,
                      label="tab:ate.results",
                      title="BART-RDD posterior summary for the ATE",
                      font.size = "small")
-ate.bcf <- colMeans(pred.bcf)
+# ate.bcf <- colMeans(pred.bcf)
 ate.sbart <- colMeans(pred.sbart)
 ate.tbart <- colMeans(pred.tbart)
-ate.other <- cbind(BCF=c(round(mean(ate.bcf),3),paste0("(",round(quantile(ate.bcf,0.025),3),",",round(quantile(ate.bcf,0.975),3),")")),
-                   `S-BART`=c(round(mean(ate.sbart),3),paste0("(",round(quantile(ate.sbart,0.025),3),",",round(quantile(ate.sbart,0.975),3),")")),
+# ate.other <- cbind(BCF=c(round(mean(ate.bcf),3),paste0("(",round(quantile(ate.bcf,0.025),3),",",round(quantile(ate.bcf,0.975),3),")")),
+#                    `S-BART`=c(round(mean(ate.sbart),3),paste0("(",round(quantile(ate.sbart,0.025),3),",",round(quantile(ate.sbart,0.975),3),")")),
+#                    `T-BART`=c(round(mean(ate.tbart),3),paste0("(",round(quantile(ate.tbart,0.025),3),",",round(quantile(ate.tbart,0.975),3),")")),
+#                    LLR=c(round(llr$Estimate[2],3),paste0("(",round(llr$ci[2,1],3),",",round(llr$ci[2,2],3),")")),
+#                    CGS=c(round(mean(pred.cgs$atem),3),paste0("(",round(quantile(pred.cgs$atem,0.025),3),",",round(quantile(pred.cgs$atem,0.975),3),")")))
+ate.other <- cbind(`S-BART`=c(round(mean(ate.sbart),3),paste0("(",round(quantile(ate.sbart,0.025),3),",",round(quantile(ate.sbart,0.975),3),")")),
                    `T-BART`=c(round(mean(ate.tbart),3),paste0("(",round(quantile(ate.tbart,0.025),3),",",round(quantile(ate.tbart,0.975),3),")")),
                    LLR=c(round(llr$Estimate[2],3),paste0("(",round(llr$ci[2,1],3),",",round(llr$ci[2,2],3),")")),
                    CGS=c(round(mean(pred.cgs$atem),3),paste0("(",round(quantile(pred.cgs$atem,0.025),3),",",round(quantile(pred.cgs$atem,0.975),3),")")))
@@ -272,7 +295,7 @@ stargazer::stargazer(ate.other, summary = F, rownames = F,
                      title="ATE point estimate and 95% confidence interval for different estimators",
                      font.size = "small")
 ###
-cate <- rpart(y~.,data.frame(y=rowMeans(pred),w[test,]),control = rpart.control(cp=0.03))
+cate <- rpart(y~.,data.frame(y=rowMeans(pred),w[test,]),control = rpart.control(cp=0.05))
 cate.campus1 <- rpart(y~.,data.frame(y=rowMeans(pred)[data$loc_campus1[test]==1],w[test & data$loc_campus1==1,]),control = rpart.control(cp=0.1))
 cate.campus2 <- rpart(y~.,data.frame(y=rowMeans(pred)[data$loc_campus2[test]==1],w[test & data$loc_campus2==1,]),control = rpart.control(cp=0.047))
 cate.campus3 <- rpart(y~.,data.frame(y=rowMeans(pred)[data$loc_campus3[test]==1],w[test & data$loc_campus3==1,]),control = rpart.control(cp=0.04))
@@ -284,39 +307,39 @@ rpart.plot(cate.campus2,main="Campus 2")
 rpart.plot(cate.campus3,main="Campus 3")
 dev.off()
 ####
-cate.hspct.leq.37.campus1 <- do.call("cbind",by(pred,data$hsgrade_pct[test] < 37
-                                           & data$loc_campus1[test] == 1, colMeans))
-cate.hspct.leq.36.campus2 <- do.call("cbind",by(pred,data$hsgrade_pct[test] < 36
+cate.hspct.leq.43.campus1 <- do.call("cbind",by(pred,data$hsgrade_pct[test] < 43
+                                                & data$loc_campus1[test] == 1, colMeans))
+cate.hspct.leq.31.campus2 <- do.call("cbind",by(pred,data$hsgrade_pct[test] < 31
                                                 & data$loc_campus2[test] == 1, colMeans))
 cate.age.leq.19.campus3 <- do.call("cbind",by(pred,data$age_at_entry[test] < 19
-                                                & data$loc_campus3[test] == 1, colMeans))
-cate.hspct.geq.37.campus1 <- do.call("cbind",by(pred,data$hsgrade_pct[test] >= 37
+                                              & data$loc_campus3[test] == 1, colMeans))
+cate.hspct.geq.43.campus1 <- do.call("cbind",by(pred,data$hsgrade_pct[test] >= 43
                                                 & data$loc_campus1[test] == 1, colMeans))
-cate.hspct.geq.36.campus2 <- do.call("cbind",by(pred,data$hsgrade_pct[test] >= 36
+cate.hspct.geq.31.campus2 <- do.call("cbind",by(pred,data$hsgrade_pct[test] >= 31
                                                 & data$loc_campus2[test] == 1, colMeans))
 cate.age.geq.19.campus3 <- do.call("cbind",by(pred,data$age_at_entry[test] >= 19
-                                                & data$loc_campus3[test] == 1, colMeans))
+                                              & data$loc_campus3[test] == 1, colMeans))
 cate.campus <- do.call("cbind",by(pred,as.factor(data$loc_campus1+2*data$loc_campus2+3*data$loc_campus3)[test],colMeans))
 ####
-pct1 <- mean((cate.hspct.leq.37.campus1[,2]-cate.hspct.geq.37.campus1[,2])>0)
-pct2 <- mean((cate.hspct.leq.36.campus2[,2]-cate.hspct.geq.36.campus2[,2])>0)
+pct1 <- mean((cate.hspct.leq.43.campus1[,2]-cate.hspct.geq.43.campus1[,2])>0)
+pct2 <- mean((cate.hspct.leq.31.campus2[,2]-cate.hspct.geq.31.campus2[,2])>0)
 pct3 <- mean((cate.age.leq.19.campus3[,2]-cate.age.geq.19.campus3[,2])>0)
 pct4 <- mean((cate.campus[,2]-cate.campus[,1])>0)
 pct5 <- mean((cate.campus[,3]-cate.campus[,1])>0)
 pct6 <- mean((cate.campus[,3]-cate.campus[,2])>0)
 pct1;pct2;pct3;pct4;pct5;pct6
 ####
-d1 <- density(cate.hspct.leq.37.campus1[,2]-cate.hspct.geq.37.campus1[,2])
-d2 <- density(cate.hspct.leq.36.campus2[,2]-cate.hspct.geq.36.campus2[,2])
+d1 <- density(cate.hspct.leq.43.campus1[,2]-cate.hspct.geq.43.campus1[,2])
+d2 <- density(cate.hspct.leq.31.campus2[,2]-cate.hspct.geq.31.campus2[,2])
 d3 <- density(cate.age.leq.19.campus3[,2]-cate.age.geq.19.campus3[,2])
 d4 <- density(cate.campus[,2]-cate.campus[,1])
 d5 <- density(cate.campus[,3]-cate.campus[,1])
 d6 <- density(cate.campus[,3]-cate.campus[,2])
 pdf("Figures/cate_difference.pdf")
 par(mfrow=c(2,2))
-plot(d1,bty="n",main="Campus 1 - hsgrade_pct > 37",ylab="",xlab="Difference in subgroup average treatment effect")
+plot(d1,bty="n",main="Campus 1 - hsgrade_pct > 43",ylab="",xlab="Difference in subgroup average treatment effect")
 polygon(c(0,d1$x[d1$x>0]),c(0,d1$y[d1$x>0]),col=rgb(96/256,96/256,96/256,0.4),border=1)
-plot(d2,bty="n",main="Campus 2 - hsgrade_pct > 36",ylab="",xlab="Difference in subgroup average treatment effect")
+plot(d2,bty="n",main="Campus 2 - hsgrade_pct > 31",ylab="",xlab="Difference in subgroup average treatment effect")
 polygon(c(0,d2$x[d2$x>0]),c(0,d2$y[d2$x>0]),col=rgb(96/256,96/256,96/256,0.4),border=1)
 plot(d3,bty="n",main="Campus 3 - age_at_entry > 19",ylab="",xlab="Difference in subgroup average treatment effect")
 polygon(c(0,d3$x[d3$x>0]),c(0,d3$y[d3$x>0]),col=rgb(96/256,96/256,96/256,0.4),border=1)
@@ -335,10 +358,10 @@ legend("topleft",legend=c("2 - 1","3 - 1","3 - 2"),
        col=c(rgb(1,0,0),rgb(0,1,0),rgb(0,0,1)),lty=1,cex=0.75)
 dev.off()
 ####
-cate.hspct.geq.43.campus3 <- do.call("cbind",by(pred,data$hsgrade_pct[test] >= 43
-                                           & data$loc_campus3[test] != 1, colMeans))
-####
-plot(density(cate.hspct.leq.43.campus1[,2]-cate.hspct.geq.43.campus3[,2]))
+# cate.hspct.geq.43.campus3 <- do.call("cbind",by(pred,data$hsgrade_pct[test] >= 43
+#                                                 & data$loc_campus3[test] != 1, colMeans))
+# ####
+# plot(density(cate.hspct.leq.43.campus1[,2]-cate.hspct.geq.43.campus3[,2]))
 ###
 ## sample <- -0.3<=x & x<=0.3 ## For XBCF and loess plot
 ## ## Plot data
@@ -443,258 +466,258 @@ plot(density(cate.hspct.leq.43.campus1[,2]-cate.hspct.geq.43.campus3[,2]))
 ## barplot(tab,cex.names=0.75,cex.axis=0.75)
 ## dev.off()
 ## RDRobust estimation
-cct1 <- rdrobust(y,x,c,all=T)
-cct2 <- rdrobust(y,x,c,covs=w,all=T)
-## XBCF estimation
-fit.xbcf <- function(h,y,w,x,p_cat,pred.band,Omin)
-{
-    t0 <- Sys.time()
-    fit <- XBCF.rd(y, w, x, c, Owidth = h, Omin = Omin, Opct = Opct,
-                   num_trees_mod = m, num_trees_con = m,
-                   num_cutpoints = n, num_sweeps = num_sweeps,
-                   burnin = burnin, Nmin = Nmin,
-                   p_categorical_con = p_cat, p_categorical_mod = p_cat,
-                   tau_con = 2*var(y)/m,
-                   tau_mod = 0.5*var(y)/m, parallel=F)
-    test <- -pred.band <= x & x<= pred.band
-    pred <- predict.XBCFrd(fit,w[test,],rep(0,sum(test)))
-    pred <- pred$tau.adj[,(burnin+1):num_sweeps]
-    post <- colMeans(pred,na.rm=T)
-    t1 <- Sys.time()
-    dt <- difftime(t1,t0)
-    print(paste0("Elapsed time: ",round(dt,2)," seconds"))
-    print(paste0("h=",h,"; Omin=",Omin,"; ATE=",mean(post)))
-    return(list(ate.post=post,pred=pred,Owidth=h,time=dt))
-}
-###
-n             <- length(y)
-Opct          <- 0.9
-m             <- 10
-Nmin          <- 10
-num_sweeps    <- 150
-burnin        <- 50
-p_categorical <- ncol(w)
-num_cutpoints <- n
-###
-### Parallelization
-num_cores <- detectCores() - 1
-registerDoParallel(num_cores)
-## ### With controls
-## fit.cont <- function(s)
-## {
-##     foreach(i=0:s,.multicombine=T,.export=c("y","w","x","p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
-##         {
-##             if (i<3)
-##             {
-##                 print(paste0("Model: h=",0.08+i/100,", Omin=",1))
-##                 fit.xbcf(0.08+i/100,y,w,x,p_categorical,0.1,1)
-##             } else
-##             {
-##                 print(paste0("Model: h=",0.08+(i-3)/100,", Omin=",5))
-##                 fit.xbcf(0.08+(i-3)/100,y,w,x,p_categorical,0.1,5)
-##             }
-##         }
-## }
-## xbcf.cont <- fit.cont(5)
-## ### Saving results to avoid running it all again
-## save(xbcf.cont,file="Tables/application1.RData")
-## rm(xbcf.cont)
-## gc()
-## print("Finished estimations")
-load("Tables/application1.RData")
-ate.post.cont1 <- xbcf.cont[[1]]$ate.post
-ate.post.cont2 <- xbcf.cont[[2]]$ate.post
-ate.post.cont3 <- xbcf.cont[[3]]$ate.post
-ate.post.cont4 <- xbcf.cont[[4]]$ate.post
-ate.post.cont5 <- xbcf.cont[[5]]$ate.post
-ate.post.cont6 <- xbcf.cont[[6]]$ate.post
-## ### Without controls
-## fit.no.cont <- function(s)
-## {
-##     foreach(i=0:s,.multicombine=T,.export=c("y","w","x","p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
-##         {
-##             if (i<3)
-##             {
-##                 print(paste0("Model: h=",0.08+i/100,", Omin=",1))
-##                 fit.xbcf(0.08+i/100,y,NULL,x,0,0.1,1)
-##             } else
-##             {
-##                 print(paste0("Model: h=",0.08+(i-3)/100,", Omin=",5))
-##                 fit.xbcf(0.08+(i-3)/100,y,NULL,x,0,0.1,5)
-##             }
-##         }
-## }
-## xbcf.no.cont <- fit.no.cont(5)
-## ### Saving results to avoid running it all again
-## save(xbcf.no.cont,file="Tables/application2.RData")
-## rm(xbcf.no.cont)
-## gc()
-## print("Finished estimation")
-load("Tables/application2.RData")
-ate.post.no.cont1 <- xbcf.no.cont[[1]]$ate.post
-ate.post.no.cont2 <- xbcf.no.cont[[2]]$ate.post
-ate.post.no.cont3 <- xbcf.no.cont[[3]]$ate.post
-ate.post.no.cont4 <- xbcf.no.cont[[4]]$ate.post
-ate.post.no.cont5 <- xbcf.no.cont[[5]]$ate.post
-ate.post.no.cont6 <- xbcf.no.cont[[6]]$ate.post
-## Main results
-r1 <- paste(round(quantile(ate.post.no.cont3,c(.025,.975)),2),collapse=",")
-r2 <- paste(round(quantile(ate.post.cont3,c(.025,.975)),2),collapse=",")
-r3 <- paste(round(cct1$ci[3,],2),collapse=",")
-r4 <- paste(round(cct2$ci[3,],2),collapse=",")
-test <- -0.1<=x & x<=0.1
-###
-results <- matrix(NA,5,6)
-results[1,] <- c("","Controls","hat{tau}","95% CI","h","N")
-results[2,] <- c("XBCF","No",round(mean(ate.post.no.cont1),2),
-                 paste0("[",r1,"]"),
-                 0.1,sum(test))
-results[3,] <- c("","Yes",round(mean(ate.post.cont1),2),
-                 paste0("[",r2,"]"),
-                 0.1,sum(test))
-results[4,] <- c("CCT","No",round(cct1$coef[1],2),
-                 paste0("[",r3,"]"),
-                 round(cct1$bws[1,1],2),
-                 sum(cct1$N_h))
-results[5,] <- c("","Yes",round(cct2$coef[1],2),
-                 paste0("[",r4,"]"),
-                 round(cct2$bws[1,1],2),
-                 sum(cct2$N_h))
-print(xtable(results,caption="RD Estimates",label="tab:gpa.res"),
-      include.rownames=F,include.colnames=F)
-## Alternative specifications for BART-RDD
-r1 <- paste(round(quantile(ate.post.no.cont1,c(.025,.975)),2),collapse=",")
-r2 <- paste(round(quantile(ate.post.no.cont2,c(.025,.975)),2),collapse=",")
-r3 <- paste(round(quantile(ate.post.no.cont4,c(.025,.975)),2),collapse=",")
-r4 <- paste(round(quantile(ate.post.no.cont5,c(.025,.975)),2),collapse=",")
-r5 <- paste(round(quantile(ate.post.no.cont6,c(.025,.975)),2),collapse=",")
-r6 <- paste(round(quantile(ate.post.cont1,c(.025,.975)),2),collapse=",")
-r7 <- paste(round(quantile(ate.post.cont2,c(.025,.975)),2),collapse=",")
-r8 <- paste(round(quantile(ate.post.cont4,c(.025,.975)),2),collapse=",")
-r9 <- paste(round(quantile(ate.post.cont5,c(.025,.975)),2),collapse=",")
-r10 <- paste(round(quantile(ate.post.cont6,c(.025,.975)),2),collapse=",")
-###
-results.check <- matrix(NA,11,5)
-results.check[1,] <- c("Controls","hat{tau}","95% CI","h","N")
-results.check[2,] <- c("No",round(mean(ate.post.no.cont1),2),
-                 paste0("[",r1,"]"),
-                 0.08,1)
-results.check[3,] <- c("No",round(mean(ate.post.no.cont2),2),
-                 paste0("[",r2,"]"),
-                 0.09,1)
-results.check[4,] <- c("No",round(mean(ate.post.no.cont4),2),
-                 paste0("[",r3,"]"),
-                 0.08,5)
-results.check[5,] <- c("No",round(mean(ate.post.no.cont5),2),
-                 paste0("[",r4,"]"),
-                 0.09,5)
-results.check[6,] <- c("No",round(mean(ate.post.no.cont6),2),
-                 paste0("[",r5,"]"),
-                 0.10,5)
-results.check[7,] <- c("Yes",round(mean(ate.post.cont1),2),
-                 paste0("[",r6,"]"),
-                 0.08,1)
-results.check[8,] <- c("Yes",round(mean(ate.post.cont2),2),
-                 paste0("[",r7,"]"),
-                 0.09,1)
-results.check[9,] <- c("Yes",round(mean(ate.post.cont4),2),
-                 paste0("[",r8,"]"),
-                 0.08,5)
-results.check[10,] <- c("Yes",round(mean(ate.post.cont5),2),
-                 paste0("[",r9,"]"),
-                 0.09,5)
-results.check[11,] <- c("Yes",round(mean(ate.post.cont6),2),
-                 paste0("[",r10,"]"),
-                 0.10,5)
-results.check <- results.check[,c(1,5,4,2,3)]
-print(xtable(results.check,caption="RD Estimates - Sensitivity analysis",label="tab:gpa.robust"),
-      include.rownames=F,include.colnames=F)
-## CATE
-cart1 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[1]]$pred),
-                              w[test,]))
-cart2 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[2]]$pred),
-                              w[test,]))
-cart3 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[3]]$pred),
-                              w[test,]))
-cart4 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[4]]$pred),
-                              w[test,]))
-cart5 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[5]]$pred),
-                              w[test,]))
-cart6 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[6]]$pred),
-                              w[test,]))
-### Plots
-cart <- list(cart1,cart2,cart3,cart4,cart5,cart6)
-for (i in 1:length(cart))
-{
-    pdf(paste0("Figures/gpa_cart_",i,".pdf"))
-    rpart.plot(cart[[i]])
-    dev.off()
-}
-#### Outcomes per age, grade and campus
-bp.age <- data.frame(y=y,Treated=x>=0,Age=w$age_at_entry>=19)[test,]
-boxplot(bp.age$y~bp.age$Treated+bp.age$Age,col=c("red","blue"),
-        axes=F,xlab="",ylab="")
-axis(1,c(1.5,3.5),
-     labels=c("Below 19 years old","Above 19 years old"))
-axis(2)
-legend("topright",legend=c("Treatment","Control"),
-       fill=c("blue","red"))
-#####
-bp.camp <- data.frame(y=y,Treated=x>=0,Camp=ifelse(w$loc_campus1==1,1,ifelse(w$loc_campus2,2,3)))[test,]
-boxplot(bp.camp$y~bp.camp$Treated+bp.camp$Camp,col=c("red","blue"),
-        axes=F,xlab="",ylab="")
-axis(1,c(1.5,3.5,5.5),
-     labels=c("Campus 1","Campus 2","Campus 3"))
-axis(2)
-legend("topright",legend=c("Treatment","Control"),
-       fill=c("blue","red"))
-#####
-bp.hsg <- data.frame(y=y,Treated=x>=0,Grade=w$hsgrade_pct>=34)[test,]
-boxplot(bp.hsg$y~bp.hsg$Treated+bp.hsg$Grade,col=c("red","blue"),
-        axes=F,xlab="",ylab="")
-axis(1,c(1.5,3.5),labels=c("Below 34","Above 34"))
-axis(2)
-legend("topright",legend=c("Treatment","Control"),
-       fill=c("blue","red"))
-#### Posterior for subgroups
-s1 <- w[test,]$age_at_entry<19 & w[test,]$loc_campus3==1
-s2 <- w[test,]$age_at_entry<19 & w[test,]$loc_campus3==0
-s3 <- w[test,]$age_at_entry<19 & w[test,]$hsgrade_pct<34 & w[test,]$loc_campus3==1
-s4 <- w[test,]$age_at_entry<19 & w[test,]$hsgrade_pct<34 & w[test,]$loc_campus3==0
-#####
-p1 <- colMeans(xbcf.cont[[3]]$pred[s1,])
-p2 <- colMeans(xbcf.cont[[3]]$pred[s2,])
-p3 <- colMeans(xbcf.cont[[3]]$pred[s3,])
-p4 <- colMeans(xbcf.cont[[3]]$pred[s4,])
-#####
-png("Figures/post_age.png")
-boxplot(by(xbcf.cont[[2]]$pred,w[test,]$age_at_entry,colMeans),axes=F,xlab="Age at entry",ylab=expression(tau))
-axis(1,at=1:5,labels=17:21)
-axis(2)
-dev.off()
-##
-grade.sd <- by(xbcf.cont[[3]]$pred,w[test,]$hsgrade_pct,function(x) sd(colMeans(x)))
-grade.mean <- by(xbcf.cont[[3]]$pred,w[test,]$hsgrade_pct,function(x) mean(colMeans(x)))
-grade.sd.u <- grade.mean + grade.sd
-grade.sd.l <- grade.mean - grade.sd
-grade.plot <- cbind(grade.sd.l,grade.mean,grade.sd.u)
-png("Figures/post_grade.png")
-matplot(grade.plot,type=c("l","b","l"),lty=c(2,1,2),pch=19,axes=F,col="black",xlab="High school grade percentile",ylab=expression(tau))
-axis(1,at=c(1,12,25,38,50,62,74),labels=rownames(grade.plot)[c(1,12,25,38,50,62,74)])
-axis(2)
-dev.off()
-##
-den <- density(p1-p2)
-png("Figures/post_diff_camp_1.png")
-plot(den,bty="n",xlab=expression(Delta),ylab="Density",main="")
-polygon(c(den$x[den$x>=0],0),c(den$y[den$x>=0],0),col="black",
-        density=25,angle=45)
-dev.off()
-den <- density(p3-p4)
-png("Figures/post_diff_camp_2.png")
-plot(den,bty="n",xlab=expression(Delta),ylab="Density",main="")
-polygon(c(den$x[den$x>=0],0),c(den$y[den$x>=0],0),col="black",
-        density=25,angle=45)
-dev.off()
-###
+# cct1 <- rdrobust(y,x,c,all=T)
+# cct2 <- rdrobust(y,x,c,covs=w,all=T)
+# ## XBCF estimation
+# fit.xbcf <- function(h,y,w,x,p_cat,pred.band,Omin)
+# {
+#   t0 <- Sys.time()
+#   fit <- XBCF.rd(y, w, x, c, Owidth = h, Omin = Omin, Opct = Opct,
+#                  num_trees_mod = m, num_trees_con = m,
+#                  num_cutpoints = n, num_sweeps = num_sweeps,
+#                  burnin = burnin, Nmin = Nmin,
+#                  p_categorical_con = p_cat, p_categorical_mod = p_cat,
+#                  tau_con = 2*var(y)/m,
+#                  tau_mod = 0.5*var(y)/m, parallel=F)
+#   test <- -pred.band <= x & x<= pred.band
+#   pred <- predict.XBCFrd(fit,w[test,],rep(0,sum(test)))
+#   pred <- pred$tau.adj[,(burnin+1):num_sweeps]
+#   post <- colMeans(pred,na.rm=T)
+#   t1 <- Sys.time()
+#   dt <- difftime(t1,t0)
+#   print(paste0("Elapsed time: ",round(dt,2)," seconds"))
+#   print(paste0("h=",h,"; Omin=",Omin,"; ATE=",mean(post)))
+#   return(list(ate.post=post,pred=pred,Owidth=h,time=dt))
+# }
+# ###
+# n             <- length(y)
+# Opct          <- 0.9
+# m             <- 10
+# Nmin          <- 10
+# num_sweeps    <- 150
+# burnin        <- 50
+# p_categorical <- ncol(w)
+# num_cutpoints <- n
+# ###
+# ### Parallelization
+# num_cores <- detectCores() - 1
+# registerDoParallel(num_cores)
+# ## ### With controls
+# ## fit.cont <- function(s)
+# ## {
+# ##     foreach(i=0:s,.multicombine=T,.export=c("y","w","x","p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+# ##         {
+# ##             if (i<3)
+# ##             {
+# ##                 print(paste0("Model: h=",0.08+i/100,", Omin=",1))
+# ##                 fit.xbcf(0.08+i/100,y,w,x,p_categorical,0.1,1)
+# ##             } else
+# ##             {
+# ##                 print(paste0("Model: h=",0.08+(i-3)/100,", Omin=",5))
+# ##                 fit.xbcf(0.08+(i-3)/100,y,w,x,p_categorical,0.1,5)
+# ##             }
+# ##         }
+# ## }
+# ## xbcf.cont <- fit.cont(5)
+# ## ### Saving results to avoid running it all again
+# ## save(xbcf.cont,file="Tables/application1.RData")
+# ## rm(xbcf.cont)
+# ## gc()
+# ## print("Finished estimations")
+# load("Tables/application1.RData")
+# ate.post.cont1 <- xbcf.cont[[1]]$ate.post
+# ate.post.cont2 <- xbcf.cont[[2]]$ate.post
+# ate.post.cont3 <- xbcf.cont[[3]]$ate.post
+# ate.post.cont4 <- xbcf.cont[[4]]$ate.post
+# ate.post.cont5 <- xbcf.cont[[5]]$ate.post
+# ate.post.cont6 <- xbcf.cont[[6]]$ate.post
+# ## ### Without controls
+# ## fit.no.cont <- function(s)
+# ## {
+# ##     foreach(i=0:s,.multicombine=T,.export=c("y","w","x","p","c","Omin","Opct","m","n","num_sweeps","burnin","Nmin","p_categorical")) %dopar%
+# ##         {
+# ##             if (i<3)
+# ##             {
+# ##                 print(paste0("Model: h=",0.08+i/100,", Omin=",1))
+# ##                 fit.xbcf(0.08+i/100,y,NULL,x,0,0.1,1)
+# ##             } else
+# ##             {
+# ##                 print(paste0("Model: h=",0.08+(i-3)/100,", Omin=",5))
+# ##                 fit.xbcf(0.08+(i-3)/100,y,NULL,x,0,0.1,5)
+# ##             }
+# ##         }
+# ## }
+# ## xbcf.no.cont <- fit.no.cont(5)
+# ## ### Saving results to avoid running it all again
+# ## save(xbcf.no.cont,file="Tables/application2.RData")
+# ## rm(xbcf.no.cont)
+# ## gc()
+# ## print("Finished estimation")
+# load("Tables/application2.RData")
+# ate.post.no.cont1 <- xbcf.no.cont[[1]]$ate.post
+# ate.post.no.cont2 <- xbcf.no.cont[[2]]$ate.post
+# ate.post.no.cont3 <- xbcf.no.cont[[3]]$ate.post
+# ate.post.no.cont4 <- xbcf.no.cont[[4]]$ate.post
+# ate.post.no.cont5 <- xbcf.no.cont[[5]]$ate.post
+# ate.post.no.cont6 <- xbcf.no.cont[[6]]$ate.post
+# ## Main results
+# r1 <- paste(round(quantile(ate.post.no.cont3,c(.025,.975)),2),collapse=",")
+# r2 <- paste(round(quantile(ate.post.cont3,c(.025,.975)),2),collapse=",")
+# r3 <- paste(round(cct1$ci[3,],2),collapse=",")
+# r4 <- paste(round(cct2$ci[3,],2),collapse=",")
+# test <- -0.1<=x & x<=0.1
+# ###
+# results <- matrix(NA,5,6)
+# results[1,] <- c("","Controls","hat{tau}","95% CI","h","N")
+# results[2,] <- c("XBCF","No",round(mean(ate.post.no.cont1),2),
+#                  paste0("[",r1,"]"),
+#                  0.1,sum(test))
+# results[3,] <- c("","Yes",round(mean(ate.post.cont1),2),
+#                  paste0("[",r2,"]"),
+#                  0.1,sum(test))
+# results[4,] <- c("CCT","No",round(cct1$coef[1],2),
+#                  paste0("[",r3,"]"),
+#                  round(cct1$bws[1,1],2),
+#                  sum(cct1$N_h))
+# results[5,] <- c("","Yes",round(cct2$coef[1],2),
+#                  paste0("[",r4,"]"),
+#                  round(cct2$bws[1,1],2),
+#                  sum(cct2$N_h))
+# print(xtable(results,caption="RD Estimates",label="tab:gpa.res"),
+#       include.rownames=F,include.colnames=F)
+# ## Alternative specifications for BART-RDD
+# r1 <- paste(round(quantile(ate.post.no.cont1,c(.025,.975)),2),collapse=",")
+# r2 <- paste(round(quantile(ate.post.no.cont2,c(.025,.975)),2),collapse=",")
+# r3 <- paste(round(quantile(ate.post.no.cont4,c(.025,.975)),2),collapse=",")
+# r4 <- paste(round(quantile(ate.post.no.cont5,c(.025,.975)),2),collapse=",")
+# r5 <- paste(round(quantile(ate.post.no.cont6,c(.025,.975)),2),collapse=",")
+# r6 <- paste(round(quantile(ate.post.cont1,c(.025,.975)),2),collapse=",")
+# r7 <- paste(round(quantile(ate.post.cont2,c(.025,.975)),2),collapse=",")
+# r8 <- paste(round(quantile(ate.post.cont4,c(.025,.975)),2),collapse=",")
+# r9 <- paste(round(quantile(ate.post.cont5,c(.025,.975)),2),collapse=",")
+# r10 <- paste(round(quantile(ate.post.cont6,c(.025,.975)),2),collapse=",")
+# ###
+# results.check <- matrix(NA,11,5)
+# results.check[1,] <- c("Controls","hat{tau}","95% CI","h","N")
+# results.check[2,] <- c("No",round(mean(ate.post.no.cont1),2),
+#                        paste0("[",r1,"]"),
+#                        0.08,1)
+# results.check[3,] <- c("No",round(mean(ate.post.no.cont2),2),
+#                        paste0("[",r2,"]"),
+#                        0.09,1)
+# results.check[4,] <- c("No",round(mean(ate.post.no.cont4),2),
+#                        paste0("[",r3,"]"),
+#                        0.08,5)
+# results.check[5,] <- c("No",round(mean(ate.post.no.cont5),2),
+#                        paste0("[",r4,"]"),
+#                        0.09,5)
+# results.check[6,] <- c("No",round(mean(ate.post.no.cont6),2),
+#                        paste0("[",r5,"]"),
+#                        0.10,5)
+# results.check[7,] <- c("Yes",round(mean(ate.post.cont1),2),
+#                        paste0("[",r6,"]"),
+#                        0.08,1)
+# results.check[8,] <- c("Yes",round(mean(ate.post.cont2),2),
+#                        paste0("[",r7,"]"),
+#                        0.09,1)
+# results.check[9,] <- c("Yes",round(mean(ate.post.cont4),2),
+#                        paste0("[",r8,"]"),
+#                        0.08,5)
+# results.check[10,] <- c("Yes",round(mean(ate.post.cont5),2),
+#                         paste0("[",r9,"]"),
+#                         0.09,5)
+# results.check[11,] <- c("Yes",round(mean(ate.post.cont6),2),
+#                         paste0("[",r10,"]"),
+#                         0.10,5)
+# results.check <- results.check[,c(1,5,4,2,3)]
+# print(xtable(results.check,caption="RD Estimates - Sensitivity analysis",label="tab:gpa.robust"),
+#       include.rownames=F,include.colnames=F)
+# ## CATE
+# cart1 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[1]]$pred),
+#                               w[test,]))
+# cart2 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[2]]$pred),
+#                               w[test,]))
+# cart3 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[3]]$pred),
+#                               w[test,]))
+# cart4 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[4]]$pred),
+#                               w[test,]))
+# cart5 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[5]]$pred),
+#                               w[test,]))
+# cart6 <- rpart(y~.,data.frame(y=rowMeans(xbcf.cont[[6]]$pred),
+#                               w[test,]))
+# ### Plots
+# cart <- list(cart1,cart2,cart3,cart4,cart5,cart6)
+# for (i in 1:length(cart))
+# {
+#   pdf(paste0("Figures/gpa_cart_",i,".pdf"))
+#   rpart.plot(cart[[i]])
+#   dev.off()
+# }
+# #### Outcomes per age, grade and campus
+# bp.age <- data.frame(y=y,Treated=x>=0,Age=w$age_at_entry>=19)[test,]
+# boxplot(bp.age$y~bp.age$Treated+bp.age$Age,col=c("red","blue"),
+#         axes=F,xlab="",ylab="")
+# axis(1,c(1.5,3.5),
+#      labels=c("Below 19 years old","Above 19 years old"))
+# axis(2)
+# legend("topright",legend=c("Treatment","Control"),
+#        fill=c("blue","red"))
+# #####
+# bp.camp <- data.frame(y=y,Treated=x>=0,Camp=ifelse(w$loc_campus1==1,1,ifelse(w$loc_campus2,2,3)))[test,]
+# boxplot(bp.camp$y~bp.camp$Treated+bp.camp$Camp,col=c("red","blue"),
+#         axes=F,xlab="",ylab="")
+# axis(1,c(1.5,3.5,5.5),
+#      labels=c("Campus 1","Campus 2","Campus 3"))
+# axis(2)
+# legend("topright",legend=c("Treatment","Control"),
+#        fill=c("blue","red"))
+# #####
+# bp.hsg <- data.frame(y=y,Treated=x>=0,Grade=w$hsgrade_pct>=34)[test,]
+# boxplot(bp.hsg$y~bp.hsg$Treated+bp.hsg$Grade,col=c("red","blue"),
+#         axes=F,xlab="",ylab="")
+# axis(1,c(1.5,3.5),labels=c("Below 34","Above 34"))
+# axis(2)
+# legend("topright",legend=c("Treatment","Control"),
+#        fill=c("blue","red"))
+# #### Posterior for subgroups
+# s1 <- w[test,]$age_at_entry<19 & w[test,]$loc_campus3==1
+# s2 <- w[test,]$age_at_entry<19 & w[test,]$loc_campus3==0
+# s3 <- w[test,]$age_at_entry<19 & w[test,]$hsgrade_pct<34 & w[test,]$loc_campus3==1
+# s4 <- w[test,]$age_at_entry<19 & w[test,]$hsgrade_pct<34 & w[test,]$loc_campus3==0
+# #####
+# p1 <- colMeans(xbcf.cont[[3]]$pred[s1,])
+# p2 <- colMeans(xbcf.cont[[3]]$pred[s2,])
+# p3 <- colMeans(xbcf.cont[[3]]$pred[s3,])
+# p4 <- colMeans(xbcf.cont[[3]]$pred[s4,])
+# #####
+# png("Figures/post_age.png")
+# boxplot(by(xbcf.cont[[2]]$pred,w[test,]$age_at_entry,colMeans),axes=F,xlab="Age at entry",ylab=expression(tau))
+# axis(1,at=1:5,labels=17:21)
+# axis(2)
+# dev.off()
+# ##
+# grade.sd <- by(xbcf.cont[[3]]$pred,w[test,]$hsgrade_pct,function(x) sd(colMeans(x)))
+# grade.mean <- by(xbcf.cont[[3]]$pred,w[test,]$hsgrade_pct,function(x) mean(colMeans(x)))
+# grade.sd.u <- grade.mean + grade.sd
+# grade.sd.l <- grade.mean - grade.sd
+# grade.plot <- cbind(grade.sd.l,grade.mean,grade.sd.u)
+# png("Figures/post_grade.png")
+# matplot(grade.plot,type=c("l","b","l"),lty=c(2,1,2),pch=19,axes=F,col="black",xlab="High school grade percentile",ylab=expression(tau))
+# axis(1,at=c(1,12,25,38,50,62,74),labels=rownames(grade.plot)[c(1,12,25,38,50,62,74)])
+# axis(2)
+# dev.off()
+# ##
+# den <- density(p1-p2)
+# png("Figures/post_diff_camp_1.png")
+# plot(den,bty="n",xlab=expression(Delta),ylab="Density",main="")
+# polygon(c(den$x[den$x>=0],0),c(den$y[den$x>=0],0),col="black",
+#         density=25,angle=45)
+# dev.off()
+# den <- density(p3-p4)
+# png("Figures/post_diff_camp_2.png")
+# plot(den,bty="n",xlab=expression(Delta),ylab="Density",main="")
+# polygon(c(den$x[den$x>=0],0),c(den$y[den$x>=0],0),col="black",
+#         density=25,angle=45)
+# dev.off()
+# ###
 stopImplicitCluster()

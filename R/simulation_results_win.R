@@ -5,7 +5,7 @@ Owidth <- 0.1
 params <- data.frame(tau=rep(0,files),delta.mu=rep(0,files),delta.tau=rep(0,files),kappa=rep(0,files))
 ##
 bart.rdd.ate <- vector("list",files)
-bcf.ate <- vector("list",files)
+# bcf.ate <- vector("list",files)
 sbart.ate <- vector("list",files)
 tbart.ate <- vector("list",files)
 cgs.ate <- vector("list",files)
@@ -23,17 +23,17 @@ bart.rdd.cate <- rep(0,files)
 bart.rdd.cate.cov <- rep(0,files)
 bart.rdd.cate.ci <- rep(0,files)
 ##
-rmse.bcf <- rep(0,files)
-sb.bcf <- rep(0,files)
-v.bcf <- rep(0,files)
-ci.bcf <- rep(0,files)
-cov.bcf <- rep(0,files)
-zero.bcf <- rep(0,files)
-bcf.cate.bias <- vector("list",files)
-bcf.cate.var <- vector("list",files)
-bcf.cate <- rep(0,files)
-bcf.cate.cov <- rep(0,files)
-bcf.cate.ci <- rep(0,files)
+# rmse.bcf <- rep(0,files)
+# sb.bcf <- rep(0,files)
+# v.bcf <- rep(0,files)
+# ci.bcf <- rep(0,files)
+# cov.bcf <- rep(0,files)
+# zero.bcf <- rep(0,files)
+# bcf.cate.bias <- vector("list",files)
+# bcf.cate.var <- vector("list",files)
+# bcf.cate <- rep(0,files)
+# bcf.cate.cov <- rep(0,files)
+# bcf.cate.ci <- rep(0,files)
 ##
 rmse.sbart <- rep(0,files)
 sb.sbart <- rep(0,files)
@@ -106,7 +106,7 @@ for (i in 1:files)
   ate <- sapply(cate,mean)
   params[i,] <- c(data$tau,data$delta_mu,data$delta_tau,data$kappa)
   bart <- readRDS(paste0("Results/bart_rdd_",i,".rds"))
-  bcf <- readRDS(paste0("Results/bcf_",i,".rds"))
+  # bcf <- readRDS(paste0("Results/bcf_",i,".rds"))
   sbart <- readRDS(paste0("Results/sbart_",i,".rds"))
   tbart <- readRDS(paste0("Results/tbart_",i,".rds"))
   # llr0 <- readRDS(paste0("Results/llr0_",i,".rds"))
@@ -131,21 +131,21 @@ for (i in 1:files)
   bart.rdd.cate.cov[i] <- mean(sapply(1:ncol(data$x), function(i) mean(bart.rdd.cate.int[[i]][,1]<cate[[i]] & cate[[i]] < bart.rdd.cate.int[[i]][,2])))
   bart.rdd.cate.ci[i] <- mean(sapply(1:ncol(data$x), function(i) mean(-bart.rdd.cate.int[[i]][,1] + bart.rdd.cate.int[[i]][,2])))
   ##
-  bcf.ate[[i]] <- sapply(bcf$results,colMeans)
-  rmse.bcf[i] <- sqrt(mean((colMeans(bcf.ate[[i]])-ate)^2))
-  sb.bcf[i] <- mean(colMeans(bcf.ate[[i]])-ate)
-  v.bcf[i] <- var(colMeans(bcf.ate[[i]]))
-  ci.bcf[i] <- mean(sapply(bcf$results,function(i) quantile(colMeans(i),0.975)-quantile(colMeans(i),0.025)))
-  cov.bcf[i] <- mean(sapply(bcf$results,function(i) quantile(colMeans(i),0.975))-ate>0 & sapply(bcf$results,function(i) quantile(colMeans(i),0.025))-ate<0)
-  zero.bcf[i] <- mean(sapply(bcf$results,function(i) quantile(colMeans(i),0.975))>0 & sapply(bcf$results,function(i) quantile(colMeans(i),0.025))<0)
-  ## CATE
-  bcf.cate.temp <- sapply(bcf$results,rowMeans)
-  bcf.cate.bias[[i]] <- mapply(function(i,j) i-j,bcf.cate.temp,cate)
-  bcf.cate.var[[i]] <- sapply(bcf.cate.temp,var)
-  bcf.cate[i] <- mean(sqrt(mapply(function(i,j) mean((i-j)^2),bcf.cate.temp,cate)))
-  bcf.cate.int <- lapply(bcf$results,function(i) t(apply(i,1,quantile,c(0.025,0.975))))
-  bcf.cate.cov[i] <- mean(sapply(1:ncol(data$x), function(i) mean(bcf.cate.int[[i]][,1]<cate[[i]] & cate[[i]]<bcf.cate.int[[i]][,2])))
-  bcf.cate.ci[i] <- mean(sapply(1:ncol(data$x), function(i) mean(-bcf.cate.int[[i]][,1] + bcf.cate.int[[i]][,2])))
+  # bcf.ate[[i]] <- sapply(bcf$results,colMeans)
+  # rmse.bcf[i] <- sqrt(mean((colMeans(bcf.ate[[i]])-ate)^2))
+  # sb.bcf[i] <- mean(colMeans(bcf.ate[[i]])-ate)
+  # v.bcf[i] <- var(colMeans(bcf.ate[[i]]))
+  # ci.bcf[i] <- mean(sapply(bcf$results,function(i) quantile(colMeans(i),0.975)-quantile(colMeans(i),0.025)))
+  # cov.bcf[i] <- mean(sapply(bcf$results,function(i) quantile(colMeans(i),0.975))-ate>0 & sapply(bcf$results,function(i) quantile(colMeans(i),0.025))-ate<0)
+  # zero.bcf[i] <- mean(sapply(bcf$results,function(i) quantile(colMeans(i),0.975))>0 & sapply(bcf$results,function(i) quantile(colMeans(i),0.025))<0)
+  # ## CATE
+  # bcf.cate.temp <- sapply(bcf$results,rowMeans)
+  # bcf.cate.bias[[i]] <- mapply(function(i,j) i-j,bcf.cate.temp,cate)
+  # bcf.cate.var[[i]] <- sapply(bcf.cate.temp,var)
+  # bcf.cate[i] <- mean(sqrt(mapply(function(i,j) mean((i-j)^2),bcf.cate.temp,cate)))
+  # bcf.cate.int <- lapply(bcf$results,function(i) t(apply(i,1,quantile,c(0.025,0.975))))
+  # bcf.cate.cov[i] <- mean(sapply(1:ncol(data$x), function(i) mean(bcf.cate.int[[i]][,1]<cate[[i]] & cate[[i]]<bcf.cate.int[[i]][,2])))
+  # bcf.cate.ci[i] <- mean(sapply(1:ncol(data$x), function(i) mean(-bcf.cate.int[[i]][,1] + bcf.cate.int[[i]][,2])))
   ##
   sbart.ate[[i]] <- sapply(sbart$results,colMeans)
   rmse.sbart[i] <- sqrt(mean((colMeans(sbart.ate[[i]])-ate)^2))
@@ -219,46 +219,60 @@ for (i in 1:files)
   zero.cgs1[i] <- mean(cgs.res[,3]>0 & cgs.res[,2]<0)
 }
 ##
-names <- c("BART-RDD","BCF","S-BART","T-BART","CGS","LLR")
+# names <- c("BART-RDD","BCF","S-BART","T-BART","CGS","LLR")
+names <- c("BART-RDD","S-BART","T-BART","CGS","LLR")
 ###
-rmse <- cbind(rmse.bart,rmse.bcf,rmse.sbart,rmse.tbart,rmse.cgs1,rmse.llr1[,1])
+# rmse <- cbind(rmse.bart,rmse.bcf,rmse.sbart,rmse.tbart,rmse.cgs1,rmse.llr1[,1])
+rmse <- cbind(rmse.bart,rmse.sbart,rmse.tbart,rmse.cgs1,rmse.llr1[,1])
 colnames(rmse) <- names
 table(apply(rmse,1,function(i) which(i==min(i))))
 ###
-sb <- cbind(sb.bart,sb.bcf,sb.sbart,sb.tbart,sb.cgs1,sb.llr1[,1])
+# sb <- cbind(sb.bart,sb.bcf,sb.sbart,sb.tbart,sb.cgs1,sb.llr1[,1])
+sb <- cbind(sb.bart,sb.sbart,sb.tbart,sb.cgs1,sb.llr1[,1])
 colnames(sb) <- names
 table(apply(sb,1,function(i) which(i==min(i))))
 ###
-v <- cbind(v.bart,v.bcf,v.sbart,v.tbart,v.cgs1,v.llr1[,1])
+# v <- cbind(v.bart,v.bcf,v.sbart,v.tbart,v.cgs1,v.llr1[,1])
+v <- cbind(v.bart,v.sbart,v.tbart,v.cgs1,v.llr1[,1])
 colnames(v) <- names
 table(apply(v,1,function(i) which(i==min(i))))
 ###
-ci <- cbind(ci.bart,ci.bcf,ci.sbart,ci.tbart,ci.cgs1,ci.llr1[,1])
+# ci <- cbind(ci.bart,ci.bcf,ci.sbart,ci.tbart,ci.cgs1,ci.llr1[,1])
+ci <- cbind(ci.bart,ci.sbart,ci.tbart,ci.cgs1,ci.llr1[,1])
 colnames(ci) <- names
 table(apply(ci,1,function(i) which(i==min(i))))
 ###
-cov <- cbind(cov.bart,cov.bcf,cov.sbart,cov.tbart,cov.cgs1,cov.llr1[,1])
+# cov <- cbind(cov.bart,cov.bcf,cov.sbart,cov.tbart,cov.cgs1,cov.llr1[,1])
+cov <- cbind(cov.bart,cov.sbart,cov.tbart,cov.cgs1,cov.llr1[,1])
 colnames(cov) <- names
-zero <- cbind(zero.bart,zero.bcf,zero.sbart,zero.tbart,zero.cgs1,zero.llr1[,1])
+# zero <- cbind(zero.bart,zero.bcf,zero.sbart,zero.tbart,zero.cgs1,zero.llr1[,1])
+zero <- cbind(zero.bart,zero.sbart,zero.tbart,zero.cgs1,zero.llr1[,1])
 colnames(zero) <- names
 ###
 bart.rdd.int <- sapply(lapply(bart.rdd.ate,function(i) apply(i,2,function(j) c(0.05-quantile(j,0.025),quantile(j,0.975)-0.05))),function(i) quantile(apply(i,2,function(j) ifelse(min(j)>0,0,abs(min(j)))),0.95))
-bcf.int <- sapply(lapply(bcf.ate,function(i) apply(i,2,function(j) c(0.05-quantile(j,0.025),quantile(j,0.975)-0.05))),function(i) quantile(apply(i,2,function(j) ifelse(min(j)>0,0,abs(min(j)))),0.95))
+# bcf.int <- sapply(lapply(bcf.ate,function(i) apply(i,2,function(j) c(0.05-quantile(j,0.025),quantile(j,0.975)-0.05))),function(i) quantile(apply(i,2,function(j) ifelse(min(j)>0,0,abs(min(j)))),0.95))
 sbart.int <- sapply(lapply(sbart.ate,function(i) apply(i,2,function(j) c(0.05-quantile(j,0.025),quantile(j,0.975)-0.05))),function(i) quantile(apply(i,2,function(j) ifelse(min(j)>0,0,abs(min(j)))),0.95))
 tbart.int <- sapply(lapply(tbart.ate,function(i) apply(i,2,function(j) c(0.05-quantile(j,0.025),quantile(j,0.975)-0.05))),function(i) quantile(apply(i,2,function(j) ifelse(min(j)>0,0,abs(min(j)))),0.95))
 llr.int <- sapply(llr.ate, function(i) quantile(apply(i,1,function(j) ifelse(0.05-j[2]>0 & j[3]-0.05>0,0,abs(min(0.05-j[2],j[3]-0.05)))),0.95))
 cgs.int <- sapply(cgs.ate, function(i) quantile(apply(i,1,function(j) ifelse(0.05-j[2]>0 & j[3]-0.05>0,0,abs(min(0.05-j[2],j[3]-0.05)))),0.95))
-int <- cbind(bart.rdd.int,bcf.int,sbart.int,tbart.int,cgs.int,llr.int)
+# int <- cbind(bart.rdd.int,bcf.int,sbart.int,tbart.int,cgs.int,llr.int)
+int <- cbind(bart.rdd.int,sbart.int,tbart.int,cgs.int,llr.int)
 colnames(int) <- names
 ###
-rmse.cate <- cbind(bart.rdd.cate,bcf.cate,sbart.cate,tbart.cate)
-colnames(rmse.cate) <- names[1:4]
+# rmse.cate <- cbind(bart.rdd.cate,bcf.cate,sbart.cate,tbart.cate)
+# colnames(rmse.cate) <- names[1:4]
+rmse.cate <- cbind(bart.rdd.cate,sbart.cate,tbart.cate)
+colnames(rmse.cate) <- names[1:3]
 table(apply(rmse.cate,1,function(i) which(i==min(i))))
 ###
-cov.cate <- cbind(bart.rdd.cate.cov,bcf.cate.cov,sbart.cate.cov,tbart.cate.cov)
-colnames(cov.cate) <- names[1:4]
+# cov.cate <- cbind(bart.rdd.cate.cov,bcf.cate.cov,sbart.cate.cov,tbart.cate.cov)
+# colnames(cov.cate) <- names[1:4]
+cov.cate <- cbind(bart.rdd.cate.cov,sbart.cate.cov,tbart.cate.cov)
+colnames(cov.cate) <- names[1:3]
 ###
-ci.cate <- cbind(bart.rdd.cate.ci,bcf.cate.ci,sbart.cate.ci,tbart.cate.ci)
-colnames(ci.cate) <- names[1:4]
+# ci.cate <- cbind(bart.rdd.cate.ci,bcf.cate.ci,sbart.cate.ci,tbart.cate.ci)
+# colnames(ci.cate) <- names[1:4]
+ci.cate <- cbind(bart.rdd.cate.ci,sbart.cate.ci,tbart.cate.ci)
+colnames(ci.cate) <- names[1:3]
 ###
 save.image("Results/sims.RData")

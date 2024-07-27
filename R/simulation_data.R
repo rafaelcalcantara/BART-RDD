@@ -19,14 +19,14 @@ mu0.w <- function(w) {
 }
 tau0.x <- function(x) -0.1*x
 tau0.w <- function(w) {
-  if(is.list(w)) sapply(w, function(i) rowMeans(i[,3:4]))
-  else rowMeans(w[,3:4])
+  if(is.list(w)) sapply(w, function(i) rowMeans(i))
+  else rowMeans(w)
 }
 mu <- function(x,w,kappa,delta) (mu0.x(x) + kappa*mu0.w(w))/sd(mu0.x(x) + kappa*mu0.w(w))*delta
 tau <- function(x,w,kappa,delta,tau.bar) tau.bar + (tau0.x(x) + kappa*tau0.w(w))/sd(tau0.x(x) + kappa*tau0.w(w))*delta
 #### Parameters
-ate <- 0.75
-delta_mu <- 1
+ate <- 0.5
+delta_mu <- 0.5
 delta_tau <- 0.3
 kappa <- 1
 #### Testing the settings

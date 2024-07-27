@@ -23,6 +23,7 @@ fit <- function(i)
   xs <- data$x[,i]
   zs <- data$z[,i]
   fit <- XBART::XBCF.discrete(y=ys, Z=zs, X_con = cbind(xs,ws), X_mod = cbind(xs,ws),
+                              pihat=zs,
                               num_trees_mod = ntrees,
                               num_trees_con = ntrees,
                               num_cutpoints = n,
