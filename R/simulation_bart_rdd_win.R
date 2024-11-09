@@ -1,8 +1,8 @@
 ## Setup
 set.seed(0)
 ## devtools::install_github("JingyuHe/XBART@XBCF-RDD")
-library(XBART)
-setwd("~/../Git/BART-RDD")
+# library(XBART)
+# setwd("~/../Git/BART-RDD")
 if (!dir.exists("Results")) dir.create("Results") ## Create results folder
 if (length(list.files("Results")[grep("bart_rdd_",list.files("Results"))])!=0) ## Clean up folder
 {
@@ -10,8 +10,8 @@ if (length(list.files("Results")[grep("bart_rdd_",list.files("Results"))])!=0) #
   for (i in files) file.remove(i)
 }
 ### Parameters
-Omin          <- 10
-Opct          <- 0.6
+Omin          <- 1
+Opct          <- 0.9
 ntrees        <- 5
 Nmin          <- 5
 num_sweeps    <- 120

@@ -1,8 +1,8 @@
 ## Setup
 set.seed(0)
 ## devtools::install_github("JingyuHe/XBART@XBCF-RDD")
-library(XBART)
-setwd("~/../Git/BART-RDD")
+# library(XBART)
+# setwd("~/../Git/BART-RDD")
 if (!dir.exists("Results")) dir.create("Results") ## Create results folder
 if (length(list.files("Results")[grep("tbart_",list.files("Results"))])!=0) ## Clean up folder
 {

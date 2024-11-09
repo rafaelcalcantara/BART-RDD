@@ -1,5 +1,5 @@
 ### ADD STRAIGHT BIAS
-setwd("~/../Git/BART-RDD/")
+setwd("~/Git/BART-RDD/")
 load("Results/sims.RData")
 ## Tables
 stargazer::stargazer(cbind(params[,-4],round(rmse,3)),summary=F,rownames = F)

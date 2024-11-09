@@ -1,4 +1,4 @@
-setwd("~/../Git/BART-RDD/")
+setwd("~/Git/BART-RDD/")
 files <- length(list.files("Data"))
 Owidth <- 0.1
 ##
@@ -8,8 +8,8 @@ bart.rdd.ate <- vector("list",files)
 # bcf.ate <- vector("list",files)
 sbart.ate <- vector("list",files)
 tbart.ate <- vector("list",files)
-cgs.ate <- vector("list",files)
-llr.ate <- vector("list",files)
+# cgs.ate <- vector("list",files)
+# llr.ate <- vector("list",files)
 ##
 rmse.bart <- rep(0,files)
 sb.bart <- rep(0,files)
@@ -66,12 +66,12 @@ tbart.cate.ci <- rep(0,files)
 # cov.llr0 <- matrix(0,files,3)
 # zero.llr0 <- matrix(0,files,3)
 ##
-rmse.llr1 <- matrix(0,files,3)
-sb.llr1 <- matrix(0,files,3)
-v.llr1 <- matrix(0,files,3)
-ci.llr1 <- matrix(0,files,3)
-cov.llr1 <- matrix(0,files,3)
-zero.llr1 <- matrix(0,files,3)
+# rmse.llr1 <- matrix(0,files,3)
+# sb.llr1 <- matrix(0,files,3)
+# v.llr1 <- matrix(0,files,3)
+# ci.llr1 <- matrix(0,files,3)
+# cov.llr1 <- matrix(0,files,3)
+# zero.llr1 <- matrix(0,files,3)
 ##
 # rmse.llr2 <- matrix(0,files,3)
 # sb.llr2 <- matrix(0,files,3)
@@ -87,12 +87,12 @@ zero.llr1 <- matrix(0,files,3)
 # cov.cgs0 <- rep(0,files)
 # zero.cgs0 <- rep(0,files)
 ##
-rmse.cgs1 <- rep(0,files)
-sb.cgs1 <- rep(0,files)
-v.cgs1 <- rep(0,files)
-ci.cgs1 <- rep(0,files)
-cov.cgs1 <- rep(0,files)
-zero.cgs1 <- rep(0,files)
+# rmse.cgs1 <- rep(0,files)
+# sb.cgs1 <- rep(0,files)
+# v.cgs1 <- rep(0,files)
+# ci.cgs1 <- rep(0,files)
+# cov.cgs1 <- rep(0,files)
+# zero.cgs1 <- rep(0,files)
 ##
 for (i in 1:files)
 {
@@ -110,10 +110,10 @@ for (i in 1:files)
   sbart <- readRDS(paste0("Results/sbart_",i,".rds"))
   tbart <- readRDS(paste0("Results/tbart_",i,".rds"))
   # llr0 <- readRDS(paste0("Results/llr0_",i,".rds"))
-  llr1 <- readRDS(paste0("Results/llr1_",i,".rds"))
+  # llr1 <- readRDS(paste0("Results/llr1_",i,".rds"))
   ## llr2 <- readRDS(paste0("Results/llr2_",i,".rds"))
   # cgs0 <- readRDS(paste0("Results/cgs0_",i,".rds"))
-  cgs1 <- readRDS(paste0("Results/cgs1_",i,".rds"))
+  # cgs1 <- readRDS(paste0("Results/cgs1_",i,".rds"))
   ##
   bart.rdd.ate[[i]] <- sapply(bart$results,colMeans)
   rmse.bart[i] <- sqrt(mean((colMeans(bart.rdd.ate[[i]])-ate)^2))
@@ -186,13 +186,13 @@ for (i in 1:files)
   # cov.llr0[i,] <- rowMeans(sapply(llr0$results,function(i) i$ci[,2])-ate>0 & sapply(llr0$results,function(i) i$ci[,1])-ate<0)
   # zero.llr0[i,] <- rowMeans(sapply(llr0$results,function(i) i$ci[,2])>0 & sapply(llr0$results,function(i) i$ci[,1])<0)
   ##
-  llr.ate[[i]] <- t(sapply(llr1$results,function(i) c(i$coef[1],i$ci[1,])))
-  rmse.llr1[i,] <- sqrt(mean((llr.ate[[i]][,1]-ate)^2))
-  sb.llr1[i,] <- mean(llr.ate[[i]][,1]-ate)^2
-  v.llr1[i,] <- var(llr.ate[[i]][,1])
-  ci.llr1[i,] <- mean(llr.ate[[i]][,3]-llr.ate[[i]][,2])
-  cov.llr1[i,] <- mean(llr.ate[[i]][,3]-ate>0 & llr.ate[[i]][,2]-ate<0)
-  zero.llr1[i,] <- mean(llr.ate[[i]][,3]>0 & llr.ate[[i]][,2]<0)
+  # llr.ate[[i]] <- t(sapply(llr1$results,function(i) c(i$coef[1],i$ci[1,])))
+  # rmse.llr1[i,] <- sqrt(mean((llr.ate[[i]][,1]-ate)^2))
+  # sb.llr1[i,] <- mean(llr.ate[[i]][,1]-ate)^2
+  # v.llr1[i,] <- var(llr.ate[[i]][,1])
+  # ci.llr1[i,] <- mean(llr.ate[[i]][,3]-llr.ate[[i]][,2])
+  # cov.llr1[i,] <- mean(llr.ate[[i]][,3]-ate>0 & llr.ate[[i]][,2]-ate<0)
+  # zero.llr1[i,] <- mean(llr.ate[[i]][,3]>0 & llr.ate[[i]][,2]<0)
   ##
   # rmse.llr2[i,] <- rowMeans((sapply(llr2$results,function(i) i$coef)-ate)^2)
   # sb.llr2[i,] <- rowMeans(sapply(llr2$results,function(i) i$coef)-ate)^2
@@ -209,54 +209,62 @@ for (i in 1:files)
   # cov.cgs0[i] <- mean(cgs.res[,3]-ate>0 & cgs.res[,2]-ate<0)
   # zero.cgs0[i] <- mean(cgs.res[,3]>0 & cgs.res[,2]<0)
   ##
-  cgs.ate[[i]] <- t(sapply(cgs1$results, function(i) c(mean(i$atem),quantile(i$atem,c(0.025,0.975)))))
-  cgs.res <- t(apply(sapply(cgs1$results,function(i) i$atem),2,function(i) c(mean(i),quantile(i,c(0.025,0.975)))))
-  rmse.cgs1[i] <- sqrt(mean((cgs.res[,1]-ate)^2))
-  sb.cgs1[i] <- mean(cgs.res[,1]-ate)^2
-  v.cgs1[i] <- var(cgs.res[,1])
-  ci.cgs1[i] <- mean(cgs.res[,3]-cgs.res[,2])
-  cov.cgs1[i] <- mean(cgs.res[,3]-ate>0 & cgs.res[,2]-ate<0)
-  zero.cgs1[i] <- mean(cgs.res[,3]>0 & cgs.res[,2]<0)
+  # cgs.ate[[i]] <- t(sapply(cgs1$results, function(i) c(mean(i$atem),quantile(i$atem,c(0.025,0.975)))))
+  # cgs.res <- t(apply(sapply(cgs1$results,function(i) i$atem),2,function(i) c(mean(i),quantile(i,c(0.025,0.975)))))
+  # rmse.cgs1[i] <- sqrt(mean((cgs.res[,1]-ate)^2))
+  # sb.cgs1[i] <- mean(cgs.res[,1]-ate)^2
+  # v.cgs1[i] <- var(cgs.res[,1])
+  # ci.cgs1[i] <- mean(cgs.res[,3]-cgs.res[,2])
+  # cov.cgs1[i] <- mean(cgs.res[,3]-ate>0 & cgs.res[,2]-ate<0)
+  # zero.cgs1[i] <- mean(cgs.res[,3]>0 & cgs.res[,2]<0)
 }
 ##
 # names <- c("BART-RDD","BCF","S-BART","T-BART","CGS","LLR")
-names <- c("BART-RDD","S-BART","T-BART","CGS","LLR")
+# names <- c("BART-RDD","S-BART","T-BART","CGS","LLR")
+names <- c("BART-RDD","S-BART","T-BART")
 ###
 # rmse <- cbind(rmse.bart,rmse.bcf,rmse.sbart,rmse.tbart,rmse.cgs1,rmse.llr1[,1])
-rmse <- cbind(rmse.bart,rmse.sbart,rmse.tbart,rmse.cgs1,rmse.llr1[,1])
+# rmse <- cbind(rmse.bart,rmse.sbart,rmse.tbart,rmse.cgs1,rmse.llr1[,1])
+rmse <- cbind(rmse.bart,rmse.sbart,rmse.tbart)
 colnames(rmse) <- names
 table(apply(rmse,1,function(i) which(i==min(i))))
 ###
 # sb <- cbind(sb.bart,sb.bcf,sb.sbart,sb.tbart,sb.cgs1,sb.llr1[,1])
-sb <- cbind(sb.bart,sb.sbart,sb.tbart,sb.cgs1,sb.llr1[,1])
+# sb <- cbind(sb.bart,sb.sbart,sb.tbart,sb.cgs1,sb.llr1[,1])
+sb <- cbind(sb.bart,sb.sbart,sb.tbart)
 colnames(sb) <- names
 table(apply(sb,1,function(i) which(i==min(i))))
 ###
 # v <- cbind(v.bart,v.bcf,v.sbart,v.tbart,v.cgs1,v.llr1[,1])
-v <- cbind(v.bart,v.sbart,v.tbart,v.cgs1,v.llr1[,1])
+# v <- cbind(v.bart,v.sbart,v.tbart,v.cgs1,v.llr1[,1])
+v <- cbind(v.bart,v.sbart,v.tbart)
 colnames(v) <- names
 table(apply(v,1,function(i) which(i==min(i))))
 ###
 # ci <- cbind(ci.bart,ci.bcf,ci.sbart,ci.tbart,ci.cgs1,ci.llr1[,1])
-ci <- cbind(ci.bart,ci.sbart,ci.tbart,ci.cgs1,ci.llr1[,1])
+# ci <- cbind(ci.bart,ci.sbart,ci.tbart,ci.cgs1,ci.llr1[,1])
+ci <- cbind(ci.bart,ci.sbart,ci.tbart)
 colnames(ci) <- names
 table(apply(ci,1,function(i) which(i==min(i))))
 ###
 # cov <- cbind(cov.bart,cov.bcf,cov.sbart,cov.tbart,cov.cgs1,cov.llr1[,1])
-cov <- cbind(cov.bart,cov.sbart,cov.tbart,cov.cgs1,cov.llr1[,1])
+# cov <- cbind(cov.bart,cov.sbart,cov.tbart,cov.cgs1,cov.llr1[,1])
+cov <- cbind(cov.bart,cov.sbart,cov.tbart)
 colnames(cov) <- names
 # zero <- cbind(zero.bart,zero.bcf,zero.sbart,zero.tbart,zero.cgs1,zero.llr1[,1])
-zero <- cbind(zero.bart,zero.sbart,zero.tbart,zero.cgs1,zero.llr1[,1])
+# zero <- cbind(zero.bart,zero.sbart,zero.tbart,zero.cgs1,zero.llr1[,1])
+zero <- cbind(zero.bart,zero.sbart,zero.tbart)
 colnames(zero) <- names
 ###
 bart.rdd.int <- sapply(lapply(bart.rdd.ate,function(i) apply(i,2,function(j) c(0.05-quantile(j,0.025),quantile(j,0.975)-0.05))),function(i) quantile(apply(i,2,function(j) ifelse(min(j)>0,0,abs(min(j)))),0.95))
 # bcf.int <- sapply(lapply(bcf.ate,function(i) apply(i,2,function(j) c(0.05-quantile(j,0.025),quantile(j,0.975)-0.05))),function(i) quantile(apply(i,2,function(j) ifelse(min(j)>0,0,abs(min(j)))),0.95))
 sbart.int <- sapply(lapply(sbart.ate,function(i) apply(i,2,function(j) c(0.05-quantile(j,0.025),quantile(j,0.975)-0.05))),function(i) quantile(apply(i,2,function(j) ifelse(min(j)>0,0,abs(min(j)))),0.95))
 tbart.int <- sapply(lapply(tbart.ate,function(i) apply(i,2,function(j) c(0.05-quantile(j,0.025),quantile(j,0.975)-0.05))),function(i) quantile(apply(i,2,function(j) ifelse(min(j)>0,0,abs(min(j)))),0.95))
-llr.int <- sapply(llr.ate, function(i) quantile(apply(i,1,function(j) ifelse(0.05-j[2]>0 & j[3]-0.05>0,0,abs(min(0.05-j[2],j[3]-0.05)))),0.95))
-cgs.int <- sapply(cgs.ate, function(i) quantile(apply(i,1,function(j) ifelse(0.05-j[2]>0 & j[3]-0.05>0,0,abs(min(0.05-j[2],j[3]-0.05)))),0.95))
+# llr.int <- sapply(llr.ate, function(i) quantile(apply(i,1,function(j) ifelse(0.05-j[2]>0 & j[3]-0.05>0,0,abs(min(0.05-j[2],j[3]-0.05)))),0.95))
+# cgs.int <- sapply(cgs.ate, function(i) quantile(apply(i,1,function(j) ifelse(0.05-j[2]>0 & j[3]-0.05>0,0,abs(min(0.05-j[2],j[3]-0.05)))),0.95))
 # int <- cbind(bart.rdd.int,bcf.int,sbart.int,tbart.int,cgs.int,llr.int)
-int <- cbind(bart.rdd.int,sbart.int,tbart.int,cgs.int,llr.int)
+# int <- cbind(bart.rdd.int,sbart.int,tbart.int,cgs.int,llr.int)
+int <- cbind(bart.rdd.int,sbart.int,tbart.int)
 colnames(int) <- names
 ###
 # rmse.cate <- cbind(bart.rdd.cate,bcf.cate,sbart.cate,tbart.cate)

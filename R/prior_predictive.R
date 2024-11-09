@@ -1,5 +1,5 @@
 set.seed(7)
-setwd("~/../Git/BART-RDD/")
+setwd("~/Git/BART-RDD/")
 library(doParallel)
 library(XBART)
 library(lattice)
@@ -27,12 +27,13 @@ fit <- function(i)
                         tau_con = 2*var(y)/ntrees,
                         tau_mod = 0.5*var(y)/ntrees)
   test <- -hs+c<=x & x<=hs+c
-  pred <- XBART::predict.XBCFrd(fit,w[test,],rep(c,sum(test)))
+  # pred <- XBART::predict.XBCFrd(fit,w[test,],rep(c,sum(test)))
+  pred <- XBART::predict.XBCFrd(fit,w[test],rep(c,sum(test)))
   mean(colMeans(pred$tau.adj[,(burnin+1):num_sweeps]))
 }
 ### Prior predictive
 #### Setup
-mu.prior <- function(x,w,omega) rowMeans(w) + 1/(1+exp(-5*x)) + (1-abs(x-c))*sin(omega*x)/10
+mu.prior <- function(x,w,omega) w + 1/(1+exp(-5*x)) + (1-abs(x-c))*sin(omega*x)/10
 tau.prior <- function(x,tau.bar) tau.bar - log(x+1)/50
 omega <- 0
 ate <- 0.4
@@ -42,6 +43,8 @@ s <- 20 ## no of samples of th synthetic DGP
 Omin <- c(1,5,10)
 Opct <- seq(0.6,0.9,length=3)
 h <- seq(0.05,0.2,length=4)
+classes <- 10
+p <- 0.4
 #### Loop
 params <- c("N","ATE","Omega","Omin","Opct","h")
 for (i in N)
@@ -50,8 +53,7 @@ for (i in N)
   obs <- i
   x <- 2*rbeta(i,2,4)-0.75
   z <- as.numeric(x>=c)
-  w <- cbind(runif(i,-0.1,0.1),rnorm(i,0,0.2),rbinom(i,1,0.4)-0.4,rbinom(i,1,dnorm(x,c,0.5)))
-  w[,4] <- w[,4]-mean(w[,4])
+  w <- rbinom(i,classes,p)+1
   ## plot(x,mu.prior(x,w,omega[3])+tau.prior(x,0.25)*z+rnorm(N),col=z+1,pch=19)
   for (j in 1:length(ate))
   {
