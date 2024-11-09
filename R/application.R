@@ -337,17 +337,17 @@ d5 <- density(cate.campus[,3]-cate.campus[,1])
 d6 <- density(cate.campus[,3]-cate.campus[,2])
 pdf("Figures/cate_difference.pdf")
 par(mfrow=c(2,2))
-plot(d1,bty="n",main="Campus 1 - hsgrade_pct > 43",ylab="",xlab="Difference in subgroup average treatment effect")
+plot(d1,bty="n",main="Campus 1 - hsgrade_pct > 43",ylab="",xlab="Difference in subgroup average treatment effect",cex=1.5)
 polygon(c(0,d1$x[d1$x>0]),c(0,d1$y[d1$x>0]),col=rgb(96/256,96/256,96/256,0.4),border=1)
-plot(d2,bty="n",main="Campus 2 - hsgrade_pct > 31",ylab="",xlab="Difference in subgroup average treatment effect")
+plot(d2,bty="n",main="Campus 2 - hsgrade_pct > 31",ylab="",xlab="Difference in subgroup average treatment effect",cex=1.5)
 polygon(c(0,d2$x[d2$x>0]),c(0,d2$y[d2$x>0]),col=rgb(96/256,96/256,96/256,0.4),border=1)
-plot(d3,bty="n",main="Campus 3 - age_at_entry > 19",ylab="",xlab="Difference in subgroup average treatment effect")
+plot(d3,bty="n",main="Campus 3 - age_at_entry > 19",ylab="",xlab="Difference in subgroup average treatment effect",cex=1.5)
 polygon(c(0,d3$x[d3$x>0]),c(0,d3$y[d3$x>0]),col=rgb(96/256,96/256,96/256,0.4),border=1)
 plot(d4,type="n",bty="n",
      xlim=c(min(d4$x,d5$x,d6$x),max(d4$x,d5$x,d6$x)),
      ylim=c(min(d4$y,d5$y,d6$y),max(d4$y,d5$y,d6$y)),
      main="",
-     ylab="",xlab="Difference in campus average treatment effect")
+     ylab="",xlab="Difference in campus average treatment effect",cex=1.5)
 lines(d4,col=rgb(1,0,0))
 lines(d5,col=rgb(0,1,0))
 lines(d6,col=rgb(0,0,1))

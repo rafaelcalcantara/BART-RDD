@@ -1,6 +1,7 @@
 ### ADD STRAIGHT BIAS
 setwd("~/../Git/BART-RDD/")
 load("Results/sims.RData")
+cex <- 1.25
 ## Tables
 stargazer::stargazer(cbind(params[,-4],round(rmse,3)),summary=F,rownames = F)
 # stargazer::stargazer(cbind(params[,-4],round(cov,3)),summary=F,rownames = F)
@@ -19,35 +20,35 @@ stargazer::stargazer(apply(cov.ci.tab,2,as.character),summary=F,rownames=F,
                      out="C:/Users/Rafael Alcantara/Dropbox/RDD-BART/Tables/sim_cov_ci_ate.tex")
 ## Plots
 par(bty="L")
-### Overall
-ticks <- paste0("(",do.call(paste,c(params[,1:3],sep=",")),")")
-matplot(rmse,lty=1,pch=19,type="b",ylab="RMSE",xaxt="n",
-        cex.axis=0.75,cex.lab=0.75,ylim=c(min(rmse),max(rmse)+0.1),
-        xlab=bquote("("~tau~","~delta[mu]~","~delta[tau]~")"))
-axis(1, at=1:nrow(params),labels=ticks,cex.axis=0.65)
-legend("topleft",legend=colnames(rmse),col=1:ncol(rmse),bty="n",lty=1,pch=19,
-       ncol=3,cex=15)
-####
-matplot(abs(sb),lty=1,pch=19,type="b",ylab="Absolute bias",xaxt="n",
-        cex.axis=0.75,cex.lab=0.75,ylim=c(min(abs(sb)),max(abs(sb))+0.1),
-        xlab=bquote("("~tau~","~delta[mu]~","~delta[tau]~")"))
-axis(1, at=1:nrow(params),labels=ticks,cex.axis=0.65)
-legend("topleft",legend=colnames(sb),col=1:ncol(v),bty="n",lty=1,pch=19,
-       ncol=3,cex=15)
-####
-matplot(v,lty=1,pch=19,type="b",ylab="Variance",xaxt="n",
-        cex.axis=0.75,cex.lab=0.75,ylim=c(min(v),max(v)+0.1),
-        xlab=bquote("("~tau~","~delta[mu]~","~delta[tau]~")"))
-axis(1, at=1:nrow(params),labels=ticks,cex.axis=0.65)
-legend("topleft",legend=colnames(v),col=1:ncol(v),bty="n",lty=1,pch=19,
-       ncol=3,cex=15)
-####
-plot(colMeans(ci),colMeans(cov),col=1:6,pch=19,bty="L",
-     xlab="Average interval length",ylab="Average coverage rate",
-     cex.axis=0.75,cex.lab=0.75)
-legend("topleft",legend=colnames(cov),title="Estimator",ncol=2,
-       cex=0.55,pt.cex=0.75,title.cex=15,
-       pch=19,col=1:6)
+# ### Overall
+# ticks <- paste0("(",do.call(paste,c(params[,1:3],sep=",")),")")
+# matplot(rmse,lty=1,pch=19,type="b",ylab="RMSE",xaxt="n",
+#         cex.axis=0.75,cex.lab=0.75,ylim=c(min(rmse),max(rmse)+0.1),
+#         xlab=bquote("("~tau~","~delta[mu]~","~delta[tau]~")"))
+# axis(1, at=1:nrow(params),labels=ticks,cex.axis=0.65)
+# legend("topleft",legend=colnames(rmse),col=1:ncol(rmse),bty="n",lty=1,pch=19,
+#        ncol=3,cex=cex)
+# ####
+# matplot(abs(sb),lty=1,pch=19,type="b",ylab="Absolute bias",xaxt="n",
+#         cex.axis=0.75,cex.lab=0.75,ylim=c(min(abs(sb)),max(abs(sb))+0.1),
+#         xlab=bquote("("~tau~","~delta[mu]~","~delta[tau]~")"))
+# axis(1, at=1:nrow(params),labels=ticks,cex.axis=0.65)
+# legend("topleft",legend=colnames(sb),col=1:ncol(v),bty="n",lty=1,pch=19,
+#        ncol=3,cex=cex)
+# ####
+# matplot(v,lty=1,pch=19,type="b",ylab="Variance",xaxt="n",
+#         cex.axis=0.75,cex.lab=0.75,ylim=c(min(v),max(v)+0.1),
+#         xlab=bquote("("~tau~","~delta[mu]~","~delta[tau]~")"))
+# axis(1, at=1:nrow(params),labels=ticks,cex.axis=0.65)
+# legend("topleft",legend=colnames(v),col=1:ncol(v),bty="n",lty=1,pch=19,
+#        ncol=3,cex=cex)
+# ####
+# plot(colMeans(ci),colMeans(cov),col=1:6,pch=19,bty="L",
+#      xlab="Average interval length",ylab="Average coverage rate",
+#      cex.axis=0.75,cex.lab=0.75)
+# legend("topleft",legend=colnames(cov),title="Estimator",ncol=2,
+#        cex=0.55,pt.cex=0.75,title.cex=cex,
+#        pch=19,col=1:6)
 ### RMSE
 rmse.plot <- reshape(cbind(params,rmse),direction="long",varying=list(5:9),timevar="Model",times=colnames(rmse),v.names = "RMSE")
 rmse.plot$Model <- factor(rmse.plot$Model, levels=colnames(rmse))
@@ -56,39 +57,39 @@ pdf("Figures/rmse_delta_mu.pdf")
 par(bty="L")
 boxplot(rmse.plot$RMSE~rmse.plot$delta.mu+rmse.plot$Model,
         col=c("lightblue","tomato"),
-        main="",ylab="RMSE",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+        main="",ylab="RMSE",xlab="",xaxt="n",cex.axis=cex,cex.lab=cex)
 axis(1, at=1.5 + 2*(1:ncol(rmse)-1),labels=F,tick=T,lwd.ticks=0)
 text(1.5 + 2*(1:ncol(rmse)-1),par("usr")[3]-0.03, labels = colnames(rmse),
-     srt = 0, pos = 1, xpd = TRUE, cex=1)
+     srt = 0, pos = 1, xpd = TRUE, cex=cex)
 for (i in 2.5 + 2*(1:(ncol(rmse)-1)-1)) abline(v=i,lty=2)
 legend("topleft",legend=unique(params$delta.mu),title=expression(delta[mu]),
-       fill=c("lightblue","tomato"),cex=1,ncol=1,bty="n")
+       fill=c("lightblue","tomato"),cex=cex,ncol=1,bty="n")
 dev.off()
 #### delta_tau
 pdf("Figures/rmse_delta_tau.pdf")
 par(bty="L")
 boxplot(rmse.plot$RMSE~rmse.plot$delta.tau+rmse.plot$Model,
         col=c("lightblue","tomato"),
-        main="",ylab="RMSE",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+        main="",ylab="RMSE",xlab="",xaxt="n",cex.axis=cex,cex.lab=cex)
 axis(1, at=1.5 + 2*(1:ncol(rmse)-1),labels=F,tick=T,lwd.ticks=0)
 text(1.5 + 2*(1:ncol(rmse)-1),par("usr")[3]-0.03, labels = colnames(rmse),
-     srt = 0, pos = 1, xpd = TRUE, cex=1)
+     srt = 0, pos = 1, xpd = TRUE, cex=cex)
 for (i in 2.5 + 2*(1:(ncol(rmse)-1)-1)) abline(v=i,lty=2)
 legend("topleft",legend=unique(params$delta.tau),title=expression(delta[tau]),
-       fill=c("lightblue","tomato"),cex=1,ncol=1,bty="n")
+       fill=c("lightblue","tomato"),cex=cex,ncol=1,bty="n")
 dev.off()
 #### tau
 pdf("Figures/rmse_tau.pdf")
 par(bty="L")
 boxplot(rmse.plot$RMSE~rmse.plot$tau+rmse.plot$Model,
         col=c("lightblue","tomato"),
-        main="",ylab="RMSE",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+        main="",ylab="RMSE",xlab="",xaxt="n",cex.axis=cex,cex.lab=cex)
 axis(1, at=1.5 + 2*(1:ncol(rmse)-1),labels=F,tick=T,lwd.ticks=0)
 text(1.5 + 2*(1:ncol(rmse)-1),par("usr")[3]-0.03, labels = colnames(rmse),
-     srt = 0, pos = 1, xpd = TRUE, cex=1)
+     srt = 0, pos = 1, xpd = TRUE, cex=cex)
 for (i in 2.5 + 2*(1:(ncol(rmse)-1)-1)) abline(v=i,lty=2)
 legend("topleft",legend=unique(params$tau),title=expression(tau),
-       fill=c("lightblue","tomato"),cex=1,ncol=1,bty="n")
+       fill=c("lightblue","tomato"),cex=cex,ncol=1,bty="n")
 dev.off()
 #### Bias
 sb.plot <- reshape(cbind(params,sb),direction="long",varying=list(5:9),timevar="Model",times=colnames(sb),v.names = "sb")
@@ -96,13 +97,13 @@ sb.plot$Model <- factor(sb.plot$Model, levels=colnames(sb))
 #### delta_mu
 boxplot(sb.plot$sb~sb.plot$delta.mu+sb.plot$Model,
         col=c("lightblue","tomato"),
-        main="",ylab="Average Bias",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+        main="",ylab="Average Bias",xlab="",xaxt="n",cex.axis=cex,cex.lab=cex)
 axis(1, at=1.5 + 2*(1:ncol(rmse)-1),labels=F,tick=T,lwd.ticks=0)
 text(1.5 + 2*(1:ncol(sb)-1),par("usr")[3]-0.03, labels = colnames(sb),
-     srt = 0, pos = 1, xpd = TRUE, cex=1)
+     srt = 0, pos = 1, xpd = TRUE, cex=cex)
 for (i in 2.5 + 2*(1:(ncol(sb)-1)-1)) abline(v=i,lty=2)
 legend("topleft",legend=unique(params$delta.mu),title=expression(delta[mu]),
-       fill=c("lightblue","tomato"),cex=1,ncol=1,bty="n")
+       fill=c("lightblue","tomato"),cex=cex,ncol=1,bty="n")
 #### delta_tau
 boxplot(sb.plot$sb~sb.plot$delta.tau+sb.plot$Model,
         col=c("lightblue","tomato"),
@@ -110,7 +111,7 @@ boxplot(sb.plot$sb~sb.plot$delta.tau+sb.plot$Model,
 axis(1, at=1.5 + 2*(1:ncol(sb)-1),labels=colnames(sb),tick=T,cex.axis=0.75,lwd.ticks=0)
 for (i in 2.5 + 2*(1:(ncol(sb)-1)-1)) abline(v=i,lty=2)
 legend("topleft",legend=unique(params$delta.tau),title=expression(delta[tau]),
-       fill=c("lightblue","tomato"),cex=15,ncol=2,bty="n")
+       fill=c("lightblue","tomato"),cex=cex,ncol=2,bty="n")
 #### tau
 boxplot(sb.plot$sb~sb.plot$tau+sb.plot$Model,
         col=c("lightblue","tomato"),
@@ -118,7 +119,7 @@ boxplot(sb.plot$sb~sb.plot$tau+sb.plot$Model,
 axis(1, at=1.5 + 2*(1:ncol(sb)-1),labels=colnames(sb),tick=T,cex.axis=0.75,lwd.ticks=0)
 for (i in 2.5 + 2*(1:(ncol(sb)-1)-1)) abline(v=i,lty=2)
 legend("topleft",legend=unique(params$tau),title=expression(tau),
-       fill=c("lightblue","tomato"),cex=15,ncol=2,bty="n")
+       fill=c("lightblue","tomato"),cex=cex,ncol=2,bty="n")
 #### Absolute bias
 sb.plot <- reshape(cbind(params,abs(sb)),direction="long",varying=list(5:9),timevar="Model",times=colnames(sb),v.names = "sb")
 sb.plot$Model <- factor(sb.plot$Model, levels=colnames(sb))
@@ -127,39 +128,39 @@ pdf("Figures/absolute_bias_delta_mu.pdf")
 par(bty="L")
 boxplot(sb.plot$sb~sb.plot$delta.mu+sb.plot$Model,
         col=c("lightblue","tomato"),
-        main="",ylab="Absolute Bias",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+        main="",ylab="Absolute Bias",xlab="",xaxt="n",cex.axis=cex,cex.lab=cex)
 axis(1, at=1.5 + 2*(1:ncol(sb)-1),labels=F,tick=T,lwd.ticks=0)
 text(1.5 + 2*(1:ncol(sb)-1),par("usr")[3]-0.03, labels = colnames(sb),
-     srt = 0, pos = 1, xpd = TRUE, cex=1)
+     srt = 0, pos = 1, xpd = TRUE, cex=cex)
 for (i in 2.5 + 2*(1:(ncol(sb)-1)-1)) abline(v=i,lty=2)
 legend("topleft",legend=unique(params$delta.mu),title=expression(delta[mu]),
-       fill=c("lightblue","tomato"),cex=1,ncol=1,bty="n")
+       fill=c("lightblue","tomato"),cex=cex,ncol=1,bty="n")
 dev.off()
 #### delta_tau
 pdf("Figures/absolute_bias_delta_tau.pdf")
 par(bty="L")
 boxplot(sb.plot$sb~sb.plot$delta.tau+sb.plot$Model,
         col=c("lightblue","tomato"),
-        main="",ylab="Absolute Bias",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+        main="",ylab="Absolute Bias",xlab="",xaxt="n",cex.axis=cex,cex.lab=cex)
 axis(1, at=1.5 + 2*(1:ncol(sb)-1),labels=F,tick=T,lwd.ticks=0)
 text(1.5 + 2*(1:ncol(sb)-1),par("usr")[3]-0.03, labels = colnames(sb),
-     srt = 0, pos = 1, xpd = TRUE, cex=1)
+     srt = 0, pos = 1, xpd = TRUE, cex=cex)
 for (i in 2.5 + 2*(1:(ncol(sb)-1)-1)) abline(v=i,lty=2)
 legend("topleft",legend=unique(params$delta.tau),title=expression(delta[tau]),
-       fill=c("lightblue","tomato"),cex=1,ncol=1,bty="n")
+       fill=c("lightblue","tomato"),cex=cex,ncol=1,bty="n")
 dev.off()
 #### tau
 pdf("Figures/absolute_bias_tau.pdf")
 par(bty="L")
 boxplot(sb.plot$sb~sb.plot$tau+sb.plot$Model,
         col=c("lightblue","tomato"),
-        main="",ylab="Absolute Bias",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+        main="",ylab="Absolute Bias",xlab="",xaxt="n",cex.axis=cex,cex.lab=cex)
 axis(1, at=1.5 + 2*(1:ncol(sb)-1),labels=F,tick=T,lwd.ticks=0)
 text(1.5 + 2*(1:ncol(sb)-1),par("usr")[3]-0.03, labels = colnames(sb),
-     srt = 0, pos = 1, xpd = TRUE, cex=1)
+     srt = 0, pos = 1, xpd = TRUE, cex=cex)
 for (i in 2.5 + 2*(1:(ncol(sb)-1)-1)) abline(v=i,lty=2)
 legend("topleft",legend=unique(params$tau),title=expression(tau),
-       fill=c("lightblue","tomato"),cex=1,ncol=1,bty="n")
+       fill=c("lightblue","tomato"),cex=cex,ncol=1,bty="n")
 dev.off()
 #### Variance
 v.plot <- reshape(cbind(params,v),direction="long",varying=list(5:9),timevar="Model",times=colnames(v),v.names = "v")
@@ -169,39 +170,39 @@ pdf("Figures/variance_delta_mu.pdf")
 par(bty="L")
 boxplot(v.plot$v~v.plot$delta.mu+v.plot$Model,
         col=c("lightblue","tomato"),
-        main="",ylab="Variance",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+        main="",ylab="Variance",xlab="",xaxt="n",cex.axis=cex,cex.lab=cex)
 axis(1, at=1.5 + 2*(1:ncol(v)-1),labels=F,tick=T,lwd.ticks=0)
 text(1.5 + 2*(1:ncol(v)-1),par("usr")[3]-0.03, labels = colnames(v),
-     srt = 0, pos = 1, xpd = TRUE, cex=1)
+     srt = 0, pos = 1, xpd = TRUE, cex=cex)
 for (i in 2.5 + 2*(1:(ncol(v)-1)-1)) abline(v=i,lty=2)
 legend("topleft",legend=unique(params$delta.mu),title=expression(delta[mu]),
-       fill=c("lightblue","tomato"),cex=1,ncol=1,bty="n")
+       fill=c("lightblue","tomato"),cex=cex,ncol=1,bty="n")
 dev.off()
 #### delta_tau
 pdf("Figures/variance_delta_tau.pdf")
 par(bty="L")
 boxplot(v.plot$v~v.plot$delta.tau+v.plot$Model,
         col=c("lightblue","tomato"),
-        main="",ylab="Variance",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+        main="",ylab="Variance",xlab="",xaxt="n",cex.axis=cex,cex.lab=cex)
 axis(1, at=1.5 + 2*(1:ncol(v)-1),labels=F,tick=T,lwd.ticks=0)
 text(1.5 + 2*(1:ncol(v)-1),par("usr")[3]-0.03, labels = colnames(v),
-     srt = 0, pos = 1, xpd = TRUE, cex=1)
+     srt = 0, pos = 1, xpd = TRUE, cex=cex)
 for (i in 2.5 + 2*(1:(ncol(v)-1)-1)) abline(v=i,lty=2)
 legend("topleft",legend=unique(params$delta.tau),title=expression(delta[tau]),
-       fill=c("lightblue","tomato"),cex=1,ncol=1,bty="n")
+       fill=c("lightblue","tomato"),cex=cex,ncol=1,bty="n")
 dev.off()
 #### tau
 pdf("Figures/variance_tau.pdf")
 par(bty="L")
 boxplot(v.plot$v~v.plot$tau+v.plot$Model,
         col=c("lightblue","tomato"),
-        main="",ylab="Variance",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+        main="",ylab="Variance",xlab="",xaxt="n",cex.axis=cex,cex.lab=cex)
 axis(1, at=1.5 + 2*(1:ncol(v)-1),labels=F,tick=T,lwd.ticks=0)
 text(1.5 + 2*(1:ncol(v)-1),par("usr")[3]-0.03, labels = colnames(v),
-     srt = 0, pos = 1, xpd = TRUE, cex=1)
+     srt = 0, pos = 1, xpd = TRUE, cex=cex)
 for (i in 2.5 + 2*(1:(ncol(v)-1)-1)) abline(v=i,lty=2)
 legend("topleft",legend=unique(params$tau),title=expression(tau),
-       fill=c("lightblue","tomato"),cex=1,ncol=1,bty="n")
+       fill=c("lightblue","tomato"),cex=cex,ncol=1,bty="n")
 dev.off()
 ### CATE
 boxplot(rmse.cate,ylab="RMSE (CATE)",cex.lab=0.75,cex.axis=0.75)
@@ -269,7 +270,7 @@ par(mfrow=c(1,1))
 # points(cate.test$CATE+0.1,cate.test[,2],pch=19,col=2)
 # points(cate.test$CATE+0.2,cate.test[,3],pch=19,col=3)
 # abline(0,1,lty=2)
-# legend("topleft",legend=names(cate.test)[-4],col=1:3,pch=19,bty="n",cex=15,ncol=2)
+# legend("topleft",legend=names(cate.test)[-4],col=1:3,pch=19,bty="n",cex=cex,ncol=2)
 # par(mfrow=c(1,1))
 # ####
 # pdf("Figures/sim_rmse.pdf")
@@ -335,7 +336,7 @@ par(mfrow=c(1,1))
 # matlines(7:9,rmse.cate[7:9,],type="b",lty=1,pch=20)
 # abline(v=3.5,lty=2)
 # abline(v=6.5,lty=2)
-# legend("topleft",ncol = 2,col=1:4, lty=1, pch=20, cex=1, legend = names[1:4])
+# legend("topleft",ncol = 2,col=1:4, lty=1, pch=20, cex=cex, legend = names[1:4])
 # dev.off()
 # ###
 # pdf("Figures/sim_intervals_cate.pdf")

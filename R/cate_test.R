@@ -3,6 +3,7 @@ setwd("~/../Git/BART-RDD/")
 library(XBART)
 ### Setup--------------------------------------------------
 par(bty="L")
+cex <- 1.5
 n <- 1000
 c <- 0
 Owidth        <- 0.1
@@ -62,7 +63,7 @@ pred.bart.rdd <- pred$tau.adj[,(burnin+1):num_sweeps]
 pdf("Figures/cate_bart_rdd_1.pdf")
 matplot(cbind(sort(cate.test),rowMeans(pred.bart.rdd)[order(cate.test)]),
         col=c("black","blue"),ylab=bquote(tau),xlab="i",pch=19,
-        cex.axis=1,cex.lab=1,cex=1,bty="L")
+        cex.axis=cex,cex.lab=cex,cex=cex,bty="L")
 legend("topleft",bty="n",col=c("black","blue"),pch=19,
        legend=c(bquote(tau(X==c,W)),"BART-RDD fit"),cex=1)
 dev.off()
@@ -82,7 +83,7 @@ pred.sbart <- pred1-pred0
 pdf("Figures/cate_sbart_1.pdf")
 matplot(cbind(sort(cate.test),rowMeans(pred.sbart)[order(cate.test)]),
         col=c("black","blue"),ylab=bquote(tau),xlab="i",pch=19,
-        cex.axis=1,cex.lab=1,cex=1,bty="L")
+        cex.axis=cex,cex.lab=cex,cex=cex,bty="L")
 legend("topleft",bty="n",col=c("black","blue"),pch=19,
        legend=c(bquote(tau(X==c,W)),"S-BART fit"),cex=1)
 dev.off()
@@ -105,7 +106,7 @@ pred.tbart <- pred1-pred0
 pdf("Figures/cate_tbart_1.pdf")
 matplot(cbind(sort(cate.test),rowMeans(pred.tbart)[order(cate.test)]),
         col=c("black","blue"),ylab=bquote(tau),xlab="i",pch=19,
-        cex.axis=1,cex.lab=1,cex=1,bty="L")
+        cex.axis=cex,cex.lab=cex,cex=cex,bty="L")
 legend("topleft",bty="n",col=c("black","blue"),pch=19,
        legend=c(bquote(tau(X==c,W)),"T-BART fit"),cex=1)
 dev.off()
@@ -145,7 +146,7 @@ pred.bart.rdd <- pred$tau.adj[,(burnin+1):num_sweeps]
 pdf("Figures/cate_bart_rdd_2.pdf")
 matplot(cbind(sort(cate.test),rowMeans(pred.bart.rdd)[order(cate.test)]),
         col=c("black","blue"),ylab=bquote(tau),xlab="i",pch=19,
-        cex.axis=1,cex.lab=1,cex=1,bty="L")
+        cex.axis=cex,cex.lab=cex,cex=cex,bty="L")
 legend("topleft",bty="n",col=c("black","blue"),pch=19,
        legend=c(bquote(tau(X==c,W)),"BART-RDD fit"),cex=1)
 dev.off()
@@ -165,7 +166,7 @@ pred.sbart <- pred1-pred0
 pdf("Figures/cate_sbart_2.pdf")
 matplot(cbind(sort(cate.test),rowMeans(pred.sbart)[order(cate.test)]),
         col=c("black","blue"),ylab=bquote(tau),xlab="i",pch=19,
-        cex.axis=1,cex.lab=1,cex=1,bty="L")
+        cex.axis=cex,cex.lab=cex,cex=cex,bty="L")
 legend("topleft",bty="n",col=c("black","blue"),pch=19,
        legend=c(bquote(tau(X==c,W)),"S-BART fit"),cex=1)
 dev.off()
@@ -188,7 +189,7 @@ pred.tbart <- pred1-pred0
 pdf("Figures/cate_tbart_2.pdf")
 matplot(cbind(sort(cate.test),rowMeans(pred.tbart)[order(cate.test)]),
         col=c("black","blue"),ylab=bquote(tau),xlab="i",pch=19,
-        cex.axis=1,cex.lab=1,cex=1,bty="L")
+        cex.axis=cex,cex.lab=cex,cex=cex,bty="L")
 legend("topleft",bty="n",col=c("black","blue"),pch=19,
        legend=c(bquote(tau(X==c,W)),"T-BART fit"),cex=1)
 dev.off()
