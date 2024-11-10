@@ -1,4 +1,11 @@
-setwd("~/Git/BART-RDD/")
+# if (substr(sessioninfo::os_name(),1,3) == "Win")
+# {
+#   setwd("~/../Git/BART-RDD/")
+# } else
+# {
+#   setwd("~/Git/BART-RDD/")
+# }
+setwd("../")
 source("R/simulation_data.R")
 library(doParallel)
 library(XBART)

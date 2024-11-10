@@ -1,48 +1,63 @@
 set.seed(7)
-setwd("~/Git/BART-RDD/")
+if (substr(sessioninfo::os_name(),1,3) == "Win")
+{
+  setwd("~/../Git/BART-RDD/")
+} else
+{
+  setwd("~/Git/BART-RDD/")
+}
 library(XBART)
 ### Setup--------------------------------------------------
 par(bty="L")
-n <- 1000
+n <- 500
 c <- 0
 Owidth        <- 0.2
 Omin          <- 1
 Opct          <- 0.9
-ntrees        <- 5
+ntrees        <- 10
 Nmin          <- 5
-num_sweeps    <- 120
-burnin        <- 20
-p_categorical <- 2
+num_sweeps    <- 150
+burnin        <- 50
+p_categorical <- 1
 ###
 mu0.x <- function(x) 3*x^5 - 2.5*x^4 - 1.5*x^3 + 2*x^2 + 3*x + 2
 mu0.w <- function(w) w*sd(mu0.x(x))/sd(w)
-tau0.x <- function(x) -0.1*x
+tau0.x <- function(x,c) 0.1*(-exp(x)+exp(c))/(1+exp(2*x))
 tau0.w <- function(w,tau.bar) {
-  het <- w < 5
-  tau.bar*het*sd(tau0.x(x))/sd(het)
+  het <- w < mean(w)
+  # het <- w
+  het <- het-mean(het)
+  k <- tau.bar/max(abs(het))
+  return(k*het)
 }
-mu <- function(x,w,kappa,delta) (mu0.x(x) + kappa*mu0.w(w))/sd(mu0.x(x) + kappa*mu0.w(w))*delta
-tau <- function(x,w,kappa,delta,tau.bar) tau.bar + (tau0.x(x) + kappa*tau0.w(w,tau.bar))/sd(tau0.x(x) + kappa*tau0.w(w,tau.bar))*delta
+mu <- function(x,w,kappa,delta,tau) (mu0.x(x) + kappa*mu0.w(w))/sd(mu0.x(x) + kappa*mu0.w(w))*delta*sd(tau)
+tau <- function(x,w,kappa,tau.bar,c) tau.bar + tau0.x(x,c) + kappa*tau0.w(w,tau.bar)
 ### 1)-----------------------------------------------------
 #### Parameters
-ate <- 0.2
-delta_mu <- 0.5
-delta_tau <- 0.3
+ate <- 0.1
+delta_mu <- 5
+delta_sig <- 5
 kappa <- 1
-classes <- 10
+classes <- 3
 p <- 0.4
 #### Data
 x <- 2*rbeta(n,2,4)-0.75
 z <- as.numeric(x>=c)
-test <- -0.07 <= x & x <= 0.07
 w <- rbinom(n,classes,p) + 1
-y <- mu(x,w,kappa,delta_mu) + tau(x,w,kappa,delta_tau,ate)*z
+t <- tau(x,w,kappa,ate,c)
+y <- mu(x,w,kappa,delta_mu,t) + t*z
 Ey <- y
-y <- y + rnorm(n)
+y <- y + rnorm(n,0,delta_sig*sd(t))
+table(t)
+plot(x,mu(x,w,kappa,delta_mu,t))
+plot(x,t)
+plot(x,y)
+min(t)
 ## Fit models
-cate <- tau(c,w,kappa,delta_tau,ate)
+cate <- tau(c,w,kappa,ate,c)
 test <- -Owidth+c <= x & x <= c+Owidth
 cate.test <- cate[test]
+mean(cate)
 ### BART-RDD
 fit <- XBART::XBCF.rd(y, w, x, c,
                       Owidth = Owidth, Omin = Omin, Opct = Opct,
@@ -69,7 +84,7 @@ legend("topleft",bty="n",col=c("black","blue"),pch=19,
 fit <- XBART::XBART(y, cbind(x,w,z), num_trees = ntrees,
                     num_cutpoints = n, num_sweeps = num_sweeps,
                     burnin = burnin, Nmin = Nmin,
-                    p_categorical = p_categorical,
+                    p_categorical = p_categorical+1,
                     tau = var(y)/ntrees,parallel=T,nthread=10)
 test.sample <- cbind(x,w,z)
 #### Plot
@@ -108,6 +123,9 @@ matplot(cbind(sort(cate.test),rowMeans(pred.tbart)[order(cate.test)]),
 legend("topleft",bty="n",col=c("black","blue"),pch=19,
        legend=c(bquote(tau(X==c,W)),"T-BART fit"),cex=1)
 # dev.off()
+summary((rowMeans(pred.bart.rdd)-cate.test)^2)
+summary((rowMeans(pred.sbart)-cate.test)^2)
+summary((rowMeans(pred.tbart)-cate.test)^2)
 ### 2)-----------------------------------------------------
 #### Parameters
 # ate <- 0.5

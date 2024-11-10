@@ -1,6 +1,13 @@
-setwd("~/Git/BART-RDD/")
+# if (substr(sessioninfo::os_name(),1,3) == "Win")
+# {
+#   setwd("~/../Git/BART-RDD/")
+# } else
+# {
+#   setwd("~/Git/BART-RDD/")
+# }
+setwd("../")
 files <- length(list.files("Data"))
-Owidth <- 0.1
+Owidth <- 0.2
 ##
 params <- data.frame(tau=rep(0,files),delta.mu=rep(0,files),delta.tau=rep(0,files),kappa=rep(0,files))
 ##

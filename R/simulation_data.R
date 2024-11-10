@@ -1,5 +1,4 @@
 set.seed(0)
-setwd("~/Git/BART-RDD/")
 ## Needed to add this to ~/.R/Makevars file to install XBART from github,
 ### after installing gcc, boost and gsl
 # LDFLAGS+=-L/opt/homebrew/lib
@@ -22,16 +21,22 @@ n <- 500
 c <- 0
 mu0.x <- function(x) 3*x^5 - 2.5*x^4 - 1.5*x^3 + 2*x^2 + 3*x + 2
 mu0.w <- function(w) w*sd(mu0.x(x))/sd(w)
-tau0.x <- function(x) -0.1*x
-tau0.w <- function(w,tau.bar) tau.bar*(w-mean(w))*sd(tau0.x(x))/sd(w)
-mu <- function(x,w,kappa,delta) (mu0.x(x) + kappa*mu0.w(w))/sd(mu0.x(x) + kappa*mu0.w(w))*delta
-tau <- function(x,w,kappa,delta,tau.bar) tau.bar + (tau0.x(x) + kappa*tau0.w(w,tau.bar))/sd(tau0.x(x) + kappa*tau0.w(w,tau.bar))*delta
+tau0.x <- function(x,c) 0.1*(-exp(x)+exp(c))/(1+exp(2*x))
+tau0.w <- function(w,tau.bar) {
+  het <- w < mean(w)
+  # het <- w
+  het <- het-mean(het)
+  k <- tau.bar/max(abs(het))
+  return(k*het)
+}
+mu <- function(x,w,kappa,delta,tau) (mu0.x(x) + kappa*mu0.w(w))/sd(mu0.x(x) + kappa*mu0.w(w))*delta*sd(tau)
+tau <- function(x,w,kappa,tau.bar,c) tau.bar + tau0.x(x,c) + kappa*tau0.w(w,tau.bar)
 #### Parameters
 ate <- 0.5
-delta_mu <- 0.5
-delta_tau <- 0.3
+delta_mu <- 2
+delta_sig <- 5
 kappa <- 1
-classes <- 10
+classes <- 5
 p <- 0.4
 #### Testing the settings
 x <- 2*rbeta(n,2,4)-0.75
@@ -40,7 +45,7 @@ test <- -0.07 <= x & x <= 0.07
 w <- rbinom(n,classes,p) + 1
 #### X
 mu.test <- mu0.x(x)
-tau.test <- tau0.x(x) + ate
+tau.test <- tau0.x(x,c) + ate
 plot(x,mu.test)
 plot(x,tau.test)
 plot(x,mu.test + z*tau.test,col=z+1,pch=19,ylab=expression(E[X](Y[z])),xlab="X",bty="n")
@@ -49,7 +54,7 @@ points(x[x>c],mu.test[x>c],col="lightgray",pch=21)
 points(x[x<c],(mu.test+tau.test)[x<c],col="lightgray",pch=21)
 #### W
 mu.test <- mu0.x(x) + mu0.w(w)
-tau.test <- tau0.x(x) + tau0.w(w,ate) + ate
+tau.test <- tau0.x(x,c) + tau0.w(w,ate) + ate
 plot(x,mu.test)
 plot(x,tau.test)
 plot(x,mu.test + z*tau.test,col=z+1,pch=19,ylab=expression(E[X](Y[z])),xlab="X",bty="n")
@@ -57,8 +62,8 @@ abline(v=c,lty=2)
 points(x[x>c],mu.test[x>c],col="lightgray",pch=21)
 points(x[x<c],(mu.test+tau.test)[x<c],col="lightgray",pch=21)
 #### All together now
-mu.test <- mu(x,w,kappa,delta_mu)
-tau.test <- tau(x,w,kappa,delta_tau,ate)
+tau.test <- tau(x,w,kappa,ate,c)
+mu.test <- mu(x,w,kappa,delta_mu,tau.test)
 plot(x,mu.test)
 plot(x,tau.test)
 plot(x,mu.test + z*tau.test,col=z+1,pch=19,ylab=expression(E[X](Y[z])),xlab="X",bty="n")
@@ -66,12 +71,12 @@ abline(v=c,lty=2)
 points(x[x>c],mu.test[x>c],col="lightgray",pch=21)
 points(x[x<c],(mu.test+tau.test)[x<c],col="lightgray",pch=21)
 #### Add error
-plot(x,mu.test + z*tau.test + rnorm(n),col=z+1,pch=19,ylab="Y",xlab="X",bty="n")
+plot(x,mu.test + z*tau.test + rnorm(n,0,delta_sig*sd(tau.test)),col=z+1,pch=19,ylab="Y",xlab="X",bty="n")
 abline(v=c,lty=2)
-### Creating and saving the data
-# ate <- c(0.2,0.5)
-# delta_mu <- c(0.5,1.25)
-# delta_tau <- c(0.1,0.3)
+## Creating and saving the data
+ate <- c(0.2,0.5)
+delta_mu <- c(0.5,1.25)
+delta_tau <- c(0.1,0.3)
 ate <- 0.1
 delta_mu <- 0.5
 delta_tau <- 0.1
@@ -92,8 +97,9 @@ for (m in 1:length(ate))
         x <- matrix(2*rbeta(n*s,2,4)-0.75,n,s)
         z <- apply(x,2,function(i) as.numeric(i>=c))
         w <- matrix(rbinom(n*s,classes,p),n,s)
-        y <- mu(x,w,kappa[k],delta_mu[i]) + tau(x,w,kappa[k],delta_tau[j],ate[m])*z
-        y <- y + matrix(rnorm(n*s,0,1),n,s)
+        t <- tau(x,w,kappa[k],ate[m],c)
+        y <- mu(x,w,kappa[k],delta_mu[i],t) + t*z
+        y <- y + matrix(rnorm(n*s,0,delta_sig*sd(t)),n,s)
         ## Save data
         out[[ind]] <- list(y=y,x=x,z=z,w=w,c=c,tau.x=tau(0,w,kappa[k],delta_tau[j],ate[m]),tau=ate[m],delta_mu=delta_mu[i],delta_tau=delta_tau[j],kappa=kappa[k])
         saveRDS(out[[ind]],paste0("Data/dgp_",ind,".rds"))
