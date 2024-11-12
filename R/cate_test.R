@@ -1,18 +1,12 @@
 set.seed(7)
-if (substr(sessioninfo::os_name(),1,3) == "Win")
-{
-  setwd("~/../Git/BART-RDD/")
-} else
-{
-  setwd("~/Git/BART-RDD/")
-}
+setwd("../")
 library(XBART)
 ### Setup--------------------------------------------------
 par(bty="L")
 n <- 500
 c <- 0
 Owidth        <- 0.2
-Omin          <- 1
+Omin          <- 5
 Opct          <- 0.9
 ntrees        <- 10
 Nmin          <- 5
@@ -22,29 +16,30 @@ p_categorical <- 1
 ###
 mu0.x <- function(x) 3*x^5 - 2.5*x^4 - 1.5*x^3 + 2*x^2 + 3*x + 2
 mu0.w <- function(w) w*sd(mu0.x(x))/sd(w)
-tau0.x <- function(x,c) 0.1*(-exp(x)+exp(c))/(1+exp(2*x))
-tau0.w <- function(w,tau.bar) {
+tau0.x <- function(x,c) (-exp(x)+exp(c))*0.1/(1+exp(2*x))
+tau0.w <- function(w,tau.bar,classes) {
   het <- w < mean(w)
   # het <- w
   het <- het-mean(het)
-  k <- tau.bar/max(abs(het))
+  k <- 2*tau.bar/classes
   return(k*het)
 }
 mu <- function(x,w,kappa,delta,tau) (mu0.x(x) + kappa*mu0.w(w))/sd(mu0.x(x) + kappa*mu0.w(w))*delta*sd(tau)
-tau <- function(x,w,kappa,tau.bar,c) tau.bar + tau0.x(x,c) + kappa*tau0.w(w,tau.bar)
+tau <- function(x,w,kappa,tau.bar,c,classes) tau.bar + tau0.x(x,c) + kappa*tau0.w(w,tau.bar,classes)
 ### 1)-----------------------------------------------------
 #### Parameters
-ate <- 0.1
-delta_mu <- 5
-delta_sig <- 5
+ate <- 1
+delta_mu <- 1
+delta_sig <- 1
 kappa <- 1
-classes <- 3
-p <- 0.4
+classes <- 10
+p <- function(x) 1/(1+exp(-x))
+p <- function(x) 0.4
 #### Data
 x <- 2*rbeta(n,2,4)-0.75
 z <- as.numeric(x>=c)
-w <- rbinom(n,classes,p) + 1
-t <- tau(x,w,kappa,ate,c)
+w <- rbinom(n,classes,p(x)) + 1
+t <- tau(x,w,kappa,ate,c,classes)
 y <- mu(x,w,kappa,delta_mu,t) + t*z
 Ey <- y
 y <- y + rnorm(n,0,delta_sig*sd(t))
@@ -54,7 +49,7 @@ plot(x,t)
 plot(x,y)
 min(t)
 ## Fit models
-cate <- tau(c,w,kappa,ate,c)
+cate <- tau(c,w,kappa,ate,c,classes)
 test <- -Owidth+c <= x & x <= c+Owidth
 cate.test <- cate[test]
 mean(cate)
@@ -123,9 +118,12 @@ matplot(cbind(sort(cate.test),rowMeans(pred.tbart)[order(cate.test)]),
 legend("topleft",bty="n",col=c("black","blue"),pch=19,
        legend=c(bquote(tau(X==c,W)),"T-BART fit"),cex=1)
 # dev.off()
-summary((rowMeans(pred.bart.rdd)-cate.test)^2)
-summary((rowMeans(pred.sbart)-cate.test)^2)
-summary((rowMeans(pred.tbart)-cate.test)^2)
+mean((rowMeans(pred.bart.rdd)-cate.test)^2)
+mean((rowMeans(pred.sbart)-cate.test)^2)
+mean((rowMeans(pred.tbart)-cate.test)^2)
+# plot(cate.test,rowMeans(pred.bart.rdd))
+# plot(cate.test,rowMeans(pred.sbart))
+# plot(cate.test,rowMeans(pred.tbart))
 ### 2)-----------------------------------------------------
 #### Parameters
 # ate <- 0.5

@@ -21,20 +21,25 @@ n <- 500
 c <- 0
 mu0.x <- function(x) 3*x^5 - 2.5*x^4 - 1.5*x^3 + 2*x^2 + 3*x + 2
 mu0.w <- function(w) w*sd(mu0.x(x))/sd(w)
-tau0.x <- function(x,c) 0.1*(-exp(x)+exp(c))/(1+exp(2*x))
-tau0.w <- function(w,tau.bar) {
-  het <- w < mean(w)
+tau0.x <- function(x,c) (-exp(x)+exp(c))*0.1/(1+exp(2*x))
+tau0.w <- function(w,tau.bar,classes) {
+  het <- w %% 2 == 0
   # het <- w
   het <- het-mean(het)
-  k <- tau.bar/max(abs(het))
+  # k <- 2*tau.bar/classes
+  k <- 0.7*tau.bar/abs(min(het))
   return(k*het)
+  # het <- cut(w,quantile(w,probs=seq(0,1,length.out=classes+1)),include.lowest=T)
+  # het <- as.numeric(het)
+  # het <- het-mean(het)
+  # return(het/classes)
 }
 mu <- function(x,w,kappa,delta,tau) (mu0.x(x) + kappa*mu0.w(w))/sd(mu0.x(x) + kappa*mu0.w(w))*delta*sd(tau)
-tau <- function(x,w,kappa,tau.bar,c) tau.bar + tau0.x(x,c) + kappa*tau0.w(w,tau.bar)
+tau <- function(x,w,kappa,tau.bar,c,classes) tau.bar + tau0.x(x,c) + kappa*tau0.w(w,tau.bar,classes)
 #### Parameters
-ate <- 0.5
+ate <- 1
 delta_mu <- 2
-delta_sig <- 5
+delta_sig <- 1
 kappa <- 1
 classes <- 5
 p <- 0.4
@@ -43,6 +48,7 @@ x <- 2*rbeta(n,2,4)-0.75
 z <- as.numeric(x>=c)
 test <- -0.07 <= x & x <= 0.07
 w <- rbinom(n,classes,p) + 1
+# w <- rnorm(n)
 #### X
 mu.test <- mu0.x(x)
 tau.test <- tau0.x(x,c) + ate
@@ -54,7 +60,7 @@ points(x[x>c],mu.test[x>c],col="lightgray",pch=21)
 points(x[x<c],(mu.test+tau.test)[x<c],col="lightgray",pch=21)
 #### W
 mu.test <- mu0.x(x) + mu0.w(w)
-tau.test <- tau0.x(x,c) + tau0.w(w,ate) + ate
+tau.test <- tau0.x(x,c) + tau0.w(w,ate,classes) + ate
 plot(x,mu.test)
 plot(x,tau.test)
 plot(x,mu.test + z*tau.test,col=z+1,pch=19,ylab=expression(E[X](Y[z])),xlab="X",bty="n")
@@ -62,7 +68,7 @@ abline(v=c,lty=2)
 points(x[x>c],mu.test[x>c],col="lightgray",pch=21)
 points(x[x<c],(mu.test+tau.test)[x<c],col="lightgray",pch=21)
 #### All together now
-tau.test <- tau(x,w,kappa,ate,c)
+tau.test <- tau(x,w,kappa,ate,c,classes)
 mu.test <- mu(x,w,kappa,delta_mu,tau.test)
 plot(x,mu.test)
 plot(x,tau.test)
@@ -74,16 +80,18 @@ points(x[x<c],(mu.test+tau.test)[x<c],col="lightgray",pch=21)
 plot(x,mu.test + z*tau.test + rnorm(n,0,delta_sig*sd(tau.test)),col=z+1,pch=19,ylab="Y",xlab="X",bty="n")
 abline(v=c,lty=2)
 ## Creating and saving the data
-ate <- c(0.2,0.5)
-delta_mu <- c(0.5,1.25)
-delta_tau <- c(0.1,0.3)
-ate <- 0.1
-delta_mu <- 0.5
-delta_tau <- 0.1
+# ate <- seq(0.1,1,length.out=10)
+# delta_mu <- c(0.5,1.25)
+# delta_tau <- c(0.1,0.3)
+ate <- 0.3
+delta_mu <- 2
+delta_tau <- 1
+delta_sig <- 2
 kappa <- 1
 ind <- 0
-out <- vector("list",length(ate)*length(delta_mu)*length(delta_tau)*length(kappa))
-for (m in 1:length(ate))
+classes <- c(5,10,20)
+out <- vector("list",length(classes)*length(delta_mu)*length(delta_tau)*length(kappa))
+for (m in 1:length(classes))
 {
   for (i in 1:length(delta_mu))
   {
@@ -96,12 +104,15 @@ for (m in 1:length(ate))
         ## Generate data
         x <- matrix(2*rbeta(n*s,2,4)-0.75,n,s)
         z <- apply(x,2,function(i) as.numeric(i>=c))
-        w <- matrix(rbinom(n*s,classes,p),n,s)
-        t <- tau(x,w,kappa[k],ate[m],c)
+        # w <- matrix(rbinom(n*s,classes,p),n,s)
+        # w <- matrix(rnorm(n*s),n,s)
+        w <- matrix(as.integer(runif(n*s,1,classes+1)),n,s)
+        t <- tau(x,w,kappa[k],ate,c,classes[m])
         y <- mu(x,w,kappa[k],delta_mu[i],t) + t*z
         y <- y + matrix(rnorm(n*s,0,delta_sig*sd(t)),n,s)
         ## Save data
-        out[[ind]] <- list(y=y,x=x,z=z,w=w,c=c,tau.x=tau(0,w,kappa[k],delta_tau[j],ate[m]),tau=ate[m],delta_mu=delta_mu[i],delta_tau=delta_tau[j],kappa=kappa[k])
+        # out[[ind]] <- list(y=y,x=x,z=z,w=w,c=c,tau.x=apply(w,2,function(i) tau(0,i,kappa[k],ate,c,classes[m])),tau=ate,delta_mu=delta_mu[i],delta_tau=delta_tau[j],kappa=kappa[k])
+        out[[ind]] <- list(y=y,x=x,z=z,w=w,c=c,tau.x=tau(0,w,kappa[k],ate,c,classes[m]),tau=ate,delta_mu=delta_mu[i],delta_tau=delta_tau[j],kappa=kappa[k])
         saveRDS(out[[ind]],paste0("Data/dgp_",ind,".rds"))
       }
     }

@@ -290,4 +290,11 @@ colnames(cov.cate) <- names[1:3]
 ci.cate <- cbind(bart.rdd.cate.ci,sbart.cate.ci,tbart.cate.ci)
 colnames(ci.cate) <- names[1:3]
 ###
+boxplot(rowMeans(bart$results[[1]])~cate[[1]])
+boxplot(rowMeans(sbart$results[[1]])~cate[[1]])
+boxplot(rowMeans(tbart$results[[1]])~cate[[1]])
+matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(bart$results[[1]])),pch=19)
+matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(sbart$results[[1]])),pch=19)
+matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(tbart$results[[1]])),pch=19)
+###
 save.image("Results/sims.RData")
