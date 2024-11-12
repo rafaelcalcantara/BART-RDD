@@ -23,7 +23,7 @@ mu0.x <- function(x) 3*x^5 - 2.5*x^4 - 1.5*x^3 + 2*x^2 + 3*x + 2
 mu0.w <- function(w) w*sd(mu0.x(x))/sd(w)
 tau0.x <- function(x,c) (-exp(x)+exp(c))*0.1/(1+exp(2*x))
 tau0.w <- function(w,tau.bar,classes) {
-  het <- w %% 2 == 0
+  het <- as.integer(w) %% 2 == 0
   # het <- w
   het <- het-mean(het)
   # k <- 2*tau.bar/classes
@@ -89,7 +89,7 @@ delta_tau <- 1
 delta_sig <- 2
 kappa <- 1
 ind <- 0
-classes <- c(5,10,20)
+classes <- 5
 out <- vector("list",length(classes)*length(delta_mu)*length(delta_tau)*length(kappa))
 for (m in 1:length(classes))
 {
@@ -105,14 +105,15 @@ for (m in 1:length(classes))
         x <- matrix(2*rbeta(n*s,2,4)-0.75,n,s)
         z <- apply(x,2,function(i) as.numeric(i>=c))
         # w <- matrix(rbinom(n*s,classes,p),n,s)
-        # w <- matrix(rnorm(n*s),n,s)
+        # w <- matrix(rnorm(n*s,2,1),n,s)
+        # w <- matrix(runif(n*s,0,11),n,s)
         w <- matrix(as.integer(runif(n*s,1,classes+1)),n,s)
         t <- tau(x,w,kappa[k],ate,c,classes[m])
         y <- mu(x,w,kappa[k],delta_mu[i],t) + t*z
         y <- y + matrix(rnorm(n*s,0,delta_sig*sd(t)),n,s)
         ## Save data
-        # out[[ind]] <- list(y=y,x=x,z=z,w=w,c=c,tau.x=apply(w,2,function(i) tau(0,i,kappa[k],ate,c,classes[m])),tau=ate,delta_mu=delta_mu[i],delta_tau=delta_tau[j],kappa=kappa[k])
-        out[[ind]] <- list(y=y,x=x,z=z,w=w,c=c,tau.x=tau(0,w,kappa[k],ate,c,classes[m]),tau=ate,delta_mu=delta_mu[i],delta_tau=delta_tau[j],kappa=kappa[k])
+        out[[ind]] <- list(y=y,x=x,z=z,w=w,c=c,tau.x=apply(w,2,function(i) tau(0,i,kappa[k],ate,c,classes[m])),tau=ate,delta_mu=delta_mu[i],delta_tau=delta_tau[j],kappa=kappa[k])
+        # out[[ind]] <- list(y=y,x=x,z=z,w=w,c=c,tau.x=tau(0,w,kappa[k],ate,c,classes[m]),tau=ate,delta_mu=delta_mu[i],delta_tau=delta_tau[j],kappa=kappa[k])
         saveRDS(out[[ind]],paste0("Data/dgp_",ind,".rds"))
       }
     }
