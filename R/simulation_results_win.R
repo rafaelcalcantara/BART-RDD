@@ -224,6 +224,16 @@ for (i in 1:files)
   # ci.cgs1[i] <- mean(cgs.res[,3]-cgs.res[,2])
   # cov.cgs1[i] <- mean(cgs.res[,3]-ate>0 & cgs.res[,2]-ate<0)
   # zero.cgs1[i] <- mean(cgs.res[,3]>0 & cgs.res[,2]<0)
+  matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(bart$results[[1]])),pch=19,ylab = "BART-RDD",xlab="W")
+  matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(sbart$results[[1]])),pch=19,ylab="SBART",xlab="W")
+  matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(tbart$results[[1]])),pch=19,ylab="TBART",xlab="W")
+  boxplot(rowMeans(bart$results[[1]])~cate[[1]], ylab="BART-RDD")
+  boxplot(rowMeans(sbart$results[[1]])~cate[[1]],ylab="SBART")
+  boxplot(rowMeans(tbart$results[[1]])~cate[[1]],ylab="TBART")
+  a <- sapply(1:length(cate), function(i) cor(cate[[i]],rowMeans(bart$results[[i]])))
+  b <- sapply(1:length(cate), function(i) cor(cate[[i]],rowMeans(sbart$results[[i]])))
+  c <- sapply(1:length(cate), function(i) cor(cate[[i]],rowMeans(tbart$results[[i]])))
+  boxplot(cbind(a,b,c))
 }
 ##
 # names <- c("BART-RDD","BCF","S-BART","T-BART","CGS","LLR")
@@ -289,12 +299,5 @@ colnames(cov.cate) <- names[1:3]
 # colnames(ci.cate) <- names[1:4]
 ci.cate <- cbind(bart.rdd.cate.ci,sbart.cate.ci,tbart.cate.ci)
 colnames(ci.cate) <- names[1:3]
-###
-boxplot(rowMeans(bart$results[[1]])~cate[[1]])
-boxplot(rowMeans(sbart$results[[1]])~cate[[1]])
-boxplot(rowMeans(tbart$results[[1]])~cate[[1]])
-matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(bart$results[[1]])),pch=19)
-matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(sbart$results[[1]])),pch=19)
-matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(tbart$results[[1]])),pch=19)
 ###
 save.image("Results/sims.RData")

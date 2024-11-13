@@ -10,7 +10,7 @@ if (length(list.files("Results")[grep("bart_rdd_",list.files("Results"))])!=0) #
   for (i in files) file.remove(i)
 }
 ### Parameters
-Omin          <- 1
+Omin          <- 5
 Opct          <- 0.9
 ntrees        <- 5
 Nmin          <- 5

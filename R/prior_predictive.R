@@ -1,5 +1,5 @@
 set.seed(7)
-setwd("~/..")
+setwd("../")
 library(doParallel)
 library(XBART)
 library(lattice)
@@ -37,10 +37,10 @@ mu.prior <- function(x,w,omega) w + 1/(1+exp(-5*x)) + (1-abs(x-c))*sin(omega*x)/
 tau.prior <- function(x,tau.bar) tau.bar - log(x+1)/50
 omega <- 0
 ate <- 0.4
-N <- 500
+N <- 1000
 c <- 0
 s <- 20 ## no of samples of th synthetic DGP
-Omin <- c(1,5,10)
+Omin <- c(5,10,20)
 Opct <- seq(0.6,0.9,length=3)
 h <- seq(0.05,0.2,length=4)
 classes <- 5
