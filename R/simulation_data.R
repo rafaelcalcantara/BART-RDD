@@ -96,8 +96,8 @@ delta_tau <- 0.5
 delta_sig <- 1
 kappa <- 1
 ind <- 0
-classes <- 100
-levels <- 1:4
+classes <- c(4,8,12,16)
+levels <- 1:2
 out <- vector("list",length(classes)*length(delta_mu)*length(delta_tau)*length(kappa))
 for (m in 1:length(levels))
 {
@@ -105,7 +105,7 @@ for (m in 1:length(levels))
   {
     for (j in 1:length(delta_tau))
     {
-      for (k in 1:length(kappa))
+      for (k in 1:length(classes))
       {
         ind <- ind+1
         print(paste0("DGP ",ind))
@@ -114,13 +114,13 @@ for (m in 1:length(levels))
         z <- apply(x,2,function(i) as.numeric(i>=c))
         # w <- matrix(rbinom(n*s,classes,p),n,s)
         # w <- matrix(rnorm(n*s,2,1),n,s)
-        w <- matrix(runif(n*s,0,classes+1),n,s)
+        w <- matrix(runif(n*s,0,classes[k]+1),n,s)
         # w <- matrix(as.integer(runif(n*s,1,classes+1)),n,s)
-        t <- tau(x,w,kappa[k],ate,c,classes,levels[m])
-        y <- mu(x,w,kappa[k],delta_mu[i],t) + t*z
+        t <- tau(x,w,kappa,ate,c,classes[k],levels[m])
+        y <- mu(x,w,kappa,delta_mu[i],t) + t*z
         y <- y + matrix(rnorm(n*s,0,delta_sig*sd(t)),n,s)
         ## Save data
-        out[[ind]] <- list(y=y,x=x,z=z,w=w,c=c,tau.x=apply(w,2,function(i) tau(0,i,kappa[k],ate,c,classes,levels[m])),tau=ate,delta_mu=delta_mu[i],delta_tau=delta_tau[j],kappa=kappa[k])
+        out[[ind]] <- list(y=y,x=x,z=z,w=w,c=c,tau.x=apply(w,2,function(i) tau(0,i,kappa,ate,c,classes[k],levels[m])),tau=ate,delta_mu=delta_mu[i],delta_tau=delta_tau[j],kappa=kappa)
         # out[[ind]] <- list(y=y,x=x,z=z,w=w,c=c,tau.x=tau(0,w,kappa[k],ate,c,classes[m]),tau=ate,delta_mu=delta_mu[i],delta_tau=delta_tau[j],kappa=kappa[k])
         saveRDS(out[[ind]],paste0("Data/dgp_",ind,".rds"))
       }
