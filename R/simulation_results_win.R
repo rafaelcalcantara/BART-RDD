@@ -300,4 +300,13 @@ colnames(cov.cate) <- names[1:3]
 ci.cate <- cbind(bart.rdd.cate.ci,sbart.cate.ci,tbart.cate.ci)
 colnames(ci.cate) <- names[1:3]
 ###
+pdf("Figures/sim_results.pdf")
+par(mfrow=c(2,2))
+matplot(rmse.cate,bty="l",cex.axis=0.9,cex.lab=0.9,ylab="RMSE",lty=2,pch=19,type="b",xlab="DGP")
+legend("topleft",col=1:3,lty=2,pch=19,legend=colnames(rmse.cate),cex=0.7,ncol=2,bty="n",x.intersp = 0.5)
+matplot(cov.cate/ci.cate,bty="l",cex.axis=0.9,cex.lab=0.9,ylab="Coverage/Int. Length",lty=2,pch=19,type="b",xlab="DGP")
+matplot(cov.cate,bty="l",cex.axis=0.9,cex.lab=0.9,ylab="Coverage",lty=2,pch=19,type="b",xlab="DGP")
+matplot(ci.cate,bty="l",cex.axis=0.9,cex.lab=0.9,ylab="Interval length",lty=2,pch=19,type="b",xlab="DGP")
+dev.off()
+###
 save.image("Results/sims.RData")

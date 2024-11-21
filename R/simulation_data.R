@@ -127,6 +127,17 @@ for (m in 1:length(levels))
     }
   }
 }
+pdf("../Figures/sim_dgps.pdf")
+par(mfrow=c(2,2))
+plot(out[[1]]$w[,1],out[[1]]$tau.x[,1],ylab=expression(tau(x==c,w)),xlab="W",
+     bty="l",cex.axis=1,cex.lab=1,main="Simple mapping",cex.main=1)
+plot(out[[4]]$w[,1],out[[4]]$tau.x[,1],ylab=expression(tau(x==c,w)),xlab="W",
+     bty="l",cex.axis=1,cex.lab=1)
+plot(out[[5]]$w[,1],out[[5]]$tau.x[,1],ylab=expression(tau(x==c,w)),xlab="W",
+     bty="l",cex.axis=1,cex.lab=1,main="Complex mapping",cex.main=1)
+plot(out[[8]]$w[,1],out[[8]]$tau.x[,1],ylab=expression(tau(x==c,w)),xlab="W",
+     bty="l",cex.axis=1,cex.lab=1)
+dev.off()
 ## lapply(out, function(i) apply(i$tau.x,2,table))
 # ### Creating test samples
 # n <- 1000
