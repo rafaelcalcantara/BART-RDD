@@ -11,7 +11,7 @@ if (length(list.files("Results")[grep("bart_rdd_",list.files("Results"))])!=0) #
 }
 ### Parameters
 Omin          <- 5
-Opct          <- 0.9
+Opct          <- 0.6
 ntrees        <- 5
 Nmin          <- 5
 num_sweeps    <- 120
@@ -22,6 +22,7 @@ fit <- function(i)
   print(paste0("Sample: ",i))
   ys <- data$y[,i]
   ifelse(is.list(data$w),ws <- data$w[[i]],ws <- subset(data$w,select=i))
+  # ws[,1] <- as.integer(ws[,1])
   xs <- data$x[,i]
   fit <- XBART::XBCF.rd(ys, ws, xs, c,
                         Owidth = Owidth, Omin = Omin, Opct = Opct,

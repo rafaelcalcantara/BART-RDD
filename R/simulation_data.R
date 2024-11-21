@@ -16,7 +16,7 @@ if (length(list.files("Data"))!=0) ## Clean up folder
   for (i in files) file.remove(i)
 }
 ### Common DGP features
-s <- 1000
+s <- 250
 n <- 500
 c <- 0
 mu0.x <- function(x) 3*x^5 - 2.5*x^4 - 1.5*x^3 + 2*x^2 + 3*x + 2
@@ -114,8 +114,8 @@ for (m in 1:length(levels))
         z <- apply(x,2,function(i) as.numeric(i>=c))
         # w <- matrix(rbinom(n*s,classes,p),n,s)
         # w <- matrix(rnorm(n*s,2,1),n,s)
-        w <- matrix(runif(n*s,1,classes[k]+1),n,s)
-        # w <- matrix(as.integer(runif(n*s,1,classes[k]+1)),n,s)
+        # w <- matrix(runif(n*s,1,classes[k]),n,s)
+        w <- matrix(as.integer(runif(n*s,1,classes[k])),n,s)
         t <- tau(x,w,kappa,ate,c,classes[k],levels[m])
         y <- mu(x,w,kappa,delta_mu[i],t) + t*z
         y <- y + matrix(rnorm(n*s,0,delta_sig*sd(t)),n,s)
@@ -127,7 +127,7 @@ for (m in 1:length(levels))
     }
   }
 }
-pdf("../Figures/sim_dgps.pdf")
+pdf("Figures/sim_dgps.pdf")
 par(mfrow=c(2,2))
 plot(out[[1]]$w[,1],out[[1]]$tau.x[,1],ylab=expression(tau(x==c,w)),xlab="W",
      bty="l",cex.axis=1,cex.lab=1,main="Simple mapping",cex.main=1)
