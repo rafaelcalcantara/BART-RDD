@@ -101,6 +101,8 @@ tbart.cate.ci <- rep(0,files)
 # cov.cgs1 <- rep(0,files)
 # zero.cgs1 <- rep(0,files)
 ##
+linear.cate <- rep(0,files)
+##
 for (i in 1:files)
 {
   print(paste0("DGP: ",i))
@@ -116,6 +118,7 @@ for (i in 1:files)
   # bcf <- readRDS(paste0("Results/bcf_",i,".rds"))
   sbart <- readRDS(paste0("Results/sbart_",i,".rds"))
   tbart <- readRDS(paste0("Results/tbart_",i,".rds"))
+  linear <- readRDS(paste0("Results/linear_",i,".rds"))
   # llr0 <- readRDS(paste0("Results/llr0_",i,".rds"))
   # llr1 <- readRDS(paste0("Results/llr1_",i,".rds"))
   ## llr2 <- readRDS(paste0("Results/llr2_",i,".rds"))
@@ -186,6 +189,8 @@ for (i in 1:files)
   tbart.cate.cov[i] <- mean(sapply(1:ncol(data$x), function(i) mean(tbart.cate.int[[i]][,1]<cate[[i]] & cate[[i]]<tbart.cate.int[[i]][,2])))
   tbart.cate.ci[i] <- mean(sapply(1:ncol(data$x), function(i) mean(-tbart.cate.int[[i]][,1] + tbart.cate.int[[i]][,2])))
   ##
+  linear.cate[i] <- mean(mapply(function(i,j) sqrt(mean((i-j)^2)),linear$results,cate))
+  ##
   # rmse.llr0[i,] <- sqrt(rowMeans((sapply(llr0$results,function(i) i$coef)-ate)^2))
   # sb.llr0[i,] <- rowMeans(sapply(llr0$results,function(i) i$coef)-ate)^2
   # v.llr0[i,] <- apply(sapply(llr0$results,function(i) i$coef),1,var)
@@ -227,6 +232,7 @@ for (i in 1:files)
   matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(bart$results[[1]])),pch=19,ylab = "BART-RDD",xlab="W")
   matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(sbart$results[[1]])),pch=19,ylab="SBART",xlab="W")
   matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(tbart$results[[1]])),pch=19,ylab="TBART",xlab="W")
+  matplot(data$w[test[,1],1],cbind(cate[[1]],linear$results[[1]]),pch=19,ylab="Linear",xlab="W")
   boxplot(rowMeans(bart$results[[1]])~cate[[1]], ylab="BART-RDD")
   boxplot(rowMeans(sbart$results[[1]])~cate[[1]],ylab="SBART")
   boxplot(rowMeans(tbart$results[[1]])~cate[[1]],ylab="TBART")
@@ -238,40 +244,40 @@ for (i in 1:files)
 ##
 # names <- c("BART-RDD","BCF","S-BART","T-BART","CGS","LLR")
 # names <- c("BART-RDD","S-BART","T-BART","CGS","LLR")
-names <- c("BART-RDD","S-BART","T-BART")
+names <- c("BART-RDD","S-BART","T-BART","Linear")
 ###
 # rmse <- cbind(rmse.bart,rmse.bcf,rmse.sbart,rmse.tbart,rmse.cgs1,rmse.llr1[,1])
 # rmse <- cbind(rmse.bart,rmse.sbart,rmse.tbart,rmse.cgs1,rmse.llr1[,1])
 rmse <- cbind(rmse.bart,rmse.sbart,rmse.tbart)
-colnames(rmse) <- names
+colnames(rmse) <- names[1:3]
 table(apply(rmse,1,function(i) which(i==min(i))))
 ###
 # sb <- cbind(sb.bart,sb.bcf,sb.sbart,sb.tbart,sb.cgs1,sb.llr1[,1])
 # sb <- cbind(sb.bart,sb.sbart,sb.tbart,sb.cgs1,sb.llr1[,1])
 sb <- cbind(sb.bart,sb.sbart,sb.tbart)
-colnames(sb) <- names
+colnames(sb) <- names[1:3]
 table(apply(sb,1,function(i) which(i==min(i))))
 ###
 # v <- cbind(v.bart,v.bcf,v.sbart,v.tbart,v.cgs1,v.llr1[,1])
 # v <- cbind(v.bart,v.sbart,v.tbart,v.cgs1,v.llr1[,1])
 v <- cbind(v.bart,v.sbart,v.tbart)
-colnames(v) <- names
+colnames(v) <- names[1:3]
 table(apply(v,1,function(i) which(i==min(i))))
 ###
 # ci <- cbind(ci.bart,ci.bcf,ci.sbart,ci.tbart,ci.cgs1,ci.llr1[,1])
 # ci <- cbind(ci.bart,ci.sbart,ci.tbart,ci.cgs1,ci.llr1[,1])
 ci <- cbind(ci.bart,ci.sbart,ci.tbart)
-colnames(ci) <- names
+colnames(ci) <- names[1:3]
 table(apply(ci,1,function(i) which(i==min(i))))
 ###
 # cov <- cbind(cov.bart,cov.bcf,cov.sbart,cov.tbart,cov.cgs1,cov.llr1[,1])
 # cov <- cbind(cov.bart,cov.sbart,cov.tbart,cov.cgs1,cov.llr1[,1])
 cov <- cbind(cov.bart,cov.sbart,cov.tbart)
-colnames(cov) <- names
+colnames(cov) <- names[1:3]
 # zero <- cbind(zero.bart,zero.bcf,zero.sbart,zero.tbart,zero.cgs1,zero.llr1[,1])
 # zero <- cbind(zero.bart,zero.sbart,zero.tbart,zero.cgs1,zero.llr1[,1])
 zero <- cbind(zero.bart,zero.sbart,zero.tbart)
-colnames(zero) <- names
+colnames(zero) <- names[1:3]
 ###
 bart.rdd.int <- sapply(lapply(bart.rdd.ate,function(i) apply(i,2,function(j) c(0.05-quantile(j,0.025),quantile(j,0.975)-0.05))),function(i) quantile(apply(i,2,function(j) ifelse(min(j)>0,0,abs(min(j)))),0.95))
 # bcf.int <- sapply(lapply(bcf.ate,function(i) apply(i,2,function(j) c(0.05-quantile(j,0.025),quantile(j,0.975)-0.05))),function(i) quantile(apply(i,2,function(j) ifelse(min(j)>0,0,abs(min(j)))),0.95))
@@ -282,12 +288,12 @@ tbart.int <- sapply(lapply(tbart.ate,function(i) apply(i,2,function(j) c(0.05-qu
 # int <- cbind(bart.rdd.int,bcf.int,sbart.int,tbart.int,cgs.int,llr.int)
 # int <- cbind(bart.rdd.int,sbart.int,tbart.int,cgs.int,llr.int)
 int <- cbind(bart.rdd.int,sbart.int,tbart.int)
-colnames(int) <- names
+colnames(int) <- names[1:3]
 ###
 # rmse.cate <- cbind(bart.rdd.cate,bcf.cate,sbart.cate,tbart.cate)
 # colnames(rmse.cate) <- names[1:4]
-rmse.cate <- cbind(bart.rdd.cate,sbart.cate,tbart.cate)
-colnames(rmse.cate) <- names[1:3]
+rmse.cate <- cbind(bart.rdd.cate,sbart.cate,tbart.cate,linear.cate)
+colnames(rmse.cate) <- names[1:4]
 table(apply(rmse.cate,1,function(i) which(i==min(i))))
 ###
 # cov.cate <- cbind(bart.rdd.cate.cov,bcf.cate.cov,sbart.cate.cov,tbart.cate.cov)
