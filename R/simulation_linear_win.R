@@ -1,10 +1,10 @@
 ## Setup
 set.seed(0)
-setwd("../")
+# setwd("../")
 if (!dir.exists("Results")) dir.create("Results") ## Create results folder
-if (length(list.files("Results")[grep("llr1_",list.files("Results"))])!=0) ## Clean up folder
+if (length(list.files("Results")[grep("linear_",list.files("Results"))])!=0) ## Clean up folder
 {
-  files <- paste0("Results/",list.files("Results")[grep("llr1_",list.files("Results"))])
+  files <- paste0("Results/",list.files("Results")[grep("linear_",list.files("Results"))])
   for (i in files) file.remove(i)
 }
 ### Functions
@@ -12,7 +12,16 @@ fit <- function(i)
 {
   print(paste0("Sample: ",i))
   ifelse(is.list(data$w),ws <- data$w[[i]],ws <- subset(data$w,select=i))
-  rdrobust::rdrobust(data$y[,i],data$x[,i],c=c,covs=ws)
+  y <- data$y[,i]
+  x <- data$x[,i]
+  # bw <- rdrobust::rdbwselect(y,x,c=c,covs=ws)$bws[4]
+  reg <- subset(data.frame(y=y,x=x,w=as.factor(as.integer(ws)),z=data$z[,i]),x>=-Owidth & x<=Owidth)
+  model <- lm(y~(x+w)*z,data=reg)
+  test.sample <- x>=-Owidth & x<=Owidth
+  test1 <- data.frame(x=0,w=as.factor(as.integer(ws)),z=1)[test.sample,]
+  test0 <- data.frame(x=0,w=as.factor(as.integer(ws)),z=0)[test.sample,]
+  tau <- predict(model,newdata=test1)-predict(model,newdata=test0)
+  return(tau)
 }
 ##
 ### BEGIN LOOP
@@ -35,7 +44,7 @@ for (i in 1:files)
   })
   stopCluster(cl)
   print(time)
-  saveRDS(list(results=out,time=time),paste0("Results/llr1_",i,".rds"))
+  saveRDS(list(results=out,time=time),paste0("Results/linear_",i,".rds"))
   rm(out)
   gc()
 }
