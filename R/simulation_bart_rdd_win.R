@@ -11,30 +11,32 @@ if (length(list.files("Results")[grep("bart_rdd_",list.files("Results"))])!=0) #
 }
 ### Parameters
 Omin          <- 5
-Opct          <- 0.6
-ntrees        <- 5
+Opct          <- 0.99
+ntrees_con    <- 10
+ntrees_mod    <- 2
 Nmin          <- 5
-num_sweeps    <- 120
-burnin        <- 20
+num_sweeps    <- 250
+burnin        <- 50
 ### Functions
 fit <- function(i)
 {
   print(paste0("Sample: ",i))
   ys <- data$y[,i]
   ifelse(is.list(data$w),ws <- data$w[[i]],ws <- subset(data$w,select=i))
+  # ws <- as.matrix(data$ws[,i])
   # ws[,1] <- as.integer(ws[,1])
   xs <- data$x[,i]
   fit <- XBART::XBCF.rd(ys, ws, xs, c,
                         Owidth = Owidth, Omin = Omin, Opct = Opct,
-                        num_trees_mod = ntrees,
-                        num_trees_con = ntrees,
+                        num_trees_mod = ntrees_mod,
+                        num_trees_con = ntrees_con,
                         num_cutpoints = n,
                         num_sweeps = num_sweeps,
                         burnin = burnin, Nmin = Nmin,
                         p_categorical_con = p_categorical,
                         p_categorical_mod = p_categorical,
-                        tau_con = 2*var(ys)/ntrees,
-                        tau_mod = 0.5*var(ys)/ntrees)
+                        tau_con = 2*var(ys)/ntrees_con, max_depth = max_depth,
+                        tau_mod = 0.5*var(ys)/ntrees_mod)
   test <- -Owidth+c<=xs & xs<=Owidth+c
   pred <- XBART::predict.XBCFrd(fit,ws[test,],rep(c,sum(test)))
   pred$tau.adj[,(burnin+1):num_sweeps]

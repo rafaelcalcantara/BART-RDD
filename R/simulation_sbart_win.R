@@ -20,12 +20,13 @@ fit <- function(i)
   print(paste0("Sample: ",i))
   ys <- data$y[,i]
   ifelse(is.list(data$w),ws <- data$w[[i]],ws <- subset(data$w,select=i))
+  # ws <- as.matrix(data$ws[,i])
   xs <- data$x[,i]
   zs <- data$z[,i]
   fit <- XBART::XBART(ys, cbind(xs,ws,zs), num_trees = ntrees,
                       num_cutpoints = n, num_sweeps = num_sweeps,
                       burnin = burnin, Nmin = Nmin,
-                      p_categorical = p_categorical,
+                      p_categorical = p_categorical, max_depth = max_depth,
                       tau = var(ys)/ntrees, parallel=F)
   test <- -Owidth+c<=xs & xs<=Owidth+c
   test.sample.0 <- cbind(c,ws,0)[test,]

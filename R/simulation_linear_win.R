@@ -12,14 +12,16 @@ fit <- function(i)
 {
   print(paste0("Sample: ",i))
   ifelse(is.list(data$w),ws <- data$w[[i]],ws <- subset(data$w,select=i))
+  ws <- data$w[,i]
   y <- data$y[,i]
   x <- data$x[,i]
+  ws <- as.integer(cut(ws,quantile(ws,seq(0,1,length.out=classes)),include.lowest=T)) %% 2 == 0
   # bw <- rdrobust::rdbwselect(y,x,c=c,covs=ws)$bws[4]
-  reg <- subset(data.frame(y=y,x=x,w=as.factor(as.integer(ws)),z=data$z[,i]),x>=-Owidth & x<=Owidth)
+  reg <- subset(data.frame(y=y,x=x,w=as.factor(ws),z=data$z[,i]),x>=-Owidth & x<=Owidth)
   model <- lm(y~(x+w)*z,data=reg)
   test.sample <- x>=-Owidth & x<=Owidth
-  test1 <- data.frame(x=0,w=as.factor(as.integer(ws)),z=1)[test.sample,]
-  test0 <- data.frame(x=0,w=as.factor(as.integer(ws)),z=0)[test.sample,]
+  test1 <- data.frame(x=0,w=as.factor(ws),z=1)[test.sample,]
+  test0 <- data.frame(x=0,w=as.factor(ws),z=0)[test.sample,]
   tau <- predict(model,newdata=test1)-predict(model,newdata=test0)
   return(tau)
 }
@@ -33,6 +35,7 @@ for (i in 1:files)
   n <- nrow(data$y)
   s <- ncol(data$y)
   c <- data$c
+  classes <- data$classes
   # test <- readRDS(paste0("Data/test_dgp_",i,".rds"))
   # test.w <- test$w
   # test.sample <- cbind(c,test.w)
