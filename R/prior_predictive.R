@@ -42,7 +42,7 @@ c <- 0
 s <- 20 ## no of samples of th synthetic DGP
 Omin <- c(5,10,20)
 Opct <- seq(0.6,0.9,length=3)
-h <- seq(0.05,0.2,length=4)
+h <- seq(0.05,0.2,length=10)
 classes <- 5
 p <- 0.4
 #### Loop
@@ -145,7 +145,7 @@ rmse.plot <- reshape(rmse.plot,direction="wide",timevar = "Opct",idvar="h")
 plot.labels <- substring(colnames(rmse.plot)[-1],6)
 plot.labels <- sapply(strsplit(plot.labels,"\\."), function(i) paste(i[1],paste0(i[2:3],collapse="."),sep="; "))
 col <- rainbow(ncol(rmse.plot)-1)
-pdf("Figures/prior_predictive.pdf")
+# pdf("Figures/prior_predictive.pdf")
 par(mfrow=c(1,1),bty="L")
 matplot(x=rmse.plot[,1],rmse.plot[,-1],type="b",lty=2,col=rep(1:3,3),
         pch=c(15,15,15,16,16,16,17,17,17),
@@ -154,4 +154,4 @@ matplot(x=rmse.plot[,1],rmse.plot[,-1],type="b",lty=2,col=rep(1:3,3),
 legend("top",title=expression(N[Omin]),legend=Omin,bty="n",cex=0.65,ncol=3,lty=2,
        col=c(1,3,2),lwd=2)
 legend("topright",title=bquote(alpha),legend=Opct,bty="n",cex=0.65,pt.cex=0.85,ncol=3,pch=c(0:2))
-dev.off()
+# dev.off()

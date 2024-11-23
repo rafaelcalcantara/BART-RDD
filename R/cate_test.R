@@ -8,19 +8,19 @@ n <- 500
 c <- 0
 Owidth        <- 0.2
 Omin          <- 5
-Opct          <- 0.7
-ntrees_con    <- 10
-ntrees_mod    <- 2
+Opct          <- 0.1
+ntrees_con    <- 30
+ntrees_mod    <- 10
 ntrees        <- 5
 Nmin          <- 5
-max_depth     <- 50
+max_depth     <- 250
 num_sweeps    <- 150
 burnin        <- 50
 p_categorical <- 0
 ###
 mu0.x <- function(x) 3*x^5 - 2.5*x^4 - 1.5*x^3 + 2*x^2 + 3*x + 2
 mu0.w <- function(w) w*sd(mu0.x(x))/sd(w)
-tau0.x <- function(x,c) (-exp(x)+exp(c))*0.1/(1+exp(2*x))
+tau0.x <- function(x,c) (-exp(x)+exp(c))/(1+exp(2*x))
 tau0.w <- function(w,tau.bar,level) {
   w <- as.integer(w)
   if (level == 1) het <- w < mean(w)
@@ -66,11 +66,12 @@ y <- y + rnorm(n,0,delta_sig*sd(t))
 # plot(x,t)
 # plot(x,y)
 ## Fit models
-cate <- tau(c,w,kappa,ate,c,classes,level)
+cate <- tau(x,w,kappa,ate,c,classes,level)
 test <- -Owidth+c <= x & x <= c+Owidth
 cate.test <- cate[test]
 mean(cate)
 ### BART-RDD
+Opct <- 1
 fit <- XBART::XBCF.rd(y, w, x, c,
                       Owidth = Owidth, Omin = Omin, Opct = Opct,
                       num_trees_mod = ntrees_mod,
@@ -87,12 +88,24 @@ trees <- jsonlite::fromJSON(fit$tree_json_con)
 print("BART-RDD")
 br <- rowMeans(sapply(trees$trees, function(i) sapply(i,nleaf)))
 #### Plot
+cate <- tau(c,w,kappa,ate,c,classes,level)
+test <- -Owidth+c <= x & x <= c+Owidth
+cate.test <- cate[test]
 pred <- XBART::predict.XBCFrd(fit,w[test],rep(c,sum(test)))
 pred.bart.rdd <- pred$tau.adj[,(burnin+1):num_sweeps]
 par(mfrow=c(2,2))
 # pdf("Figures/cate_bart_rdd_1.pdf")
 matplot(w[test],cbind(cate.test,rowMeans(pred.bart.rdd)),
         col=c("black","blue"),ylab=bquote(tau(X==c,W)),xlab="W",pch=19,
+        cex.axis=1,cex.lab=1,cex=1,bty="L",main="BART-RDD")
+##
+cate <- tau(x,w,kappa,ate,c,classes,level)
+test <- -Owidth+c <= x & x <= c+Owidth
+cate.test <- cate[test]
+pred <- XBART::predict.XBCFrd(fit,w[test],x[test])
+pred.bart.rdd <- pred$tau.adj[,(burnin+1):num_sweeps]
+matplot(x[test],cbind(cate.test,rowMeans(pred.bart.rdd)),
+        col=c("black","blue"),ylab=bquote(tau(X,W)),xlab="X",pch=19,
         cex.axis=1,cex.lab=1,cex=1,bty="L",main="BART-RDD")
 # legend("topleft",bty="n",col=c("black","blue"),pch=19,
 #        legend=c(bquote(tau(X==c,W)),"BART-RDD fit"),cex=1)
