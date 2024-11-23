@@ -10,7 +10,7 @@ Owidth        <- 0.2
 Omin          <- 5
 Opct          <- 0.7
 ntrees_con    <- 10
-ntrees_mod    <- 2
+ntrees_mod    <- 10
 ntrees        <- 5
 Nmin          <- 5
 max_depth     <- 50
@@ -71,6 +71,7 @@ test <- -Owidth+c <= x & x <= c+Owidth
 cate.test <- cate[test]
 mean(cate)
 ### BART-RDD
+Opct <- 1
 fit <- XBART::XBCF.rd(y, w, x, c,
                       Owidth = Owidth, Omin = Omin, Opct = Opct,
                       num_trees_mod = ntrees_mod,
@@ -83,9 +84,9 @@ fit <- XBART::XBCF.rd(y, w, x, c,
                       tau_con = 2*var(y)/ntrees,
                       tau_mod = 0.5*var(y)/ntrees,parallel=T,nthread=10)
 ###
-trees <- jsonlite::fromJSON(fit$tree_json_con)
+# trees <- jsonlite::fromJSON(fit$tree_json_con)
 print("BART-RDD")
-br <- rowMeans(sapply(trees$trees, function(i) sapply(i,nleaf)))
+# br <- rowMeans(sapply(trees$trees, function(i) sapply(i,nleaf)))
 #### Plot
 pred <- XBART::predict.XBCFrd(fit,w[test],rep(c,sum(test)))
 pred.bart.rdd <- pred$tau.adj[,(burnin+1):num_sweeps]
