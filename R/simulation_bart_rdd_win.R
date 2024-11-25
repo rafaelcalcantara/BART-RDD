@@ -11,11 +11,11 @@ if (length(list.files("Results")[grep("bart_rdd_",list.files("Results"))])!=0) #
 }
 ### Parameters
 Omin          <- 5
-Opct          <- 0.99
-ntrees_con    <- 10
-ntrees_mod    <- 2
+Opct          <- 0.9
+ntrees_con    <- 5
+ntrees_mod    <- 10
 Nmin          <- 5
-num_sweeps    <- 250
+num_sweeps    <- 150
 burnin        <- 50
 ### Functions
 fit <- function(i)

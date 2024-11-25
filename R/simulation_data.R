@@ -17,8 +17,8 @@ if (length(list.files("Data"))!=0) ## Clean up folder
 }
 if (!dir.exists("Figures")) dir.create("Figures") ## Create figures folder
 ### Common DGP features
-s <- 10
-n <- 5000
+s <- 20
+n <- 500
 c <- 0
 mu0.x <- function(x) 3*x^5 - 2.5*x^4 - 1.5*x^3 + 2*x^2 + 3*x + 2
 mu0.w <- function(w) w*sd(mu0.x(x))/sd(w)

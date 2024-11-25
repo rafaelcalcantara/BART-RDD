@@ -18,7 +18,7 @@ scripts <- scripts[-grep("master|data|llr0|llr1|llr2|cgs0|cgs1|results|bcf",scri
 scripts <- paste0("R/",scripts)
 p_categorical <- 0
 Owidth        <- 0.2
-max_depth     <- 10
+max_depth     <- 250
 for (i in scripts)
 {
   print(paste0("Script: ",i))
