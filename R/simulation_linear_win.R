@@ -12,10 +12,10 @@ fit <- function(i)
 {
   print(paste0("Sample: ",i))
   ifelse(is.list(data$w),ws <- data$w[[i]],ws <- subset(data$w,select=i))
-  ws <- data$w[,i]
+  ws <- data$ws[,i]
   y <- data$y[,i]
   x <- data$x[,i]
-  ws <- as.integer(cut(ws,quantile(ws,seq(0,1,length.out=classes)),include.lowest=T)) %% 2 == 0
+  # ws <- as.integer(cut(ws,quantile(ws,seq(0,1,length.out=classes)),include.lowest=T)) %% 2 == 0
   # bw <- rdrobust::rdbwselect(y,x,c=c,covs=ws)$bws[4]
   reg <- subset(data.frame(y=y,x=x,w=as.factor(ws),z=data$z[,i]),x>=-Owidth & x<=Owidth)
   model <- lm(y~(x+w)*z,data=reg)

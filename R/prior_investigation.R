@@ -4,8 +4,8 @@ library(XBART)
 ### Setup--------------------------------------------------
 par(bty="L")
 Owidth        <- 0.2
-Omin          <- 20
-Opct          <- 0.95
+Omin          <- 5
+Opct          <- 0.75
 ntrees_con    <- 15
 ntrees_mod    <- 5
 ntrees        <- 5
@@ -34,14 +34,15 @@ tau <- function(x,w,ate,c,type,delta) {
   tau.x <- tau0.x(x,c)
   tau.w <- tau0.w(w,type,ate)
   ate + (tau.x + tau.w)/sd(tau.x + tau.w)*delta
+  # ate + tau.x
 }
 #### Parameters
 ate <- 0.2
 delta_mu <- 0.5
-delta_tau <- 1
+delta_tau <- 2
 c <- 0
 type <- 2
-n <- 3000
+n <- 1000
 #### Data
 x <- 2*rbeta(n,2,4)-0.75
 z <- as.numeric(x>=c)
@@ -70,6 +71,7 @@ fit <- XBART::XBCF.rd(y, w, x, c,
 cate <- tau(c,w,ate,c,type,delta_tau)
 test <- -Owidth+c <= x & x <= c+Owidth
 cate.test <- cate[test]
+# cate.test <- cate
 pred <- XBART::predict.XBCFrd(fit,w[test],rep(c,sum(test)))
 pred.bart.rdd <- pred$tau.adj[,(burnin+1):num_sweeps]
 matplot(w[test],cbind(cate.test,rowMeans(pred.bart.rdd)),

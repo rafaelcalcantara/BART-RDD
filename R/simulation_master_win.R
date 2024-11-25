@@ -17,7 +17,7 @@ scripts <- list.files("R")[grep("win",list.files("R"))]
 scripts <- scripts[-grep("master|data|llr0|llr1|llr2|cgs0|cgs1|results|bcf",scripts)]
 scripts <- paste0("R/",scripts)
 p_categorical <- 0
-Owidth        <- 0.2
+Owidth        <- 0.067
 max_depth     <- 250
 for (i in scripts)
 {

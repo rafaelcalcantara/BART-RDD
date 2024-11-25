@@ -7,9 +7,9 @@
 # }
 setwd("../")
 files <- length(list.files("Data"))
-Owidth <- 0.2
+Owidth <- 0.067
 ##
-params <- data.frame(tau=rep(0,files),delta.mu=rep(0,files),delta.tau=rep(0,files),kappa=rep(0,files))
+params <- data.frame(tau=rep(0,files),delta.mu=rep(0,files),delta.tau=rep(0,files))
 ##
 bart.rdd.ate <- vector("list",files)
 # bcf.ate <- vector("list",files)
@@ -113,7 +113,7 @@ for (i in 1:files)
   ate <- data$tau
   cate <- sapply(1:ncol(data$tau.x), function(i) data$tau.x[test[,i],i])
   ate <- sapply(cate,mean)
-  params[i,] <- c(data$tau,data$delta_mu,data$delta_tau,data$kappa)
+  params[i,] <- c(data$tau,data$delta_mu,data$delta_tau)
   bart <- readRDS(paste0("Results/bart_rdd_",i,".rds"))
   # bcf <- readRDS(paste0("Results/bcf_",i,".rds"))
   sbart <- readRDS(paste0("Results/sbart_",i,".rds"))
