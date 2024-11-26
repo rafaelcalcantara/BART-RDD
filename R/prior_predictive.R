@@ -30,12 +30,12 @@ fit <- function(i)
 ### Prior predictive
 #### Setup
 mu.prior <- function(x,w,omega) w + 1/(1+exp(-5*x)) + (1-abs(x-c))*sin(omega*x)/10
-tau.prior <- function(x,w,tau.bar) tau.bar - log(x+1)/50 + w - mean(w)
+tau.prior <- function(x,w,tau.bar) tau.bar - log(x+1)/50 + 0.01*(w - mean(w))
 omega <- 0
 ate <- 0.4
 N <- 500
 c <- 0
-s <- 100 ## no of samples of th synthetic DGP
+s <- 20 ## no of samples of th synthetic DGP
 Omin <- c(1,3,5)
 Opct <- seq(0.6,0.9,length=3)
 classes <- 5

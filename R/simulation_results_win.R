@@ -9,7 +9,7 @@ setwd("../")
 files <- length(list.files("Data"))
 Owidth <- 0.067
 ##
-params <- data.frame(tau=rep(0,files),delta.mu=rep(0,files),delta.tau=rep(0,files))
+params <- data.frame(type=rep(0,files),delta.mu=rep(0,files),delta.tau=rep(0,files))
 ##
 bart.rdd.ate <- vector("list",files)
 # bcf.ate <- vector("list",files)
@@ -101,7 +101,8 @@ tbart.cate.ci <- rep(0,files)
 # cov.cgs1 <- rep(0,files)
 # zero.cgs1 <- rep(0,files)
 ##
-linear.cate <- rep(0,files)
+oracle.cate <- rep(0,files)
+polynomial.cate <- rep(0,files)
 ##
 for (i in 1:files)
 {
@@ -113,12 +114,13 @@ for (i in 1:files)
   ate <- data$tau
   cate <- sapply(1:ncol(data$tau.x), function(i) data$tau.x[test[,i],i])
   ate <- sapply(cate,mean)
-  params[i,] <- c(data$tau,data$delta_mu,data$delta_tau)
+  params[i,] <- c(data$type,data$delta_mu,data$delta_tau)
   bart <- readRDS(paste0("Results/bart_rdd_",i,".rds"))
   # bcf <- readRDS(paste0("Results/bcf_",i,".rds"))
   sbart <- readRDS(paste0("Results/sbart_",i,".rds"))
   tbart <- readRDS(paste0("Results/tbart_",i,".rds"))
-  linear <- readRDS(paste0("Results/linear_",i,".rds"))
+  oracle <- readRDS(paste0("Results/oracle_",i,".rds"))
+  polynomial <- readRDS(paste0("Results/polynomial_",i,".rds"))
   # llr0 <- readRDS(paste0("Results/llr0_",i,".rds"))
   # llr1 <- readRDS(paste0("Results/llr1_",i,".rds"))
   ## llr2 <- readRDS(paste0("Results/llr2_",i,".rds"))
@@ -189,7 +191,8 @@ for (i in 1:files)
   tbart.cate.cov[i] <- mean(sapply(1:ncol(data$x), function(i) mean(tbart.cate.int[[i]][,1]<cate[[i]] & cate[[i]]<tbart.cate.int[[i]][,2])))
   tbart.cate.ci[i] <- mean(sapply(1:ncol(data$x), function(i) mean(-tbart.cate.int[[i]][,1] + tbart.cate.int[[i]][,2])))
   ##
-  linear.cate[i] <- mean(mapply(function(i,j) sqrt(mean((i-j)^2)),linear$results,cate))
+  oracle.cate[i] <- mean(mapply(function(i,j) sqrt(mean((i-j)^2)),oracle$results,cate))
+  polynomial.cate[i] <- mean(mapply(function(i,j) sqrt(mean((i-j)^2)),polynomial$results,cate))
   ##
   # rmse.llr0[i,] <- sqrt(rowMeans((sapply(llr0$results,function(i) i$coef)-ate)^2))
   # sb.llr0[i,] <- rowMeans(sapply(llr0$results,function(i) i$coef)-ate)^2
@@ -229,22 +232,22 @@ for (i in 1:files)
   # ci.cgs1[i] <- mean(cgs.res[,3]-cgs.res[,2])
   # cov.cgs1[i] <- mean(cgs.res[,3]-ate>0 & cgs.res[,2]-ate<0)
   # zero.cgs1[i] <- mean(cgs.res[,3]>0 & cgs.res[,2]<0)
-  matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(bart$results[[1]])),pch=19,ylab = "BART-RDD",xlab="W")
-  matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(sbart$results[[1]])),pch=19,ylab="SBART",xlab="W")
-  matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(tbart$results[[1]])),pch=19,ylab="TBART",xlab="W")
-  matplot(data$w[test[,1],1],cbind(cate[[1]],linear$results[[1]]),pch=19,ylab="Linear",xlab="W")
-  boxplot(rowMeans(bart$results[[1]])~cate[[1]], ylab="BART-RDD")
-  boxplot(rowMeans(sbart$results[[1]])~cate[[1]],ylab="SBART")
-  boxplot(rowMeans(tbart$results[[1]])~cate[[1]],ylab="TBART")
-  a <- sapply(1:length(cate), function(i) cor(cate[[i]],rowMeans(bart$results[[i]])))
-  b <- sapply(1:length(cate), function(i) cor(cate[[i]],rowMeans(sbart$results[[i]])))
-  c <- sapply(1:length(cate), function(i) cor(cate[[i]],rowMeans(tbart$results[[i]])))
-  boxplot(cbind(a,b,c))
+  # matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(bart$results[[1]])),pch=19,ylab = "BART-RDD",xlab="W")
+  # matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(sbart$results[[1]])),pch=19,ylab="SBART",xlab="W")
+  # matplot(data$w[test[,1],1],cbind(cate[[1]],rowMeans(tbart$results[[1]])),pch=19,ylab="TBART",xlab="W")
+  # matplot(data$w[test[,1],1],cbind(cate[[1]],linear$results[[1]]),pch=19,ylab="Linear",xlab="W")
+  # boxplot(rowMeans(bart$results[[1]])~cate[[1]], ylab="BART-RDD")
+  # boxplot(rowMeans(sbart$results[[1]])~cate[[1]],ylab="SBART")
+  # boxplot(rowMeans(tbart$results[[1]])~cate[[1]],ylab="TBART")
+  # a <- sapply(1:length(cate), function(i) cor(cate[[i]],rowMeans(bart$results[[i]])))
+  # b <- sapply(1:length(cate), function(i) cor(cate[[i]],rowMeans(sbart$results[[i]])))
+  # c <- sapply(1:length(cate), function(i) cor(cate[[i]],rowMeans(tbart$results[[i]])))
+  # boxplot(cbind(a,b,c))
 }
 ##
 # names <- c("BART-RDD","BCF","S-BART","T-BART","CGS","LLR")
 # names <- c("BART-RDD","S-BART","T-BART","CGS","LLR")
-names <- c("BART-RDD","S-BART","T-BART","Linear")
+names <- c("BART-RDD","S-BART","T-BART","Oracle","Polynomial")
 ###
 # rmse <- cbind(rmse.bart,rmse.bcf,rmse.sbart,rmse.tbart,rmse.cgs1,rmse.llr1[,1])
 # rmse <- cbind(rmse.bart,rmse.sbart,rmse.tbart,rmse.cgs1,rmse.llr1[,1])
@@ -292,8 +295,8 @@ colnames(int) <- names[1:3]
 ###
 # rmse.cate <- cbind(bart.rdd.cate,bcf.cate,sbart.cate,tbart.cate)
 # colnames(rmse.cate) <- names[1:4]
-rmse.cate <- cbind(bart.rdd.cate,sbart.cate,tbart.cate,linear.cate)
-colnames(rmse.cate) <- names[1:4]
+rmse.cate <- cbind(bart.rdd.cate,sbart.cate,tbart.cate,oracle.cate,polynomial.cate)
+colnames(rmse.cate) <- names
 table(apply(rmse.cate,1,function(i) which(i==min(i))))
 ###
 # cov.cate <- cbind(bart.rdd.cate.cov,bcf.cate.cov,sbart.cate.cov,tbart.cate.cov)
@@ -307,12 +310,12 @@ ci.cate <- cbind(bart.rdd.cate.ci,sbart.cate.ci,tbart.cate.ci)
 colnames(ci.cate) <- names[1:3]
 ###
 # pdf("Figures/sim_results.pdf")
-par(mfrow=c(2,2))
-matplot(rmse.cate,bty="l",cex.axis=0.9,cex.lab=0.9,ylab="RMSE",lty=2,pch=19,type="b",xlab="DGP")
-legend("topleft",col=1:4,lty=2,pch=19,legend=colnames(rmse.cate),cex=0.7,ncol=2,bty="n",x.intersp = 0.5)
-matplot(cov.cate/ci.cate,bty="l",cex.axis=0.9,cex.lab=0.9,ylab="Coverage/Int. Length",lty=2,pch=19,type="b",xlab="DGP")
-matplot(cov.cate,bty="l",cex.axis=0.9,cex.lab=0.9,ylab="Coverage",lty=2,pch=19,type="b",xlab="DGP")
-matplot(ci.cate,bty="l",cex.axis=0.9,cex.lab=0.9,ylab="Interval length",lty=2,pch=19,type="b",xlab="DGP")
+# par(mfrow=c(2,2))
+# matplot(rmse.cate,bty="l",cex.axis=0.9,cex.lab=0.9,ylab="RMSE",lty=2,pch=19,type="b",xlab="DGP")
+# legend("topleft",col=1:4,lty=2,pch=19,legend=colnames(rmse.cate),cex=0.7,ncol=2,bty="n",x.intersp = 0.5)
+# matplot(cov.cate/ci.cate,bty="l",cex.axis=0.9,cex.lab=0.9,ylab="Coverage/Int. Length",lty=2,pch=19,type="b",xlab="DGP")
+# matplot(cov.cate,bty="l",cex.axis=0.9,cex.lab=0.9,ylab="Coverage",lty=2,pch=19,type="b",xlab="DGP")
+# matplot(ci.cate,bty="l",cex.axis=0.9,cex.lab=0.9,ylab="Interval length",lty=2,pch=19,type="b",xlab="DGP")
 # dev.off()
 ###
 save.image("Results/sims.RData")

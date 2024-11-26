@@ -11,14 +11,14 @@ if (length(list.files("Results")[grep("linear_",list.files("Results"))])!=0) ## 
 fit <- function(i)
 {
   print(paste0("Sample: ",i))
-  ifelse(is.list(data$w),ws <- data$w[[i]],ws <- subset(data$w,select=i))
+  # ifelse(is.list(data$w),ws <- data$w[[i]],ws <- subset(data$w,select=i))
   ws <- data$ws[,i]
   y <- data$y[,i]
   x <- data$x[,i]
   # ws <- as.integer(cut(ws,quantile(ws,seq(0,1,length.out=classes)),include.lowest=T)) %% 2 == 0
-  # bw <- rdrobust::rdbwselect(y,x,c=c,covs=ws)$bws[4]
-  reg <- subset(data.frame(y=y,x=x,w=as.factor(ws),z=data$z[,i]),x>=-Owidth & x<=Owidth)
-  model <- lm(y~(x+w)*z,data=reg)
+  bw <- rdrobust::rdbwselect(y,x,c=c,covs=ws,p=5,q=6)$bws[4]
+  reg <- subset(data.frame(y=y,x=x,w=as.factor(ws),z=data$z[,i]),x>=-bw & x<=bw)
+  model <- lm(y~(x^5+x^4+x^3+x^2+x+x*w)*z,data=reg)
   test.sample <- x>=-Owidth & x<=Owidth
   test1 <- data.frame(x=0,w=as.factor(ws),z=1)[test.sample,]
   test0 <- data.frame(x=0,w=as.factor(ws),z=0)[test.sample,]
@@ -47,7 +47,7 @@ for (i in 1:files)
   })
   stopCluster(cl)
   print(time)
-  saveRDS(list(results=out,time=time),paste0("Results/linear_",i,".rds"))
+  saveRDS(list(results=out,time=time),paste0("Results/oracle_",i,".rds"))
   rm(out)
   gc()
 }

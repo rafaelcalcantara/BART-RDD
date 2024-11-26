@@ -370,3 +370,158 @@ par(mfrow=c(1,1))
 # boxplot(rmse,main="ATE",bty="n",las=3,cex.axis=0.7)
 # boxplot(rmse.cate,main="CATE",bty="n",las=3,cex.axis=0.7)
 # dev.off()
+rmse.plot <- reshape(cbind(params,rmse.cate),direction="long",varying=list(4:7),timevar="Model",times=colnames(rmse.cate),v.names = "RMSE")
+rmse.plot$Model <- factor(rmse.plot$Model, levels=colnames(rmse.cate))
+###
+ticks <- 2 + 3*(1:ncol(rmse.cate)-1)
+colors <- rainbow(length(table(rmse.plot$delta.mu)))
+par(bty="L",mfrow=c(1,1))
+boxplot(rmse.plot$RMSE~rmse.plot$delta.mu+rmse.plot$Model,
+        col=colors,
+        main="",ylab="RMSE",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+axis(1, at=ticks,labels=F,tick=T,lwd.ticks=1)
+text(ticks,par("usr")[3]-0.03, labels = colnames(rmse.cate),
+     srt = 0, pos = 1, xpd = TRUE, cex=1)
+abline(v=ticks+1.5,lty=2)
+legend("topleft",legend=unique(params$delta.mu),title=expression(delta[mu]),
+       fill=colors,cex=1,ncol=1,bty="n")
+###
+ticks <- 3 + 5*(1:ncol(rmse.cate)-1)
+colors <- rainbow(length(table(rmse.plot$delta.tau)))
+boxplot(RMSE~delta.tau+Model,
+        data = subset(rmse.plot,delta.mu==2),
+        col=colors,
+        main="",ylab="RMSE",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+axis(1, at= ticks,labels=F,tick=T,lwd.ticks=1)
+text(ticks,par("usr")[3]-0.03, labels = colnames(rmse.cate),
+     srt = 0, pos = 1, xpd = TRUE, cex=1)
+abline(v=ticks+2.5,lty=2)
+legend("topleft",legend=unique(params$delta.tau),title=expression(delta[tau]),
+       fill=colors,cex=1,ncol=1,bty="n")
+###
+ticks <- 1.5 + 2*(1:ncol(rmse.cate)-1)
+colors <- rainbow(length(table(rmse.plot$type)))
+boxplot(rmse.plot$RMSE~rmse.plot$type+rmse.plot$Model,
+        col=colors,
+        main="",ylab="RMSE",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+axis(1, at= ticks,labels=F,tick=T,lwd.ticks=1)
+text(ticks,par("usr")[3]-0.03, labels = colnames(rmse.cate),
+     srt = 0, pos = 1, xpd = TRUE, cex=1)
+abline(v=ticks+1,lty=2)
+legend("topleft",legend=unique(params$type),title=expression(f(W)),
+       fill=colors,cex=1,ncol=1,bty="n")
+###
+bias.cate <- cbind(`BART-RDD`=sapply(bart.rdd.cate.bias, function(i) mean(sapply(i,mean))),
+                   SBART = sapply(sbart.cate.bias, function(i) mean(sapply(i,mean))),
+                   TBART = sapply(tbart.cate.bias, function(i) mean(sapply(i,mean))))
+bias.plot <- reshape(cbind(params,abs(bias.cate)),direction="long",varying=list(4:6),timevar="Model",times=colnames(bias.cate),v.names = "bias")
+bias.plot$Model <- factor(bias.plot$Model, levels=colnames(bias.cate))
+###
+ticks <- 2 + 3*(1:ncol(bias.cate)-1)
+colors <- rainbow(length(table(bias.plot$delta.mu)))
+par(bty="L",mfrow=c(1,1))
+boxplot(bias.plot$bias~bias.plot$delta.mu+bias.plot$Model,
+        col=colors,
+        main="",ylab="bias",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+axis(1, at=ticks,labels=F,tick=T,lwd.ticks=1)
+text(ticks,par("usr")[3]-0.03, labels = colnames(bias.cate),
+     srt = 0, pos = 1, xpd = TRUE, cex=1)
+abline(v=ticks+1.5,lty=2)
+legend("topleft",legend=unique(params$delta.mu),title=expression(delta[mu]),
+       fill=colors,cex=1,ncol=1,bty="n")
+###
+ticks <- 3 + 5*(1:ncol(bias.cate)-1)
+colors <- rainbow(length(table(bias.plot$delta.tau)))
+boxplot(bias.plot$bias~bias.plot$delta.tau+bias.plot$Model,
+        col=colors,
+        main="",ylab="bias",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+axis(1, at= ticks,labels=F,tick=T,lwd.ticks=1)
+text(ticks,par("usr")[3]-0.03, labels = colnames(bias.cate),
+     srt = 0, pos = 1, xpd = TRUE, cex=1)
+abline(v=ticks+2.5,lty=2)
+legend("topleft",legend=unique(params$delta.tau),title=expression(delta[tau]),
+       fill=colors,cex=1,ncol=1,bty="n")
+###
+ticks <- 1.5 + 2*(1:ncol(bias.cate)-1)
+colors <- rainbow(length(table(bias.plot$type)))
+boxplot(bias.plot$bias~bias.plot$type+bias.plot$Model,
+        col=colors,
+        main="",ylab="bias",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+axis(1, at= ticks,labels=F,tick=T,lwd.ticks=1)
+text(ticks,par("usr")[3]-0.03, labels = colnames(bias.cate),
+     srt = 0, pos = 1, xpd = TRUE, cex=1)
+abline(v=ticks+1,lty=2)
+legend("topleft",legend=unique(params$type),title=expression(f(W)),
+       fill=colors,cex=1,ncol=1,bty="n")
+###
+var.cate <- cbind(`BART-RDD`=sapply(bart.rdd.cate.var, mean),
+                  SBART = sapply(sbart.cate.var, mean),
+                  TBART = sapply(tbart.cate.var, mean))
+var.plot <- reshape(cbind(params,abs(var.cate)),direction="long",varying=list(4:6),timevar="Model",times=colnames(var.cate),v.names = "var")
+var.plot$Model <- factor(var.plot$Model, levels=colnames(var.cate))
+###
+ticks <- 2 + 3*(1:ncol(var.cate)-1)
+colors <- rainbow(length(table(var.plot$delta.mu)))
+par(bty="L",mfrow=c(1,1))
+boxplot(var.plot$var~var.plot$delta.mu+var.plot$Model,
+        col=colors,
+        main="",ylab="var",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+axis(1, at=ticks,labels=F,tick=T,lwd.ticks=1)
+text(ticks,par("usr")[3]-0.03, labels = colnames(var.cate),
+     srt = 0, pos = 1, xpd = TRUE, cex=1)
+abline(v=ticks+1.5,lty=2)
+legend("topleft",legend=unique(params$delta.mu),title=expression(delta[mu]),
+       fill=colors,cex=1,ncol=1,bty="n")
+###
+ticks <- 3 + 5*(1:ncol(var.cate)-1)
+colors <- rainbow(length(table(var.plot$delta.tau)))
+boxplot(var.plot$var~var.plot$delta.tau+var.plot$Model,
+        col=colors,
+        main="",ylab="var",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+axis(1, at= ticks,labels=F,tick=T,lwd.ticks=1)
+text(ticks,par("usr")[3]-0.03, labels = colnames(var.cate),
+     srt = 0, pos = 1, xpd = TRUE, cex=1)
+abline(v=ticks+2.5,lty=2)
+legend("topleft",legend=unique(params$delta.tau),title=expression(delta[tau]),
+       fill=colors,cex=1,ncol=1,bty="n")
+###
+ticks <- 1.5 + 2*(1:ncol(var.cate)-1)
+colors <- rainbow(length(table(var.plot$type)))
+boxplot(var.plot$var~var.plot$type+var.plot$Model,
+        col=colors,
+        main="",ylab="var",xlab="",xaxt="n",cex.axis=1,cex.lab=1)
+axis(1, at= ticks,labels=F,tick=T,lwd.ticks=1)
+text(ticks,par("usr")[3]-0.03, labels = colnames(var.cate),
+     srt = 0, pos = 1, xpd = TRUE, cex=1)
+abline(v=ticks+1,lty=2)
+legend("topleft",legend=unique(params$type),title=expression(f(W)),
+       fill=colors,cex=1,ncol=1,bty="n")
+###
+rmse <- cbind(params,rmse.cate)
+par(mfrow=c(2,2),bty="n")
+for (i in c(4,5,6,8))
+{
+  plot(rmse$delta.tau,rmse[,i],type="p",col=rmse$type+1,pch=rmse$delta.mu+15,
+       ylab=colnames(rmse)[i],xlab=expression(delta[tau]),ylim=c(0.1,0.8))
+  lines(unique(rmse$delta.tau),rmse[,i][rmse$delta.mu==0.5 & rmse$type==1],col=2)
+  lines(unique(rmse$delta.tau),rmse[,i][rmse$delta.mu==1 & rmse$type==1],col=2)
+  lines(unique(rmse$delta.tau),rmse[,i][rmse$delta.mu==2 & rmse$type==1],col=2)
+  lines(unique(rmse$delta.tau),rmse[,i][rmse$delta.mu==0.5 & rmse$type==1],col=3)
+  lines(unique(rmse$delta.tau),rmse[,i][rmse$delta.mu==0.5 & rmse$type==1],col=2)
+  lines(unique(rmse$delta.tau),rmse[,i][rmse$delta.mu==0.5 & rmse$type==2],col=3)
+  lines(unique(rmse$delta.tau),rmse[,i][rmse$delta.mu==1 & rmse$type==2],col=3)
+  lines(unique(rmse$delta.tau),rmse[,i][rmse$delta.mu==2 & rmse$type==2],col=3)
+  grid(nx = NA,
+       ny = NULL,
+       lty = 2, col = "gray", lwd = 1)
+  points(rmse$delta.tau,rmse$Oracle,type="p",col="gray",pch=rmse$delta.mu+15,
+         ylab=colnames(rmse)[i],xlab=expression(delta[tau]))
+  lines(unique(rmse$delta.tau),rmse$Oracle[rmse$delta.mu==0.5 & rmse$type==1],col="gray")
+  lines(unique(rmse$delta.tau),rmse$Oracle[rmse$delta.mu==1 & rmse$type==1],col="gray")
+  lines(unique(rmse$delta.tau),rmse$Oracle[rmse$delta.mu==2 & rmse$type==1],col="gray")
+  lines(unique(rmse$delta.tau),rmse$Oracle[rmse$delta.mu==0.5 & rmse$type==1],col="gray")
+  lines(unique(rmse$delta.tau),rmse$Oracle[rmse$delta.mu==0.5 & rmse$type==1],col="gray")
+  lines(unique(rmse$delta.tau),rmse$Oracle[rmse$delta.mu==0.5 & rmse$type==2],col="gray")
+  lines(unique(rmse$delta.tau),rmse$Oracle[rmse$delta.mu==1 & rmse$type==2],col="gray")
+  lines(unique(rmse$delta.tau),rmse$Oracle[rmse$delta.mu==2 & rmse$type==2],col="gray")
+}
