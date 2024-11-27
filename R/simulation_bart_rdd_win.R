@@ -1,14 +1,5 @@
 ## Setup
 set.seed(0)
-## devtools::install_github("JingyuHe/XBART@XBCF-RDD")
-# library(XBART)
-# setwd("~/../Git/BART-RDD")
-if (!dir.exists("Results")) dir.create("Results") ## Create results folder
-if (length(list.files("Results")[grep("bart_rdd_",list.files("Results"))])!=0) ## Clean up folder
-{
-  files <- paste0("Results/",list.files("Results")[grep("bart_rdd_",list.files("Results"))])
-  for (i in files) file.remove(i)
-}
 ### Parameters
 Omin          <- 1
 Opct          <- 0.9
@@ -22,9 +13,7 @@ fit <- function(i)
 {
   print(paste0("Sample: ",i))
   ys <- data$y[,i]
-  ifelse(is.list(data$w),ws <- data$w[[i]],ws <- subset(data$w,select=i))
-  # ws <- as.matrix(data$ws[,i])
-  # ws[,1] <- as.integer(ws[,1])
+  ws <- as.matrix(data$w[,i])
   xs <- data$x[,i]
   fit <- XBART::XBCF.rd(ys, ws, xs, c,
                         Owidth = Owidth, Omin = Omin, Opct = Opct,
@@ -44,25 +33,32 @@ fit <- function(i)
 ##
 ### BEGIN LOOP
 files <- length(list.files("Data"))
+s0 <- 1
 for (i in 1:files)
 {
   print(paste0("DGP: ",i))
   data <- readRDS(paste0("Data/dgp_",i,".rds"))
+  if (paste0("Results/bart_rdd_",i,".rds") %in% list.files("Results/") == T)
+  {
+    res <- readRDS(paste0("Results/bart_rdd_",i,".rds"))
+  } else
+  {
+    res <- list(results=vector("list",s))
+  }
   n <- nrow(data$y)
   s <- ncol(data$y)
+  s1 <- s
   c <- data$c
-  # test <- readRDS(paste0("Data/test_dgp_",i,".rds"))
-  # test.w <- test$w
-  # test.sample <- cbind(c,test.w)
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
   clusterExport(cl,varlist=ls())
   time <- system.time({
-    out <- parLapply(cl,1:s,fit)
+    out <- parLapply(cl,s0:s1,fit)
   })
   stopCluster(cl)
   print(time)
-  saveRDS(list(results=out,time=time),paste0("Results/bart_rdd_",i,".rds"))
+  res$results[s0:s1] <- out
+  saveRDS(list(results=res$results,time=time/(s1-s0+1)),paste0("Results/bart_rdd_",i,".rds"))
   rm(out)
   gc()
 }
