@@ -15,10 +15,10 @@ no_cores <- detectCores()-1
 if (!dir.exists("Results")) dir.create("Results")
 ## Get simulation script names
 scripts <- list.files("R")[grep("win",list.files("R"))]
-scripts <- scripts[-grep("master|bart|polynomial|data|llr0|llr1|llr2|cgs0|cgs1|results|bcf",scripts)]
+scripts <- scripts[-grep("master|bart|oracle|data|llr0|llr1|llr2|cgs0|cgs1|results|bcf",scripts)]
 scripts <- paste0("R/",scripts)
 p_categorical <- 0
-Owidth        <- 0.067
+Owidth        <- 0.028
 max_depth     <- 250
 for (i in scripts)
 {

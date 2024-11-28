@@ -4,32 +4,17 @@ set.seed(0)
 fit <- function(i)
 {
   print(paste0("Sample: ",i))
-  # ifelse(is.list(data$w),ws <- data$w[[i]],ws <- subset(data$w,select=i))
-  ws <- data$w[,i]
-  # ws <- cbind(ws,sapply(3:9,function(i) as.integer(as.integer(10*data$w[,i]) %% i == 0)))\
+  w <- data$w[,i]
   y <- data$y[,i]
   x <- data$x[,i]
-  bw <- rdrobust::rdbwselect(y,x,c=c,covs=ws,p=7,q=8)$bws[4]
-  # reg <- subset(data.frame(y=y,x=x,w1=as.factor(ws[,1]),w2=as.factor(ws[,2]),
-  #                          w3=as.factor(ws[,3]),w4=as.factor(ws[,4]),
-  #                          w5=as.factor(ws[,5]),w6=as.factor(ws[,6]),
-  #                          w7=as.factor(ws[,7]),w8=as.factor(ws[,8]),
-  #                          z=data$z[,i]),x>=-bw & x<=bw)
-  reg <- subset(data.frame(y=y,x=x,w=ws,z=data$z[,i]),x>=-bw & x<=bw)
-  model <- lm(y~((poly(x,6))*(poly(w,4)))*z,data=reg)
+  deg.x <- 1
+  deg.w <- 15
+  bw <- rdrobust::rdbwselect(y,x,c=c,covs=w,p=deg.x,q=deg.x+1)$bws[4]
+  reg <- subset(data.frame(y=y,x=x,w=w,z=data$z[,i]),x>=-bw & x<=bw)
+  model <- lm(y~((poly(x,deg.x,raw=T))*(poly(w,deg.w,raw=T)))*z,data=reg)
   test.sample <- x>=-Owidth & x<=Owidth
-  # test1 <- data.frame(x=0,w1=as.factor(ws[,1]),w2=as.factor(ws[,2]),
-  #                     w3=as.factor(ws[,3]),w4=as.factor(ws[,4]),
-  #                     w5=as.factor(ws[,5]),w6=as.factor(ws[,6]),
-  #                     w7=as.factor(ws[,7]),w8=as.factor(ws[,8]),
-  #                     z=1)[test.sample,]
-  # test0 <- data.frame(x=0,w1=as.factor(ws[,1]),w2=as.factor(ws[,2]),
-  #                     w3=as.factor(ws[,3]),w4=as.factor(ws[,4]),
-  #                     w5=as.factor(ws[,5]),w6=as.factor(ws[,6]),
-  #                     w7=as.factor(ws[,7]),w8=as.factor(ws[,8]),
-  #                     z=0)[test.sample,]
-  test1 <- data.frame(x=0,w=ws,z=1)[test.sample,]
-  test0 <- data.frame(x=0,w=ws,z=0)[test.sample,]
+  test1 <- data.frame(x=0,w=w,z=1)[test.sample,]
+  test0 <- data.frame(x=0,w=w,z=0)[test.sample,]
   tau <- predict(model,newdata=test1)-predict(model,newdata=test0)
   return(tau)
 }

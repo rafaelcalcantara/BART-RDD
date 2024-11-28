@@ -1,7 +1,7 @@
 ## Setup
 set.seed(0)
 ### Parameters
-Omin          <- 1
+Omin          <- 5
 Opct          <- 0.9
 ntrees_con    <- 10
 ntrees_mod    <- 5
