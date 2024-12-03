@@ -14,13 +14,13 @@ fit <- function(i)
                         Owidth = hs, Omin = Om, Opct = Op,
                         num_trees_mod = ntrees,
                         num_trees_con = ntrees,
-                        num_cutpoints = obs,
+                        num_cutpoints = n,
                         num_sweeps = num_sweeps,
                         burnin = burnin, Nmin = Nmin,
                         p_categorical_con = p_categorical,
                         p_categorical_mod = p_categorical,
-                        tau_con = 2*var(y)/ntrees,
-                        tau_mod = 0.5*var(y)/ntrees)
+                        tau_con = tc*var(y)/ntrees,
+                        tau_mod = tm*var(y)/ntrees)
   test <- -hs+c<=x & x<=hs+c
   # pred <- XBART::predict.XBCFrd(fit,w[test,],rep(c,sum(test)))
   pred <- XBART::predict.XBCFrd(fit,w[test],rep(c,sum(test)))
@@ -29,53 +29,44 @@ fit <- function(i)
 }
 ### Prior predictive
 #### Setup
-mu.prior <- function(x,w,omega) w + 1/(1+exp(-5*x)) + (1-abs(x-c))*sin(omega*x)/10
+mu.prior <- function(x,w) w + 1/(1+exp(-5*x)) + (1-abs(x-c))*sin(x)/10
 tau.prior <- function(x,w,tau.bar) tau.bar - log(x+1)/50 + 0.01*(w - mean(w))
-omega <- 0
 ate <- 0.4
-N <- 5000
 c <- 0
-s <- 25 ## no of samples of th synthetic DGP
+s <- 10 ## no of samples of th synthetic DGP
+N <- c(500,1000)
 Omin <- c(1,3,5)
 Opct <- seq(0.6,0.9,length=3)
-classes <- 5
-p <- 0.4
+tcon <- c(0.5,2)
+tmod <- c(0.5,2)
 #### Loop
-params <- c("N","ATE","Omega","Omin","Opct","h")
+params <- c("N","ATE","Omin","Opct","h","tau_con","tau_mod")
 ntrees        <- 5
 Nmin          <- 5
-num_sweeps    <- 120
-burnin        <- 20
+num_sweeps    <- 150
+burnin        <- 50
 p_categorical <- 0
-for (i in N)
+for (n in N)
 {
   ## Data for calibrating the prior to the simulation DGPs
-  obs <- i
-  x <- 2*rbeta(i,2,4)-0.75
+  x <- 2*rbeta(n,2,4)-0.75
   z <- as.numeric(x>=c)
-  # w <- rbinom(i,classes,p)+1
-  w <- runif(i)
+  w <- runif(n)
   cate <- tau.prior(c,w,ate)
   h <- quantile(abs(x),c(0.05,0.1,0.15,0.2,0.3))
-  ## plot(x,mu.prior(x,w,omega[3])+tau.prior(x,0.25)*z+rnorm(N),col=z+1,pch=19)
-  for (j in 1:length(ate))
+  Ey <- mu.prior(x,w) + tau.prior(x,w,ate)*z
+  ys <-  Ey + matrix(rnorm(n*s,0,0.1*sd(tau.prior(x,w,ate))),n,s)
+  for (tc in tcon)
   {
-    taubar <- ate[j]
-    for (k in 1:length(omega))
+    for (tm in tmod)
     {
-      ome <- omega[k]
-      Ey <- mu.prior(x,w,ome) + tau.prior(x,w,taubar)*z
-      ys <-  Ey + matrix(rnorm(i*s,0,0.1*sd(tau.prior(x,w,taubar))),i,s)
-      for (l in 1:length(Omin))
+      for (Om in Omin)
       {
-        Om <- Omin[l]
-        for (m in 1:length(Opct))
+        for (Op in Opct)
         {
-          Op <- Opct[m]
-          for (n in 1:length(h))
+          for (hs in h)
           {
-            hs <- h[n]
-            print(paste(params,c(i,taubar,ome,Om,Op,hs),sep=": "))
+            print(paste(params,c(n,ate,Om,Op,hs,tc,tm),sep=": "))
             ## Fit the model
             cl <- makeCluster(no_cores,type="SOCK")
             registerDoParallel(cl)
@@ -85,7 +76,7 @@ for (i in N)
             })
             stopCluster(cl)
             print(time)
-            assign(paste(params,c(i,taubar,ome,Om,Op,hs),sep=".",collapse="_"),out)
+            assign(paste(params,c(n,ate,Om,Op,hs,tc,tm),sep=".",collapse="_"),out)
           }
         }
       }
@@ -99,12 +90,10 @@ for (i in N)
 objects <- mget(ls())
 sel <- grep(paste0("ATE.",ate),names(objects))
 p <- do.call("rbind",strsplit(names(objects[sel]),"_"))
-p <- apply(p,2, function(i) sub("N.|ATE.|Omega.|Omin.|Opct.|h.","",i))
-# temp <- do.call("cbind",objects[sel])
-# temp <- sqrt(colMeans((temp-cate)^2))
+p <- apply(p,2, function(i) sub("N.|ATE.|Omin.|Opct.|h.|tcon.|tmod.","",i))
 rmse <- sapply(objects[sel],mean)
 rmse <- cbind(p,RMSE=rmse)
-colnames(rmse) <- c("N","ATE","Omega","Omin","Opct","h","RMSE")
+colnames(rmse) <- c("N","ATE","Omin","Opct","h","tau_con","tau_mod","RMSE")
 rmse <- apply(rmse,2,as.numeric)
 rmse <- data.frame(rmse)
 ### Plots

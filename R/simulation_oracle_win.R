@@ -7,13 +7,15 @@ fit <- function(i)
   w <- data$w[,i]
   y <- data$y[,i]
   x <- data$x[,i]
-  deg <- 1
-  bw <- rdrobust::rdbwselect(y,x,c=c,covs=w,p=deg,q=deg+1)$bws[4]
-  reg <- subset(data.frame(y=y,x=x,w=w,w2=sin(10*pi*w),z=data$z[,i]),x>=-bw & x<=bw)
+  deg <- 5
+  if (lvl==1) w2 <- sin(3*pi*w)
+  if (lvl==2) w2 <- sin(7*pi*w)*(w-0.5)/(5+exp(-2*w))
+  bw <- rdrobust::rdbwselect(y,x,c=c,covs=cbind(w,w2),p=deg,q=deg+1)$bws[4]
+  reg <- subset(data.frame(y=y,x=x,w=w,w2=w2,z=data$z[,i]),x>=-bw & x<=bw)
   model <- lm(y~(poly(x,deg,raw=T)+w2)*z+w,data=reg)
   test.sample <- x>=-Owidth & x<=Owidth
-  test1 <- data.frame(x=0,w=w,w2=sin(10*pi*w),z=1)[test.sample,]
-  test0 <- data.frame(x=0,w=w,w2=sin(10*pi*w),z=0)[test.sample,]
+  test1 <- data.frame(x=0,w=w,w2=w2,z=1)[test.sample,]
+  test0 <- data.frame(x=0,w=w,w2=w2,z=0)[test.sample,]
   tau <- predict(model,newdata=test1)-predict(model,newdata=test0)
   return(tau)
 }
@@ -32,7 +34,9 @@ for (i in 1:files)
   {
     res <- list(results=vector("list",s))
   }
-  n <- nrow(data$y)
+  n <- data$n
+  lvl <- data$level
+  Owidth <- Ow[lvl]
   s <- ncol(data$y)
   s1 <- s
   c <- data$c

@@ -7,8 +7,9 @@ fit <- function(i)
   w <- data$w[,i]
   y <- data$y[,i]
   x <- data$x[,i]
-  deg.x <- 1
-  deg.w <- 15
+  deg.x <- 5
+  if (lvl==1) deg.w <- 6
+  if (lvl==2) deg.w <- 14
   bw <- rdrobust::rdbwselect(y,x,c=c,covs=w,p=deg.x,q=deg.x+1)$bws[4]
   reg <- subset(data.frame(y=y,x=x,w=w,z=data$z[,i]),x>=-bw & x<=bw)
   model <- lm(y~((poly(x,deg.x,raw=T))*(poly(w,deg.w,raw=T)))*z,data=reg)
@@ -33,7 +34,9 @@ for (i in 1:files)
   {
     res <- list(results=vector("list",s))
   }
-  n <- nrow(data$y)
+  n <- data$n
+  lvl <- data$level
+  Owidth <- Ow[lvl]
   s <- ncol(data$y)
   s1 <- s
   c <- data$c

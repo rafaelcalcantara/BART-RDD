@@ -44,7 +44,9 @@ for (i in 1:files)
   {
     res <- list(results=vector("list",s))
   }
-  n <- nrow(data$y)
+  n <- data$n
+  lvl <- data$level
+  Owidth <- Ow[lvl]
   s <- ncol(data$y)
   s1 <- s
   c <- data$c
