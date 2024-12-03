@@ -1,18 +1,18 @@
 setwd("../")
 load("Results/sims.RData")
 ###
-par(mfrow=c(2,2),bty="n")
-matplot(unlist(sapply(1:11, function(i) data$w[test[,i],i])),cbind(unlist(cate),unlist(bart.rdd.cate[[9]])),pch=19)
-matplot(unlist(sapply(1:11, function(i) data$w[test[,i],i])),cbind(unlist(cate),unlist(sbart.cate[[9]])),pch=19)
-matplot(unlist(sapply(1:11, function(i) data$w[test[,i],i])),cbind(unlist(cate),unlist(tbart.cate[[9]])),pch=19)
-matplot(unlist(sapply(1:11, function(i) data$w[test[,i],i])),cbind(unlist(cate),unlist(polynomial.cate[[9]])),pch=19)
+# par(mfrow=c(2,2),bty="n")
+# matplot(unlist(sapply(1:11, function(i) data$w[test[,i],i])),cbind(unlist(cate),unlist(bart.rdd.cate[[9]])),pch=19)
+# matplot(unlist(sapply(1:11, function(i) data$w[test[,i],i])),cbind(unlist(cate),unlist(sbart.cate[[9]])),pch=19)
+# matplot(unlist(sapply(1:11, function(i) data$w[test[,i],i])),cbind(unlist(cate),unlist(tbart.cate[[9]])),pch=19)
+# matplot(unlist(sapply(1:11, function(i) data$w[test[,i],i])),cbind(unlist(cate),unlist(polynomial.cate[[9]])),pch=19)
 ###
 rmse.plot <- cbind(params,rmse.cate)
 for (i in c(6,7,8,10))
 {
-  rmse <- subset(rmse,n==500 & sig_error == 0.25)
+  rmse <- subset(rmse.plot,n==1000 & sig_error == 0.5)
   plot(rmse$delta.tau,rmse[,i],type="p",col=rmse$level+1,pch=rmse$delta.mu+15,
-       ylab=colnames(rmse)[i],xlab=expression(delta[tau]),ylim=c(0,0.8))
+       ylab=colnames(rmse)[i],xlab=expression(delta[tau]),ylim=c(0,1))
   lines(unique(rmse$delta.tau),rmse[,i][rmse$delta.mu==0.5 & rmse$level==1],col=2)
   lines(unique(rmse$delta.tau),rmse[,i][rmse$delta.mu==0.5 & rmse$level==2],col=3)
   lines(unique(rmse$delta.tau),rmse[,i][rmse$delta.mu==2 & rmse$level==1],col=2)
