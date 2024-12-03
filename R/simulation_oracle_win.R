@@ -36,7 +36,7 @@ for (i in 1:files)
   }
   n <- data$n
   lvl <- data$level
-  Owidth <- Ow[lvl]
+  Owidth <- ifelse(n==500,Ow[2],Ow[1])
   s <- ncol(data$y)
   s1 <- s
   c <- data$c

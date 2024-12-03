@@ -1,7 +1,8 @@
 setwd("../")
 files <- length(list.files("Data"))
-Owidth <- 0.028
-params <- data.frame(delta.mu=rep(0,files),delta.tau=rep(0,files))
+Ow <- c(0.021,0.066)
+params <- data.frame(delta.mu=rep(0,files),delta.tau=rep(0,files),
+                     level=rep(0,files),n=rep(0,files),sig_error=rep(0,files))
 ##
 bart.rdd.cate <- vector("list",files)
 bart.rdd.cate.rmse <- rep(0,files)
@@ -42,9 +43,11 @@ for (i in 1:files)
 {
   print(paste0("DGP: ",i))
   data <- readRDS(paste0("Data/dgp_",i,".rds"))
+  n <- data$n
+  Owidth <- ifelse(n==500,Ow[2],Ow[1])
   test <- apply(data$x,2,function(i) i >= -Owidth & Owidth >= i)
   cate <- sapply(1:ncol(data$tau.x), function(i) data$tau.x[test[,i],i])
-  params[i,] <- c(data$delta_mu,data$delta_tau)
+  params[i,] <- c(data$delta_mu,data$delta_tau,data$level,n,data$sig_error)
   bart.rdd <- readRDS(paste0("Results/bart_rdd_",i,".rds"))
   sbart <- readRDS(paste0("Results/sbart_",i,".rds"))
   tbart <- readRDS(paste0("Results/tbart_",i,".rds"))
