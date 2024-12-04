@@ -22,7 +22,6 @@ fit <- function(i)
                         tau_con = tc*var(y)/ntc,
                         tau_mod = tm*var(y)/ntm)
   test <- -hs+c<=x & x<=hs+c
-  # pred <- XBART::predict.XBCFrd(fit,w[test,],rep(c,sum(test)))
   pred <- XBART::predict.XBCFrd(fit,w[test],rep(c,sum(test)))
   pred <- rowMeans(pred$tau.adj[,(burnin+1):num_sweeps])
   sqrt(mean((pred-cate[test])^2))
@@ -33,17 +32,17 @@ mu.prior <- function(x,w) w + 1/(1+exp(-5*x)) + (1-abs(x-c))*sin(x)/10
 tau.prior <- function(x,w,tau.bar) tau.bar - log(x+1)/50 + 0.01*(w - mean(w))
 ate <- 0.4
 c <- 0
-s <- 10 ## no of samples of th synthetic DGP
+s <- 50 ## no of samples of th synthetic DGP
 N <- c(500,1000)
-Omin <- c(1,5)
-Opct <- seq(0.6,0.9,length=2)
-t.sig <- c(0.1,2)
-ntrees <- c(5,15)
-Nmin <- c(5,15)
+Omin <- c(1,5,10)
+Opct <- seq(0.6,0.9,length=3)
+tau.sig <- c(0.5,1,2)
+ntrees <- c(5,10,15)
+Nmin <- c(5,10,15)
 #### Loop
-params <- c("N","ATE","Omin","Opct","h","tau_con","tau_mod","Ntrees_con","Ntrees_mod","Nmin")
-num_sweeps    <- 120
-burnin        <- 20
+params <- c("N","ATE","Omin","Opct","h","tcon","tmod","Ntcon","Ntmod","Nmin")
+num_sweeps    <- 150
+burnin        <- 50
 p_categorical <- 0
 for (n in N)
 {
@@ -53,33 +52,37 @@ for (n in N)
   w <- runif(n)
   cate <- tau.prior(c,w,ate)
   h <- quantile(abs(x),c(0.05,0.1,0.15,0.2))
+  h <- 0.068
   Ey <- mu.prior(x,w) + tau.prior(x,w,ate)*z
   ys <-  Ey + matrix(rnorm(n*s,0,0.1*sd(tau.prior(x,w,ate))),n,s)
-  for (ntc in ntrees)
+  for (tc in tau.sig)
   {
-    for (nm in Nmin)
+    for (tm in tau.sig)
     {
-      for (tc in t.sig)
+      for (ntc in ntrees)
       {
-        for (tm in t.sig)
+        for (ntm in ntrees)
         {
-          for (Om in Omin)
+          for (nm in Nmin)
           {
-            for (Op in Opct)
+            for (Om in Omin)
             {
-              for (hs in h)
+              for (Op in Opct)
               {
-                print(paste(params,c(n,ate,Om,Op,hs,tc,tm,ntc,ntm,nm),sep=": "))
-                ## Fit the model
-                cl <- makeCluster(no_cores,type="SOCK")
-                registerDoParallel(cl)
-                clusterExport(cl,varlist=ls())
-                time <- system.time({
-                  out <- parSapply(cl,1:s,fit)
-                })
-                stopCluster(cl)
-                print(time)
-                assign(paste(params,c(n,ate,Om,Op,hs,tc,tm,ntc,ntm,nm),sep=".",collapse="_"),out)
+                for (hs in h)
+                {
+                  print(paste(params,c(n,ate,Om,Op,hs,tc,tm,ntc,ntm,nm),sep=": "))
+                  ## Fit the model
+                  cl <- makeCluster(no_cores,type="SOCK")
+                  registerDoParallel(cl)
+                  clusterExport(cl,varlist=ls())
+                  time <- system.time({
+                    out <- parSapply(cl,1:s,fit)
+                  })
+                  stopCluster(cl)
+                  print(time)
+                  assign(paste(params,c(n,ate,Om,Op,hs,tc,tm,ntc,ntm,nm),sep=".",collapse="_"),out)
+                }
               }
             }
           }
@@ -95,10 +98,10 @@ save.image("prior_predictive.RData")
 objects <- mget(ls())
 sel <- grep(paste0("ATE.",ate),names(objects))
 p <- do.call("rbind",strsplit(names(objects[sel]),"_"))
-p <- apply(p,2, function(i) sub("N.|ATE.|Omin.|Opct.|h.|tcon.|tmod.","",i))
+p <- apply(p,2, function(i) sub("N.|ATE.|Omin.|Opct.|h.|tcon.|tmod.|Ntcon.|Ntmod.|Nmin.","",i))
 rmse <- sapply(objects[sel],mean)
 rmse <- cbind(p,RMSE=rmse)
-colnames(rmse) <- c("N","ATE","Omin","Opct","h","tau_con","tau_mod","RMSE")
+colnames(rmse) <- c(params,"RMSE")
 rmse <- apply(rmse,2,as.numeric)
 rmse <- data.frame(rmse)
 ### Plots
