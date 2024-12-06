@@ -32,10 +32,10 @@ mu.prior <- function(x,w) w + 1/(1+exp(-5*x)) + (1-abs(x-c))*sin(x)/10
 tau.prior <- function(x,w,tau.bar) tau.bar - log(x+1)/50 + 0.01*(w - mean(w))
 ate <- 0.4
 c <- 0
-s <- 50 ## no of samples of th synthetic DGP
-N <- c(500,1000)
+s <- 11 ## no of samples of th synthetic DGP
+N <- c(500)
 Omin <- c(1,5,10)
-Opct <- seq(0.6,0.9,length=3)
+Opct <- seq(0.6,0.9,length=2)
 tau.sig <- c(0.5,1,2)
 ntrees <- c(5,10,15)
 Nmin <- c(5,10,15)
