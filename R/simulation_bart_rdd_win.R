@@ -1,13 +1,5 @@
 ## Setup
 set.seed(0)
-### Parameters
-Omin          <- 5
-Opct          <- 0.9
-ntrees_con    <- 10
-ntrees_mod    <- 5
-Nmin          <- 5
-num_sweeps    <- 150
-burnin        <- 50
 ### Functions
 fit <- function(i)
 {
@@ -17,20 +9,20 @@ fit <- function(i)
   xs <- data$x[,i]
   fit <- XBART::XBCF.rd(ys, ws, xs, c,
                         Owidth = Owidth, Omin = Omin, Opct = Opct,
-                        num_trees_mod = ntrees_mod,
-                        num_trees_con = ntrees_con,
                         num_cutpoints = n,
+                        num_trees_con = 10, num_trees_mod = 5,
                         num_sweeps = num_sweeps,
-                        burnin = burnin, Nmin = Nmin,
+                        burnin = burnin,
                         p_categorical_con = p_categorical,
                         p_categorical_mod = p_categorical,
-                        tau_con = 2*var(ys)/ntrees_con, max_depth = max_depth,
-                        tau_mod = 0.5*var(ys)/ntrees_mod)
+                        tau_con = 2*var(ys)/10, tau_mod = 0.5*var(ys)/5)
   test <- -Owidth+c<=xs & xs<=Owidth+c
   pred <- XBART::predict.XBCFrd(fit,ws[test,],rep(c,sum(test)))
   pred$tau.adj[,(burnin+1):num_sweeps]
 }
-##
+## Parameters
+Omin <- 1
+Opct <- 0.9
 ### BEGIN LOOP
 files <- length(list.files("Data"))
 s0 <- 1
@@ -46,10 +38,19 @@ for (i in 1:files)
     res <- list(results=vector("list",s))
   }
   n <- data$n
-  Owidth <- ifelse(n==500,Ow[2],Ow[1])
   s <- ncol(data$y)
   s1 <- s
   c <- data$c
+  if (n==500)
+  {
+    Owidth <- Ow[1]
+  } else if (n==1000)
+  {
+    Owidth <- Ow[2]
+  } else
+  {
+    Owidth <- Ow[3]
+  }
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
   clusterExport(cl,varlist=ls())

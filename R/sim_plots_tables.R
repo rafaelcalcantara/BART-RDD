@@ -7,30 +7,49 @@ load("Results/sims.RData")
 # matplot(unlist(sapply(1:11, function(i) data$w[test[,i],i])),cbind(unlist(cate),unlist(tbart.cate[[9]])),pch=19)
 # matplot(unlist(sapply(1:11, function(i) data$w[test[,i],i])),cbind(unlist(cate),unlist(polynomial.cate[[9]])),pch=19)
 ###
-rmse.plot <- cbind(params,rmse.cate)
-for (i in c(6,7,8,10))
-{
-  rmse <- subset(rmse.plot,n==1000 & sig_error == 0.5)
-  plot(rmse$delta.tau,rmse[,i],type="p",col=rmse$level+1,pch=rmse$delta.mu+15,
-       ylab=colnames(rmse)[i],xlab=expression(delta[tau]),ylim=c(0,1))
-  lines(unique(rmse$delta.tau),rmse[,i][rmse$delta.mu==0.5 & rmse$level==1],col=2)
-  lines(unique(rmse$delta.tau),rmse[,i][rmse$delta.mu==0.5 & rmse$level==2],col=3)
-  lines(unique(rmse$delta.tau),rmse[,i][rmse$delta.mu==2 & rmse$level==1],col=2)
-  lines(unique(rmse$delta.tau),rmse[,i][rmse$delta.mu==2 & rmse$level==2],col=3)
-  grid(nx = NA,
-       ny = NULL,
-       lty = 2, col = "gray", lwd = 1)
-  points(rmse$delta.tau,rmse$Oracle,type="p",col="gray",pch=rmse$delta.mu+15,
-         ylab=colnames(rmse)[i],xlab=expression(delta[tau]))
-  lines(unique(rmse$delta.tau),rmse$Oracle[rmse$delta.mu==0.5 & rmse$level==1],col="gray")
-  lines(unique(rmse$delta.tau),rmse$Oracle[rmse$delta.mu==0.5 & rmse$level==2],col="gray")
-  lines(unique(rmse$delta.tau),rmse$Oracle[rmse$delta.mu==2 & rmse$level==1],col="gray")
-  lines(unique(rmse$delta.tau),rmse$Oracle[rmse$delta.mu==2 & rmse$level==2],col="gray")
-}
-mtext(expression(tau(w) == sin(10*pi*w)), side = 3, line = - 2, outer = TRUE)
+# rmse.plot <- cbind(params,rmse.cate)
+# par(mfrow=c(2,2),bty="n")
+# for (i in c(6,7,8,10))
+# {
+#   rmse <- subset(rmse.plot,n==5000)
+#   plot(rmse$delta.tau,rmse[,i],type="p",col=rmse$level+1,pch=rmse$sig_error+15,
+#        ylab=colnames(rmse)[i],xlab=expression(delta[tau]),ylim=c(0,0.9))
+#   # lines(unique(rmse$delta.tau),rmse[,i][rmse$sig_error==0.25 & rmse$level==1],col=2)
+#   # lines(unique(rmse$delta.tau),rmse[,i][rmse$sig_error==0.25 & rmse$level==2],col=3)
+#   # lines(unique(rmse$delta.tau),rmse[,i][rmse$sig_error==0.5 & rmse$level==1],col=2)
+#   # lines(unique(rmse$delta.tau),rmse[,i][rmse$sig_error==0.5 & rmse$level==2],col=3)
+#   lines(unique(rmse$delta.tau),rmse[,i][rmse$sig_error==1 & rmse$level==1],col=2)
+#   lines(unique(rmse$delta.tau),rmse[,i][rmse$sig_error==1 & rmse$level==2],col=3)
+#   lines(unique(rmse$delta.tau),rmse[,i][rmse$sig_error==2 & rmse$level==1],col=2)
+#   lines(unique(rmse$delta.tau),rmse[,i][rmse$sig_error==2 & rmse$level==2],col=3)
+#   grid(nx = NA,
+#        ny = NULL,
+#        lty = 2, col = "gray", lwd = 1)
+#   points(rmse$delta.tau,rmse$Oracle,type="p",col="gray",pch=rmse$sig_error+15,
+#          ylab=colnames(rmse)[i],xlab=expression(delta[tau]))
+#   # lines(unique(rmse$delta.tau),rmse$Oracle[rmse$sig_error==0.25 & rmse$level==1],col="gray")
+#   # lines(unique(rmse$delta.tau),rmse$Oracle[rmse$sig_error==0.25 & rmse$level==2],col="gray")
+#   # lines(unique(rmse$delta.tau),rmse$Oracle[rmse$sig_error==0.5 & rmse$level==1],col="gray")
+#   # lines(unique(rmse$delta.tau),rmse$Oracle[rmse$sig_error==0.5 & rmse$level==2],col="gray")
+#   lines(unique(rmse$delta.tau),rmse$Oracle[rmse$sig_error==1 & rmse$level==1],col="gray")
+#   lines(unique(rmse$delta.tau),rmse$Oracle[rmse$sig_error==1 & rmse$level==2],col="gray")
+#   lines(unique(rmse$delta.tau),rmse$Oracle[rmse$sig_error==2 & rmse$level==1],col="gray")
+#   lines(unique(rmse$delta.tau),rmse$Oracle[rmse$sig_error==2 & rmse$level==2],col="gray")
+# }
+# mtext(expression(tau(w) == sin(10*pi*w)), side = 3, line = - 2, outer = TRUE)
 ###
-sample <- 20
-dgp <- 3
+rmse.plot <- cbind(params,rmse.cate)
+rmse <- subset(rmse.plot,n==5000 & delta.tau==0.2)
+matplot(t(rmse[,6:9]),bty="n",pch=rmse$sig_error+14,col=rmse$level+1,
+        lty=2,type="b",ylab="RMSE",
+        xaxt="n",main=bquote(delta[tau]==0.2~";"~N==5000))
+axis(1,at=1:4,labels=names(rmse)[6:9])
+legend("topleft",col=2:3,legend=c(1,2),title=bquote(tau),ncol=2,lty=2,cex=0.75,lwd=2)
+legend("topright",pch=15:16,legend=c(1,2),title=bquote(sigma),ncol=2,cex=0.75)
+###
+sample <- 3
+dgp <- 2
+Owidth <- Ow[2]
 bart.rdd.cate.est <- bart.rdd.cate[[dgp]][[sample]]
 sbart.cate.est <- sbart.cate[[dgp]][[sample]]
 tbart.cate.est <- tbart.cate[[dgp]][[sample]]

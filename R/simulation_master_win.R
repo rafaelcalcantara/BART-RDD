@@ -17,10 +17,12 @@ if (!dir.exists("Results")) dir.create("Results")
 scripts <- list.files("R")[grep("win",list.files("R"))]
 scripts <- scripts[-grep("master|data|llr0|llr1|llr2|cgs0|cgs1|results|bcf",scripts)]
 scripts <- paste0("R/",scripts)
+### Parameters
 p_categorical <- 0
-## Owidth = 0.068 for N=500
-Ow            <- c(0.021,0.066)
-max_depth     <- 250
+ntrees        <- 20
+num_sweeps    <- 150
+burnin        <- 50
+Ow            <- c(0.066,0.034,0.014)
 for (i in scripts)
 {
   print(paste0("Script: ",i))

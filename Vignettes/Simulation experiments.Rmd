@@ -13,8 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 set.seed(7)
 ### Functions
-mu0.x <- function(x) x^3-0.75*x^2+1+0.1*sin(3*pi*x)
-mu0.w <- function(w) 0.4*w
+# - (x+0.5)*(x-1)*(cos(10*pi*x))
+mu0.x <- function(x) 3*x^5 - 2.5*x^4 - 1.5*x^3 + 2*x^2 + 3*x + 2
+mu0.w <- function(w) 0.5*w^2 - w
 tau0.x <- function(x,c) (exp(x)-exp(c))/(1+exp(x))
 tau0.w <- function(w,level) {
   if (level==1) out <- sin(3*pi*w) ## 6th degree polynomial on W
@@ -25,7 +26,7 @@ tau0.w <- function(w,level) {
 mu <- function(x,w,delta,level) {
   mu.x <- mu0.x(x)
   mu.w <- mu0.w(w)
-  mu0 <- mu.x + 0.2*mu.x*(mu.w<mean(mu.w)) + mu.w
+  mu0 <- mu.x + mu.w + 0.5*mu.x*(as.integer(mu.w*10)%%2==0)
   mu0/sd(mu0)*delta
 }
 tau <- function(x,c,w,delta,level) {
@@ -35,26 +36,26 @@ tau <- function(x,c,w,delta,level) {
 }
 ## Parameters
 c <- 0
-ate <- 0.2
-delta_mu <- 0.5
-delta_tau <- c(0.25,1)
+ate <- 1
+delta_mu <- 2
+delta_tau <- c(0.2,0.5)
 level <- 1:2
-N <- c(1000)
-sig_error <- c(0.1)
-for (dm in delta_mu)
+N <- c(1000,5000)
+sig_error <- c(1,2)
+for (n in N)
 {
-  for (dt in delta_tau)
+  ## Generate data
+  x <- 2*rbeta(n,2,4)-0.75
+  z <- as.numeric(x>=c)
+  w <- runif(n)
+  for (dm in delta_mu)
   {
-    for (lvl in level)
+    for (dt in delta_tau)
     {
-      for (n in N)
+      for (lvl in level)
       {
         for (sig in sig_error)
         {
-          ## Generate data
-          x <- 2*rbeta(n,2,4)-0.75
-          z <- as.numeric(x>=c)
-          w <- runif(n)
           cate <- tau(c,c,w,dt,lvl)
           prog <- mu(x,w,dm,lvl)
           Ey <- mu(x,w,dm,lvl) + tau(x,c,w,dt,lvl)*z
@@ -67,7 +68,7 @@ for (dm in delta_mu)
                           ~";"~sigma^2==.(sig))
           ## Plot data
           par(bty="n",pch=19)
-          layout(matrix(c(1,2,1,3,1,4),ncol=3),height=c(1,3,3))
+          layout(matrix(c(1,2,3,1,4,5),ncol=2),height=c(1,3,3))
           par(mar=c(2,2,1,1))
           plot.new()
           text(0.5,0.5,title,cex=2,font=2)
@@ -76,7 +77,13 @@ for (dm in delta_mu)
           plot(x,y,col=z+1)
           abline(v=c,lty=2)
           ###
-          plot(w,Ey,ylab=bquote(mu(x,w)+tau(x,w)*z),col=z+1)
+          plot(x,mu(x,w,dm,lvl),ylab=bquote(mu(x,w)))
+          ###
+          h <- ifelse(n==1000,0.034,0.013)
+          test <- -h<x & x<h
+          plot(w[test],Ey[test],
+               ylab="E[Y|-h<x & x<h,w]",xlab="w",
+               col=z[test]+1)
           ###
           plot(w,cate,ylab=bquote(tau(x==c,w)))
         }

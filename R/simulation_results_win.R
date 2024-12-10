@@ -1,6 +1,6 @@
 setwd("../")
 files <- length(list.files("Data"))
-Ow <- c(0.021,0.066)
+Ow <- c(0.066,0.034,0.014)
 params <- data.frame(delta.mu=rep(0,files),delta.tau=rep(0,files),
                      level=rep(0,files),n=rep(0,files),sig_error=rep(0,files))
 ##
@@ -44,7 +44,16 @@ for (i in 1:files)
   print(paste0("DGP: ",i))
   data <- readRDS(paste0("Data/dgp_",i,".rds"))
   n <- data$n
-  Owidth <- ifelse(n==500,Ow[2],Ow[1])
+  if (n==500)
+  {
+    Owidth <- Ow[1]
+  } else if (n==1000)
+  {
+    Owidth <- Ow[2]
+  } else
+  {
+    Owidth <- Ow[3]
+  }
   test <- apply(data$x,2,function(i) i >= -Owidth & Owidth >= i)
   cate <- sapply(1:ncol(data$tau.x), function(i) data$tau.x[test[,i],i])
   params[i,] <- c(data$delta_mu,data$delta_tau,data$level,n,data$sig_error)

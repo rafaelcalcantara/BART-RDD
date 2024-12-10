@@ -1,10 +1,5 @@
 ## Setup
 set.seed(0)
-### Parameters
-ntrees        <- 5
-Nmin          <- 5
-num_sweeps    <- 120
-burnin        <- 20
 ### Functions
 fit <- function(i)
 {
@@ -15,13 +10,11 @@ fit <- function(i)
   zs <- data$z[,i]
   fit1 <- XBART::XBART(ys[zs==1], cbind(xs,ws)[zs==1,], num_trees = ntrees,
                 num_cutpoints = sum(zs==1), num_sweeps = num_sweeps,
-                burnin = burnin, Nmin = Nmin,
-                p_categorical = p_categorical, max_depth = max_depth,
+                burnin = burnin, p_categorical = p_categorical,
                 tau = var(ys[zs==1])/ntrees, parallel=F)
   fit0 <- XBART::XBART(ys[zs==0], cbind(xs,ws)[zs==0,], num_trees = ntrees,
                 num_cutpoints = sum(zs==0), num_sweeps = num_sweeps,
-                burnin = burnin, Nmin = Nmin,
-                p_categorical = p_categorical, max_depth = max_depth,
+                burnin = burnin, p_categorical = p_categorical,
                 tau = var(ys[zs==0])/ntrees, parallel=F)
   test <- -Owidth+c<=xs & xs<=Owidth+c
   test.sample <- cbind(c,ws)[test,]
@@ -45,10 +38,20 @@ for (i in 1:files)
     res <- list(results=vector("list",s))
   }
   n <- data$n
-  Owidth <- ifelse(n==500,Ow[2],Ow[1])
   s <- ncol(data$y)
   s1 <- s
   c <- data$c
+  if (n==500)
+  {
+    Owidth <- Ow[1]
+  } else if (n==1000)
+  {
+    Owidth <- Ow[2]
+  } else
+  {
+    Owidth <- Ow[3]
+  }
+  
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
   clusterExport(cl,varlist=ls())

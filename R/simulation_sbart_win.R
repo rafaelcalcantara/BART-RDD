@@ -1,10 +1,5 @@
 ## Setup
 set.seed(0)
-### Parameters
-ntrees        <- 5
-Nmin          <- 5
-num_sweeps    <- 120
-burnin        <- 20
 ### Functions
 fit <- function(i)
 {
@@ -15,8 +10,7 @@ fit <- function(i)
   zs <- data$z[,i]
   fit <- XBART::XBART(ys, cbind(xs,ws,zs), num_trees = ntrees,
                       num_cutpoints = n, num_sweeps = num_sweeps,
-                      burnin = burnin, Nmin = Nmin,
-                      p_categorical = p_categorical, max_depth = max_depth,
+                      burnin = burnin, p_categorical = p_categorical,
                       tau = var(ys)/ntrees, parallel=F)
   test <- -Owidth+c<=xs & xs<=Owidth+c
   test.sample.0 <- cbind(c,ws,0)[test,]
@@ -41,8 +35,18 @@ for (i in 1:files)
     res <- list(results=vector("list",s))
   }
   n <- data$n
-  Owidth <- ifelse(n==500,Ow[2],Ow[1])
   s <- ncol(data$y)
+  if (n==500)
+  {
+    Owidth <- Ow[1]
+  } else if (n==1000)
+  {
+    Owidth <- Ow[2]
+  } else
+  {
+    Owidth <- Ow[3]
+  }
+  
   s1 <- s
   c <- data$c
   cl <- makeCluster(no_cores,type="SOCK")

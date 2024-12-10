@@ -36,10 +36,20 @@ for (i in 1:files)
   }
   n <- data$n
   lvl <- data$level
-  Owidth <- ifelse(n==500,Ow[2],Ow[1])
   s <- ncol(data$y)
   s1 <- s
   c <- data$c
+  if (n==500)
+  {
+    Owidth <- Ow[1]
+  } else if (n==1000)
+  {
+    Owidth <- Ow[2]
+  } else
+  {
+    Owidth <- Ow[3]
+  }
+  
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
   clusterExport(cl,varlist=ls())
