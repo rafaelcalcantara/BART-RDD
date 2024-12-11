@@ -1,6 +1,6 @@
 ## Setup
 set.seed(0)
-setwd("~/../Git/BART-RDD")
+setwd("../")
 if (!dir.exists("Results")) dir.create("Results") ## Create results folder
 if (length(list.files("Results")[grep("llr1_",list.files("Results"))])!=0) ## Clean up folder
 {

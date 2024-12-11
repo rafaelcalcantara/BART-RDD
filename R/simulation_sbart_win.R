@@ -1,31 +1,16 @@
 ## Setup
 set.seed(0)
-## devtools::install_github("JingyuHe/XBART@XBCF-RDD")
-library(XBART)
-setwd("~/../Git/BART-RDD")
-if (!dir.exists("Results")) dir.create("Results") ## Create results folder
-if (length(list.files("Results")[grep("sbart_",list.files("Results"))])!=0) ## Clean up folder
-{
-  files <- paste0("Results/",list.files("Results")[grep("sbart_",list.files("Results"))])
-  for (i in files) file.remove(i)
-}
-### Parameters
-ntrees        <- 5
-Nmin          <- 5
-num_sweeps    <- 120
-burnin        <- 20
 ### Functions
 fit <- function(i)
 {
   print(paste0("Sample: ",i))
   ys <- data$y[,i]
-  ifelse(is.list(data$w),ws <- data$w[[i]],ws <- subset(data$w,select=i))
+  ws <- as.matrix(data$w[,i])
   xs <- data$x[,i]
   zs <- data$z[,i]
   fit <- XBART::XBART(ys, cbind(xs,ws,zs), num_trees = ntrees,
                       num_cutpoints = n, num_sweeps = num_sweeps,
-                      burnin = burnin, Nmin = Nmin,
-                      p_categorical = p_categorical,
+                      burnin = burnin, p_categorical = p_categorical,
                       tau = var(ys)/ntrees, parallel=F)
   test <- -Owidth+c<=xs & xs<=Owidth+c
   test.sample.0 <- cbind(c,ws,0)[test,]
@@ -37,26 +22,45 @@ fit <- function(i)
 ##
 ### BEGIN LOOP
 files <- length(list.files("Data"))
+s0 <- 1
 for (i in 1:files)
 {
   print(paste0("DGP: ",i))
   data <- readRDS(paste0("Data/dgp_",i,".rds"))
-  n <- nrow(data$y)
+  if (paste0("Results/sbart_",i,".rds") %in% list.files("Results/") == T)
+  {
+    res <- readRDS(paste0("Results/sbart_",i,".rds"))
+  } else
+  {
+    res <- list(results=vector("list",s))
+  }
+  n <- data$n
   s <- ncol(data$y)
+  if (n==500)
+  {
+    Owidth <- Ow[1]
+  } else if (n==1000)
+  {
+    Owidth <- Ow[2]
+  } else if (n==2500)
+  {
+    Owidth <- Ow[3]
+  } else
+  {
+    Owidth <- Ow[4]
+  }
+  s1 <- s
   c <- data$c
-  # test <- readRDS(paste0("Data/test_dgp_",i,".rds"))
-  # test.w <- test$w
-  # test.sample.0 <- cbind(c,test.w,0)
-  # test.sample.1 <- cbind(c,test.w,1)
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
   clusterExport(cl,varlist=ls())
   time <- system.time({
-    out <- parLapply(cl,1:s,fit)
+    out <- parLapply(cl,s0:s1,fit)
   })
   stopCluster(cl)
   print(time)
-  saveRDS(list(results=out,time=time),paste0("Results/sbart_",i,".rds"))
+  res$results[s0:s1] <- out
+  saveRDS(list(results=res$results,time=time/(s1-s0+1)),paste0("Results/sbart_",i,".rds"))
   rm(out)
   gc()
 }
