@@ -8,11 +8,11 @@ fit <- function(i)
   y <- data$y[,i]
   x <- data$x[,i]
   deg.x <- 5
-  if (lvl==1) deg.w <- 6
+  if (lvl==1) deg.w <- 5
   if (lvl==2) deg.w <- 14
   bw <- rdrobust::rdbwselect(y,x,c=c,covs=w,p=deg.x,q=deg.x+1)$bws[4]
   reg <- subset(data.frame(y=y,x=x,w=w,z=data$z[,i]),x>=-bw & x<=bw)
-  model <- lm(y~((poly(x,deg.x,raw=T))*(poly(w,deg.w,raw=T)))*z,data=reg)
+  model <- lm(y~((poly(x,deg.x,raw=T))+(poly(w,deg.w,raw=T)))*z,data=reg)
   test.sample <- x>=-Owidth & x<=Owidth
   test1 <- data.frame(x=0,w=w,z=1)[test.sample,]
   test0 <- data.frame(x=0,w=w,z=0)[test.sample,]
@@ -45,11 +45,13 @@ for (i in 1:files)
   } else if (n==1000)
   {
     Owidth <- Ow[2]
-  } else
+  } else if (n==2500)
   {
     Owidth <- Ow[3]
+  } else
+  {
+    Owidth <- Ow[4]
   }
-  
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
   clusterExport(cl,varlist=ls())

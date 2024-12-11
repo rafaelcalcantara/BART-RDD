@@ -10,7 +10,7 @@ mu0.x <- function(x) 3*x^5 - 2.5*x^4 - 1.5*x^3 + 2*x^2 + 3*x + 2
 mu0.w <- function(w) 0.5*w^2 - w
 tau0.x <- function(x,c) (exp(x)-exp(c))/(1+exp(x))
 tau0.w <- function(w,level) {
-  if (level==1) out <- sin(3*pi*w) ## 6th degree polynomial on W
+  if (level==1) out <- sin(3*pi*w) ## 5th degree polynomial on W
   if (level==2) out <- sin(7*pi*w)*(w-0.5)/(5+exp(-2*w)) ## 14th degree polynomial on W
   out <- out-mean(out)
   return(out)
@@ -29,13 +29,13 @@ tau <- function(x,c,w,delta,level) {
   ate + (tau.x + tau.w)/sd(tau.x + tau.w)*delta
 }
 ## Parameters
-s <- 55
+s <- 150
 c <- 0
 ate <- 1
 delta_mu <- 2
-delta_tau <- c(0.2,0.5)
+delta_tau <- seq(0.1,1,by=0.1)
 level <- 1:2
-N <- c(1000,5000)
+N <- c(500,1000,2500,5000)
 sig_error <- c(1,2)
 out <- vector("list",length(delta_tau)*length(level)*length(N)*length(sig_error))
 ind <- 0

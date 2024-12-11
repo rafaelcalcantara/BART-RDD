@@ -38,14 +38,24 @@ load("Results/sims.RData")
 # }
 # mtext(expression(tau(w) == sin(10*pi*w)), side = 3, line = - 2, outer = TRUE)
 ###
-rmse.plot <- cbind(params,rmse.cate)
-rmse <- subset(rmse.plot,n==5000 & delta.tau==0.2)
-matplot(t(rmse[,6:9]),bty="n",pch=rmse$sig_error+14,col=rmse$level+1,
-        lty=2,type="b",ylab="RMSE",
-        xaxt="n",main=bquote(delta[tau]==0.2~";"~N==5000))
-axis(1,at=1:4,labels=names(rmse)[6:9])
-legend("topleft",col=2:3,legend=c(1,2),title=bquote(tau),ncol=2,lty=2,cex=0.75,lwd=2)
-legend("topright",pch=15:16,legend=c(1,2),title=bquote(sigma),ncol=2,cex=0.75)
+rmse.plot <- cbind(params,rmse.cate[,c(4,1,3,2,5)])
+par(mfrow=c(2,2))
+for (i in c(500,1000,2500,5000))
+{
+  rmse <- subset(rmse.plot,n==i)
+  matplot(t(rmse[,6:10]),bty="n",pch=rmse$sig_error+14,col=rmse$level+1,
+          lty=2,type="b",ylab="RMSE",
+          xaxt="n",main=bquote(N==.(i)))
+  axis(1,at=1:5,labels=names(rmse)[6:10])
+  grid(nx = NA,
+       ny = NULL,
+       lty = 2, col = "gray", lwd = 1)
+  if (i==500)
+  {
+    legend("topleft",col=2:3,legend=c(1,2),title=bquote(tau),ncol=2,lty=2,cex=0.75,lwd=2)
+    legend("top",pch=15:16,legend=c(1,2),title=bquote(sigma),ncol=2,cex=0.75)
+  }
+}
 ###
 sample <- 3
 dgp <- 2

@@ -42,11 +42,13 @@ for (i in 1:files)
   } else if (n==1000)
   {
     Owidth <- Ow[2]
-  } else
+  } else if (n==2500)
   {
     Owidth <- Ow[3]
+  } else
+  {
+    Owidth <- Ow[4]
   }
-  
   s1 <- s
   c <- data$c
   cl <- makeCluster(no_cores,type="SOCK")

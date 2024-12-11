@@ -31,13 +31,14 @@ tau.prior <- function(x,w,tau.bar) tau.bar - log(x+1)/50 + (w - mean(w))
 ate <- 0.5
 c <- 0
 s <- 11 ## no of samples of th synthetic DGP
-N <- c(500)
-Omin <- c(1,5,10)
+N <- c(500,1000,2500,5000)
+N <- 2500
+Omin <- c(1,5)
 Opct <- seq(0.6,0.9,length=3)
 #### Loop
 params <- c("N","ATE","Omin","Opct","h")
-num_sweeps    <- 150
-burnin        <- 50
+num_sweeps    <- 120
+burnin        <- 20
 p_categorical <- 0
 for (n in N)
 {
@@ -84,7 +85,7 @@ colnames(rmse) <- c(params,"RMSE")
 rmse <- apply(rmse,2,as.numeric)
 rmse <- data.frame(rmse)
 ### Plots
-rmse.plot <- reshape(subset(rmse,N==500,select=c("Omin","Opct","h","RMSE")),direction="wide",timevar = "Omin",idvar=c("h","Opct"))
+rmse.plot <- reshape(subset(rmse,N==2500,select=c("Omin","Opct","h","RMSE")),direction="wide",timevar = "Omin",idvar=c("h","Opct"))
 rmse.plot <- reshape(rmse.plot,direction="wide",timevar = "Opct",idvar="h")
 plot.labels <- substring(colnames(rmse.plot)[-1],6)
 plot.labels <- sapply(strsplit(plot.labels,"\\."), function(i) paste(i[1],paste0(i[2:3],collapse="."),sep="; "))

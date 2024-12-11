@@ -22,7 +22,7 @@ p_categorical <- 0
 ntrees        <- 20
 num_sweeps    <- 150
 burnin        <- 50
-Ow            <- c(0.066,0.034,0.014)
+Ow            <- c(0.066,0.034,0.03,0.014)
 for (i in scripts)
 {
   print(paste0("Script: ",i))
