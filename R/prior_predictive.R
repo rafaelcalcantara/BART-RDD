@@ -99,7 +99,7 @@ for (n in N)
           pch=c(rep(15,length(Opct)),rep(16,length(Opct)),rep(17,length(Opct))),
           cex.axis=0.75,cex.lab=0.75,cex=0.75,
           ylab="RMSE",xlab="h",main=paste0("N=",n))
-  if (n==500)
+  if (n==1000)
   {
     legend("top",title=expression(N[Omin]),legend=Omin,bty="n",cex=0.65,ncol=2,lty=2,
            col=1:length(Omin),lwd=2)
@@ -107,3 +107,4 @@ for (n in N)
   }
 }
 # dev.off()
+for (n in N) print(subset(rmse[rmse$N==n,],RMSE==min(RMSE)))

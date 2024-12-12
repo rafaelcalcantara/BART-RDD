@@ -29,11 +29,11 @@ tau <- function(x,c,w,delta,level) {
   ate + (tau.x + tau.w)/sd(tau.x + tau.w)*delta
 }
 ## Parameters
-s <- 150
+s <- 1000
 c <- 0
 ate <- 1
 delta_mu <- 2
-delta_tau <- seq(0.1,1,by=0.1)
+delta_tau <- c(0.1,0.25,0.5,1)
 level <- 1:2
 N <- c(500,1000,2500,5000)
 sig_error <- c(1,2)

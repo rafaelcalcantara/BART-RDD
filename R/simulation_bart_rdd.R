@@ -20,9 +20,6 @@ fit <- function(i)
   pred <- XBART::predict.XBCFrd(fit,ws[test,],rep(c,sum(test)))
   pred$tau.adj[,(burnin+1):num_sweeps]
 }
-## Parameters
-Omin <- 1
-Opct <- 0.9
 ### BEGIN LOOP
 files <- length(list.files("Data"))
 s0 <- 1
@@ -44,15 +41,23 @@ for (i in 1:files)
   if (n==500)
   {
     Owidth <- Ow[1]
+    Omin <- 1
+    Opct <- 0.75
   } else if (n==1000)
   {
     Owidth <- Ow[2]
+    Omin <- 1
+    Opct <- 0.95
   } else if (n==2500)
   {
     Owidth <- Ow[3]
+    Omin <- 1
+    Opct <- 0.75
   } else
   {
     Owidth <- Ow[4]
+    Omin <- 5
+    Opct <- 0.95
   }
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
