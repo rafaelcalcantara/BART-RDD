@@ -33,8 +33,7 @@ s <- 150
 c <- 0
 ate <- 1
 delta_mu <- 2
-# delta_tau <- seq(0.1,1,by=0.1)
-delta_tau <- 0.2
+delta_tau <- seq(0.1,1,by=0.1)
 level <- 1:2
 N <- c(500,1000,2500,5000)
 sig_error <- c(1,2)

@@ -38,9 +38,9 @@ tau <- function(x,c,w,delta,level) {
 c <- 0
 ate <- 1
 delta_mu <- 2
-delta_tau <- c(0.2,0.5)
+delta_tau <- 0.2
 level <- 1:2
-N <- c(1000,5000)
+N <- c(500,1000,2500,5000)
 sig_error <- c(1,2)
 for (n in N)
 {
@@ -79,7 +79,11 @@ for (n in N)
           ###
           plot(x,mu(x,w,dm,lvl),ylab=bquote(mu(x,w)))
           ###
-          h <- ifelse(n==1000,0.034,0.013)
+          # Windows used in BART-RDD for each sample size
+          if (n==500) h <- 0.06
+          if (n==1000) h <- 0.034
+          if (n==2500) h <- 0.03
+          if (n==5000) h <- 0.014
           test <- -h<x & x<h
           plot(w[test],Ey[test],
                ylab="E[Y|-h<x & x<h,w]",xlab="w",

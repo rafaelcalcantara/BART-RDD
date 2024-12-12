@@ -30,11 +30,10 @@ mu.prior <- function(x,w) w + 1/(1+exp(-5*x)) + (1-abs(x-c))*sin(x)/10
 tau.prior <- function(x,w,tau.bar) tau.bar - log(x+1)/50 + (w - mean(w))
 ate <- 0.5
 c <- 0
-s <- 11 ## no of samples of th synthetic DGP
+s <- 100 ## no of samples of th synthetic DGP
 N <- c(500,1000,2500,5000)
-N <- 2500
-Omin <- c(1,5)
-Opct <- seq(0.6,0.9,length=3)
+Omin <- 1:5
+Opct <- c(0.6,0.7,0.8,0.9,0.95)
 #### Loop
 params <- c("N","ATE","Omin","Opct","h")
 num_sweeps    <- 120
@@ -100,15 +99,3 @@ legend("top",title=expression(N[Omin]),legend=Omin,bty="n",cex=0.65,ncol=3,lty=2
        col=1:3,lwd=2)
 legend("topright",title=bquote(alpha),legend=Opct,bty="n",cex=0.65,pt.cex=0.85,ncol=3,pch=c(0:2))
 # dev.off()
-# rmse.plot <- reshape(subset(rmse,N==5000,select=c("Omin","Opct","h","RMSE")),direction="wide",timevar = "Omin",idvar=c("h","Opct"))
-# rmse.plot <- reshape(rmse.plot,direction="wide",timevar = "Opct",idvar="h")
-# plot.labels <- substring(colnames(rmse.plot)[-1],6)
-# plot.labels <- sapply(strsplit(plot.labels,"\\."), function(i) paste(i[1],paste0(i[2:3],collapse="."),sep="; "))
-# col <- rainbow(ncol(rmse.plot)-1)
-# matplot(x=rmse.plot[,1],rmse.plot[,-1],type="b",lty=2,col=rep(c(1,3,2),3),
-#         pch=c(15,15,15,16,16,16,17,17,17),
-#         cex.axis=0.75,cex.lab=0.75,cex=0.75,
-#         ylab="RMSE",xlab="h",main="N=5000")
-# legend("top",title=expression(N[Omin]),legend=Omin,bty="n",cex=0.65,ncol=3,lty=2,
-#        col=1:3,lwd=2)
-# legend("topright",title=bquote(alpha),legend=Opct,bty="n",cex=0.65,pt.cex=0.85,ncol=3,pch=c(0:2))
