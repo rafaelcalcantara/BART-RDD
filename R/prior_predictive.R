@@ -30,10 +30,14 @@ mu.prior <- function(x,w) w + 1/(1+exp(-5*x)) + (1-abs(x-c))*sin(x)/10
 tau.prior <- function(x,w,tau.bar) tau.bar - log(x+1)/50 + (w - mean(w))
 ate <- 0.5
 c <- 0
-s <- 100 ## no of samples of th synthetic DGP
+s <- no_cores ## no of samples of th synthetic DGP
 N <- c(500,1000,2500,5000)
-Omin <- 1:5
-Opct <- c(0.6,0.7,0.8,0.9,0.95)
+Omin <- c(1,3,5)
+Opct <- c(0.6,0.75,0.95)
+h.list <- list(`500`=quantile(abs(2*rbeta(500,2,4)-0.75),c(0.025,0.05,0.1)),
+               `1000`=quantile(abs(2*rbeta(500,2,4)-0.75),c(0.025,0.05,0.1)),
+               `2500`=quantile(abs(2*rbeta(500,2,4)-0.75),c(0.025,0.05,0.1)),
+               `5000`=quantile(abs(2*rbeta(500,2,4)-0.75),c(0.025,0.05,0.1)))
 #### Loop
 params <- c("N","ATE","Omin","Opct","h")
 num_sweeps    <- 120
@@ -46,7 +50,7 @@ for (n in N)
   z <- as.numeric(x>=c)
   w <- runif(n)
   cate <- tau.prior(c,w,ate)
-  h <- quantile(abs(x),c(0.025,0.05,0.1))
+  h <- h.list[[as.character(n)]]
   Ey <- mu.prior(x,w) + tau.prior(x,w,ate)*z
   ys <-  Ey + matrix(rnorm(n*s,0,0.1*sd(tau.prior(x,w,ate))),n,s)
   for (Om in Omin)
@@ -84,18 +88,22 @@ colnames(rmse) <- c(params,"RMSE")
 rmse <- apply(rmse,2,as.numeric)
 rmse <- data.frame(rmse)
 ### Plots
-rmse.plot <- reshape(subset(rmse,N==2500,select=c("Omin","Opct","h","RMSE")),direction="wide",timevar = "Omin",idvar=c("h","Opct"))
-rmse.plot <- reshape(rmse.plot,direction="wide",timevar = "Opct",idvar="h")
-plot.labels <- substring(colnames(rmse.plot)[-1],6)
-plot.labels <- sapply(strsplit(plot.labels,"\\."), function(i) paste(i[1],paste0(i[2:3],collapse="."),sep="; "))
-col <- rainbow(ncol(rmse.plot)-1)
 # pdf("Figures/prior_predictive.pdf")
-par(mfrow=c(1,1),bty="L")
-matplot(x=rmse.plot[,1],rmse.plot[,-1],type="b",lty=2,col=rep(c(1,3,2),3),
-        pch=c(15,15,15,16,16,16,17,17,17),
-        cex.axis=0.75,cex.lab=0.75,cex=0.75,
-        ylab="RMSE",xlab="h",main="N=1000")
-legend("top",title=expression(N[Omin]),legend=Omin,bty="n",cex=0.65,ncol=3,lty=2,
-       col=1:3,lwd=2)
-legend("topright",title=bquote(alpha),legend=Opct,bty="n",cex=0.65,pt.cex=0.85,ncol=3,pch=c(0:2))
+par(mfrow=c(2,2),bty="L")
+###
+for (n in N)
+{
+  rmse.plot <- reshape(subset(rmse,N==n,select=c("Omin","Opct","h","RMSE")),direction="wide",timevar = "Omin",idvar=c("h","Opct"))
+  rmse.plot <- reshape(rmse.plot,direction="wide",timevar = "Opct",idvar="h")
+  matplot(x=rmse.plot[,1],rmse.plot[,-1],type="b",lty=2,col=rep(1:length(Omin),length(Opct)),
+          pch=c(rep(15,length(Opct)),rep(16,length(Opct)),rep(17,length(Opct))),
+          cex.axis=0.75,cex.lab=0.75,cex=0.75,
+          ylab="RMSE",xlab="h",main=paste0("N=",n))
+  if (n==500)
+  {
+    legend("top",title=expression(N[Omin]),legend=Omin,bty="n",cex=0.65,ncol=2,lty=2,
+           col=1:length(Omin),lwd=2)
+    legend("topright",title=bquote(alpha),legend=Opct,bty="n",cex=0.65,pt.cex=0.85,ncol=2,pch=15:17)
+  }
+}
 # dev.off()
