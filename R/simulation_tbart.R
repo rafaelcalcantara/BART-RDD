@@ -25,7 +25,6 @@ fit <- function(i)
 ##
 ### BEGIN LOOP
 files <- length(list.files("Data"))
-s0 <- 1
 for (i in 1:files)
 {
   print(paste0("DGP: ",i))
@@ -39,7 +38,6 @@ for (i in 1:files)
   }
   n <- data$n
   s <- ncol(data$y)
-  s1 <- s
   c <- data$c
   if (n==500)
   {
