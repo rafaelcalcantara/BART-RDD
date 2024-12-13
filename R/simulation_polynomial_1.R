@@ -58,7 +58,7 @@ for (i in 1:files)
   stopCluster(cl)
   print(time)
   res$results[s0:s1] <- out
-  saveRDS(list(results=res$results,time=time/(s1-s0+1)),paste0("Results/polynomial_",i,".rds"))
+  saveRDS(list(results=res$results,time=time/(s1-s0+1)),paste0("Results/polynomial_1_",i,".rds"))
   rm(out)
   gc()
 }
