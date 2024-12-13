@@ -1,0 +1,99 @@
+---
+title: "Simulation Experiments"
+author: "Rafael Alcantara"
+date: "2024-12-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## DGPs
+```{r}
+set.seed(7)
+### Functions
+# - (x+0.5)*(x-1)*(cos(10*pi*x))
+mu0.x <- function(x) 3*x^5 - 2.5*x^4 - 1.5*x^3 + 2*x^2 + 3*x + 2
+mu0.w <- function(w) 0.5*w^2 - w
+tau0.x <- function(x,c) (exp(x)-exp(c))/(1+exp(x))
+tau0.w <- function(w,level) {
+  if (level==1) out <- sin(3*pi*w) ## 5th degree polynomial on W
+  if (level==2) out <- sin(7*pi*w)*(w-0.5)/(5+exp(-2*w)) ## 14th degree polynomial on W
+  out <- out-mean(out)
+  return(out)
+}
+mu <- function(x,w,delta,level) {
+  mu.x <- mu0.x(x)
+  mu.w <- mu0.w(w)
+  mu0 <- mu.x + mu.w + 0.5*mu.x*(as.integer(mu.w*10)%%2==0)
+  mu0/sd(mu0)*delta
+}
+tau <- function(x,c,w,delta,level) {
+  tau.x <- tau0.x(x,c)
+  tau.w <- tau0.w(w,level)
+  ate + (tau.x + tau.w)/sd(tau.x + tau.w)*delta
+}
+## Parameters
+c <- 0
+ate <- 1
+delta_mu <- 2
+delta_tau <- 0.2
+level <- 1:2
+N <- c(500,1000,2500,5000)
+sig_error <- c(1,2)
+for (n in N)
+{
+  ## Generate data
+  x <- 2*rbeta(n,2,4)-0.75
+  z <- as.numeric(x>=c)
+  w <- runif(n)
+  for (dm in delta_mu)
+  {
+    for (dt in delta_tau)
+    {
+      for (lvl in level)
+      {
+        for (sig in sig_error)
+        {
+          cate <- tau(c,c,w,dt,lvl)
+          prog <- mu(x,w,dm,lvl)
+          Ey <- mu(x,w,dm,lvl) + tau(x,c,w,dt,lvl)*z
+          y <- Ey + rnorm(n,0,sqrt(sig))
+          title <- bquote(tau(x==c,w)==.(ate)
+                          ~";"~delta[mu]==.(dm)
+                          ~";"~delta[tau]==.(dt)
+                          ~";"~tau[level]==.(lvl)
+                          ~";"~N==.(n)
+                          ~";"~sigma^2==.(sig))
+          ## Plot data
+          par(bty="n",pch=19)
+          layout(matrix(c(1,2,3,1,4,5),ncol=2),height=c(1,3,3))
+          par(mar=c(2,2,1,1))
+          plot.new()
+          text(0.5,0.5,title,cex=2,font=2)
+          ###
+          par(mar=c(5,5,1,1))
+          plot(x,y,col=z+1)
+          abline(v=c,lty=2)
+          ###
+          plot(x,mu(x,w,dm,lvl),ylab=bquote(mu(x,w)))
+          ###
+          # Windows used in BART-RDD for each sample size
+          if (n==500) h <- 0.06
+          if (n==1000) h <- 0.034
+          if (n==2500) h <- 0.03
+          if (n==5000) h <- 0.014
+          test <- -h<x & x<h
+          plot(w[test],Ey[test],
+               ylab="E[Y|-h<x & x<h,w]",xlab="w",
+               col=z[test]+1)
+          ###
+          plot(w,cate,ylab=bquote(tau(x==c,w)))
+        }
+      }
+    }
+  }
+}
+```
+
