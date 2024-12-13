@@ -16,6 +16,8 @@ ntrees        <- 20
 num_sweeps    <- 150
 burnin        <- 50
 Ow            <- c(0.03,0.04,0.007,0.02)
+s0 <- 1
+s1 <- 125
 for (i in scripts)
 {
   print(paste0("Script: ",i))

@@ -22,7 +22,6 @@ fit <- function(i)
 ##
 ### BEGIN LOOP
 files <- length(list.files("Data"))
-s0 <- 1
 for (i in 1:files)
 {
   print(paste0("DGP: ",i))
@@ -49,7 +48,6 @@ for (i in 1:files)
   {
     Owidth <- Ow[4]
   }
-  s1 <- s
   c <- data$c
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
