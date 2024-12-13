@@ -3,7 +3,7 @@ source("R/simulation_data.R")
 library(doParallel)
 library(XBART)
 ### Parallelization
-no_cores <- 10
+no_cores <- 125
 ## Create results folder
 if (!dir.exists("Results")) dir.create("Results")
 ## Get simulation script names
