@@ -1,4 +1,4 @@
-setwd("../")
+setwd("~/Git/BART-RDD")
 source("R/simulation_data.R")
 library(doParallel)
 library(XBART)
@@ -8,7 +8,7 @@ no_cores <- 125
 if (!dir.exists("Results")) dir.create("Results")
 ## Get simulation script names
 scripts <- list.files("R")[grep("simulation",list.files("R"))]
-scripts <- scripts[-grep("master|data|results|bart_rdd",scripts)]
+scripts <- scripts[-grep("master|data|results",scripts)]
 scripts <- paste0("R/",scripts)
 ### Parameters
 p_categorical <- 0
