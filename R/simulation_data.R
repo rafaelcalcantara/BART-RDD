@@ -37,28 +37,31 @@ delta_tau <- c(0.1,0.25,0.5,1)
 level <- 1:2
 N <- c(500,1000,2500,5000)
 sig_error <- c(1,2)
-out <- vector("list",length(delta_tau)*length(level)*length(N)*length(sig_error))
 ind <- 0
-for (dt in delta_tau)
+params <- expand.grid(delta_tau,level,N,sig_error)
+gen.data <- function(ind)
 {
-  for (lvl in level)
-  {
-    for (n in N)
-    {
-      for (sig in sig_error)
-      {
-        ind <- ind+1
-        print(paste0("DGP ",ind))
-        ## Generate data
-        x <- matrix(2*rbeta(n*s,2,4)-0.75,n,s)
-        z <- apply(x,2,function(i) as.numeric(i>=c))
-        w <- matrix(runif(n*s),n,s)
-        cate <- apply(w, 2, function(i) tau(c,c,i,dt,lvl))
-        y <- sapply(1:s, function(i) mu(x[,i],w[,i],delta_mu,lvl) + tau(x[,i],c,w[,i],dt,lvl)*z[,i] + rnorm(n,0,sqrt(sig)))
-        ## Save data
-        out[[ind]] <- list(y=y,x=x,z=z,w=w,c=c,tau.x=cate,tau=ate,delta_mu=delta_mu,delta_tau=dt,level=lvl,n=n,sig_error=sig)
-        saveRDS(out[[ind]],paste0("Data/dgp_",ind,".rds"))
-      }
-    }
-  }
+  row <- as.numeric(params[ind,])
+  dt <- row[1]
+  lvl <- row[2]
+  n <- row[3]
+  sig <- row[4]
+  x <- matrix(2*rbeta(n*s,2,4)-0.75,n,s)
+  z <- apply(x,2,function(i) as.numeric(i>=c))
+  w <- matrix(runif(n*s),n,s)
+  cate <- apply(w, 2, function(i) tau(c,c,i,dt,lvl))
+  y <- sapply(1:s, function(i) mu(x[,i],w[,i],delta_mu,lvl) + tau(x[,i],c,w[,i],dt,lvl)*z[,i] + rnorm(n,0,sqrt(sig)))
+  ## Save data
+  out <- list(y=y,x=x,z=z,w=w,c=c,tau.x=cate,tau=ate,delta_mu=delta_mu,delta_tau=dt,level=lvl,n=n,sig_error=sig)
+  saveRDS(out,paste0("Data/dgp_",ind,".rds"))
 }
+##
+cl <- makeCluster(no_cores,type="SOCK")
+registerDoParallel(cl)
+clusterExport(cl,varlist=ls())
+time <- system.time({
+  out <- parLapply(cl,1:nrow(params),gen.data)
+})
+stopCluster(cl)
+print(time)
+print("Data generated")
