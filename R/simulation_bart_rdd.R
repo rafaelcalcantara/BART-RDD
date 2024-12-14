@@ -57,7 +57,7 @@ for (i in 1:files)
     Omin <- 5
     Opct <- 0.95
   }
-  cl <- makeCluster(no_cores,type="FORK")
+  cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
   clusterExport(cl,varlist=ls())
   time <- system.time({

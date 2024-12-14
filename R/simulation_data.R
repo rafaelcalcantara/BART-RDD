@@ -57,7 +57,7 @@ gen.data <- function(ind)
   saveRDS(out,paste0("Data/dgp_",ind,".rds"))
 }
 ##
-cl <- makeCluster(no_cores,type="FORK")
+cl <- makeCluster(no_cores,type="SOCK")
 registerDoParallel(cl)
 clusterExport(cl,varlist=ls())
 time <- system.time({
