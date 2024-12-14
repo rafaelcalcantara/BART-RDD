@@ -1,4 +1,5 @@
 set.seed(0)
+no_cores <- 10
 if (!dir.exists("Data")) dir.create("Data") ## Create data folder
 if (length(list.files("Data"))!=0) ## Clean up folder
 {

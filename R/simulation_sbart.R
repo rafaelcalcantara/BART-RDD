@@ -26,7 +26,7 @@ for (i in 1:files)
 {
   print(paste0("DGP: ",i))
   data <- readRDS(paste0("Data/dgp_",i,".rds"))
-  if (paste0("Results/sbart_",i,".rds") %in% list.files("Results/") == T)
+  if (paste0("sbart_",i,".rds") %in% list.files("Results/") == T)
   {
     res <- readRDS(paste0("Results/sbart_",i,".rds"))
   } else
@@ -58,7 +58,7 @@ for (i in 1:files)
   stopCluster(cl)
   print(time)
   res$results[s0:s1] <- out
-  saveRDS(list(results=res$results,time=time/(s1-s0+1)),paste0("Results/sbart_",i,".rds"))
+  saveRDS(list(results=res$results,time=time),paste0("Results/sbart_",i,".rds"))
   rm(out)
   gc()
 }

@@ -38,15 +38,15 @@ load("Results/sims.RData")
 # }
 # mtext(expression(tau(w) == sin(10*pi*w)), side = 3, line = - 2, outer = TRUE)
 ###
-rmse.plot <- cbind(params,rmse.cate[,c(4,1,3,2,5)])
+rmse.plot <- cbind(params,rmse.cate)
 par(mfrow=c(2,2))
 for (i in c(500,1000,2500,5000))
 {
-  rmse <- subset(rmse.plot,n==i)
-  matplot(t(rmse[,6:10]),bty="n",pch=rmse$sig_error+14,col=rmse$level+1,
+  rmse <- subset(rmse.plot,n==i & delta.tau==1)
+  matplot(t(rmse[,-c(1:5)]),bty="n",pch=rmse$sig_error+14,col=rmse$level+1,
           lty=2,type="b",ylab="RMSE",
           xaxt="n",main=bquote(N==.(i)))
-  axis(1,at=1:5,labels=names(rmse)[6:10])
+  axis(1,at=1:(ncol(rmse)-5),labels=names(rmse)[-c(1:5)],cex.axis=0.8)
   grid(nx = NA,
        ny = NULL,
        lty = 2, col = "gray", lwd = 1)
