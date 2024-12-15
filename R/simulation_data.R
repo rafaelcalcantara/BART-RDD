@@ -1,3 +1,4 @@
+setwd("../")
 library(doParallel)
 set.seed(0)
 no_cores <- 125
