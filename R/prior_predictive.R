@@ -4,7 +4,7 @@ library(doParallel)
 library(XBART)
 library(lattice)
 ### Parallelization
-no_cores <- 125
+no_cores <- detectCores()-1
 ## Fitting function for prior predictive
 fit <- function(i)
 {
@@ -30,7 +30,7 @@ mu.prior <- function(x,w) w + 1/(1+exp(-5*x)) + (1-abs(x-c))*sin(x)/10
 tau.prior <- function(x,w,tau.bar) tau.bar - log(x+1)/50 + (w - mean(w))
 ate <- 0.5
 c <- 0
-s <- no_cores ## no of samples of th synthetic DGP
+s <- no_cores*3 ## no of samples of th synthetic DGP
 N <- c(500,1000,2500,5000)
 Omin <- c(1,3,5)
 Opct <- c(0.6,0.75,0.95)
