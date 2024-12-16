@@ -22,8 +22,7 @@ fit <- function(i)
 }
 ##
 ### BEGIN LOOP
-files <- length(list.files("Data"))
-for (i in 1:files)
+for (i in files)
 {
   print(paste0("DGP: ",i))
   data <- readRDS(paste0("Data/dgp_",i,".rds"))

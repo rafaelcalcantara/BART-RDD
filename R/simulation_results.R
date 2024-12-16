@@ -1,6 +1,6 @@
 setwd("../")
 files <- length(list.files("Data"))
-Ow <- c(0.03,0.04,0.007,0.02)
+Ow <- c(0.066,0.0425,0.029,0.01)
 params <- data.frame(delta.mu=rep(0,files),delta.tau=rep(0,files),
                      level=rep(0,files),n=rep(0,files),sig_error=rep(0,files))
 samples <- 1:125

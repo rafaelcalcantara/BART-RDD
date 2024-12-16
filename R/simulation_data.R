@@ -36,10 +36,10 @@ s <- 1000
 c <- 0
 ate <- 1
 delta_mu <- 2
-delta_tau <- c(0.1,0.25,0.5,1)
+delta_tau <- c(0.2,1)
 level <- 1:2
 N <- c(500,1000,2500,5000)
-sig_error <- c(1,2)
+sig_error <- 1
 ind <- 0
 params <- expand.grid(delta_tau,level,N,sig_error)
 gen.data <- function(ind)
