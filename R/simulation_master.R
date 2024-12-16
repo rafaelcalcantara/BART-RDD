@@ -6,6 +6,12 @@ no_cores <- 125
 ## Create results folder
 if (!dir.exists("Results")) dir.create("Results")
 ## Get simulation script names
+scripts <- list.files("R")[grep("simulation",list.files("R"))]
+scripts <- scripts[-grep("master|data|results",scripts)]
+scripts <- paste0("R/",scripts)
+## Samples to estimate
+s0 <- 1
+s1 <- 1000
 ## Take command line arguments
 args <- commandArgs(trailingOnly = T)
 if (length(args) > 0)
@@ -15,9 +21,6 @@ if (length(args) > 0)
 {
   files <- length(list.files("Data"))
 }
-scripts <- list.files("R")[grep("simulation",list.files("R"))]
-scripts <- scripts[-grep("master|data|results",scripts)]
-scripts <- paste0("R/",scripts)
 ### Parameters
 p_categorical <- 0
 ntrees        <- 10
