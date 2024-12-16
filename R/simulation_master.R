@@ -9,6 +9,7 @@ if (!dir.exists("Results")) dir.create("Results")
 scripts <- list.files("R")[grep("simulation",list.files("R"))]
 scripts <- scripts[-grep("master|data|results",scripts)]
 scripts <- paste0("R/",scripts)
+scripts <- "R/simulation_oracle.R"
 ## Samples to estimate
 s0 <- 1
 s1 <- 1000
