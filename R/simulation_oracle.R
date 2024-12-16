@@ -9,8 +9,8 @@ fit <- function(i)
   x <- data$x[,i]
   deg.x <- 5
   deg.w <- 2
-  if (lvl==1) w2 <- sin(2*pi*w)
-  if (lvl==2) w2 <- sin(3*pi*w)*(w-0.5)/(5+exp(-2*w))
+  if (lvl==1) w2 <- sin(3*pi*w)
+  if (lvl==2) w2 <- sin(7*pi*w)*(w-0.5)/(5+exp(-2*w))
   bw <- rdrobust::rdbwselect(y,x,c=c,covs=cbind(w,w2),p=deg.x,q=deg.x+1)$bws[4]
   reg <- subset(data.frame(y=y,x=x,w=w,w2=w2,z=data$z[,i]),x>=-bw & x<=bw)
   model <- lm(y~((exp(x)-1)/(1+exp(x))+w2)*z+poly(x,deg.x,raw=T)*as.factor(as.integer(10*w)%%2==0)+poly(w,deg.w,raw=T),data=reg)
