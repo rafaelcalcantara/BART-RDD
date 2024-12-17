@@ -35,7 +35,7 @@ ate <- 0.5
 c <- 0
 s <- no_cores*5 ## no of samples of th synthetic DGP
 N <- c(500,1000,2500,5000)
-Omin <- 1:10
+Omin <- c(1,3,5)
 Opct <- c(0.6,0.75,0.95)
 h.grid <- function(x,c,grid)
 {
@@ -56,10 +56,10 @@ h.grid <- function(x,c,grid)
   }
   return(out)
 }
-h.list <- list(`500`=h.grid(2*rbeta(500,2,4)-0.75,c,2:10*10),
-               `1000`=h.grid(2*rbeta(1000,2,4)-0.75,c,2:10*10),
-               `2500`=h.grid(2*rbeta(2500,2,4)-0.75,c,2:10*10),
-               `5000`=h.grid(2*rbeta(5000,2,4)-0.75,c,2:10*10))
+h.list <- list(`500`=h.grid(2*rbeta(500,2,4)-0.75,c,2:12*10),
+               `1000`=h.grid(2*rbeta(1000,2,4)-0.75,c,2:12*10),
+               `2500`=h.grid(2*rbeta(2500,2,4)-0.75,c,2:12*10),
+               `5000`=h.grid(2*rbeta(5000,2,4)-0.75,c,2:12*10))
 #### Loop
 params <- c("N","ATE","Omin","Opct","h")
 num_sweeps    <- 120
