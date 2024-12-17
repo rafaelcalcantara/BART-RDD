@@ -4,8 +4,8 @@ library(doParallel)
 library(XBART)
 library(lattice)
 ### Parallelization
-no_cores <- detectCores()-1
-# no_cores <- 125
+# no_cores <- detectCores()-1
+no_cores <- 125
 ## Fitting function for prior predictive
 fit <- function(i)
 {
