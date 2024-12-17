@@ -5,12 +5,15 @@ library(XBART)
 library(lattice)
 ### Parallelization
 no_cores <- detectCores()-1
-no_cores <- 125
+# no_cores <- 125
 ## Fitting function for prior predictive
 fit <- function(i)
 {
   print(paste0("Sample: ",i))
   y <- ys[,i]
+  y <- y[train]
+  x <- x[train]
+  w <- w[train]
   fit <- XBART::XBCF.rd(y, w, x, c,
                         Owidth = hs, Omin = Om, Opct = Op,
                         num_cutpoints = n,
@@ -82,6 +85,7 @@ for (n in N)
       for (hs in h)
       {
         print(paste(params,c(n,ate,Om,Op,hs),sep=": "))
+        train <- -5*hs < x & x < 5*hs
         ## Fit the model
         cl <- makeCluster(no_cores,type="SOCK")
         registerDoParallel(cl)
