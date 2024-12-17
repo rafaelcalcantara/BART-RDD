@@ -38,10 +38,10 @@ tau <- function(x,c,w,delta,level) {
 c <- 0
 ate <- 1
 delta_mu <- 2
-delta_tau <- 0.2
+delta_tau <- c(0.2,1)
 level <- 1:2
 N <- c(500,1000,2500,5000)
-sig_error <- c(1,2)
+sig_error <- c(1)
 for (n in N)
 {
   ## Generate data

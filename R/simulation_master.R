@@ -9,10 +9,9 @@ if (!dir.exists("Results")) dir.create("Results")
 scripts <- list.files("R")[grep("simulation",list.files("R"))]
 scripts <- scripts[-grep("master|data|results",scripts)]
 scripts <- paste0("R/",scripts)
-scripts <- "R/simulation_oracle.R"
 ## Samples to estimate
 s0 <- 1
-s1 <- 1000
+s1 <- 500
 ## Take command line arguments
 args <- commandArgs(trailingOnly = T)
 if (length(args) > 0)
@@ -27,7 +26,7 @@ p_categorical <- 0
 ntrees        <- 10
 num_sweeps    <- 150
 burnin        <- 50
-Ow            <- c(0.029,0.018,0.029,0.01)
+Ow            <- c(0.066,0.034,0.03,0.014)
 for (j in scripts)
 {
   print(paste0("Script: ",j))
