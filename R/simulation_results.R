@@ -1,9 +1,9 @@
 setwd("../")
 files <- length(list.files("Data"))
-Ow <- c(0.029,0.018,0.029,0.01)
+Ow <- c(0.057,0.029,0.01,0.007)
 params <- data.frame(delta.mu=rep(0,files),delta.tau=rep(0,files),
                      level=rep(0,files),n=rep(0,files),sig_error=rep(0,files))
-samples <- 1:1000
+samples <- 1:500
 ##
 bart.rdd.cate <- vector("list",files)
 bart.rdd.cate.rmse <- rep(0,files)
@@ -135,12 +135,12 @@ for (i in 1:files)
 ## RMSE
 rmse.cate <- cbind(`Oracle`=oracle.cate.rmse,
                    `BART-RDD`=bart.rdd.cate.rmse,
+                   `Poly_full`=polynomial.full.cate.rmse,
                    `T-BART`=tbart.cate.rmse,
                    `S-BART`=sbart.cate.rmse,
                    `Poly_1`=polynomial.1.cate.rmse,
                    `Poly_2`=polynomial.2.cate.rmse,
-                   `Poly_3`=polynomial.3.cate.rmse,
-                   `Poly_full`=polynomial.full.cate.rmse)
+                   `Poly_3`=polynomial.3.cate.rmse)
 ## Bias
 bias.cate <- cbind(`Oracle`=oracle.cate.bias,
                    `BART-RDD`=bart.rdd.cate.bias,

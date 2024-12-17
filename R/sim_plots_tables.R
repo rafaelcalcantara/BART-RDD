@@ -1,24 +1,24 @@
 setwd("../")
 load("Results/sims.RData")
 ###
-rmse.plot <- cbind(params,rmse.cate)
-dt <- 1
+rmse.plot <- cbind(params,rmse.cate/params$delta.tau)
 par(mfrow=c(2,2))
 for (i in c(500,1000,2500,5000))
 {
-  rmse <- subset(rmse.plot,n==i & delta.tau==dt)
-  matplot(t(rmse[,-c(1:5)])/dt,bty="n",pch=16,col=rmse$level+1,
+  rmse <- subset(rmse.plot,n==i)
+  matplot(t(rmse[,-c(1:5)]),bty="n",pch=16,col=1:3,
           lty=2,type="b",ylab=bquote("RMSE/"~delta[tau]),
           xaxt="n",main=bquote(N==.(i)))
   axis(1,at=1:(ncol(rmse)-5),labels=names(rmse)[-c(1:5)],cex.axis=0.8)
   grid(nx = NA,
        ny = NULL,
        lty = 2, col = "gray", lwd = 1)
-  if (i==500)
+  if (i==5000)
   {
-    legend(x=par("usr")[1],y=par("usr")[4],col=2:3,legend=c(1,2),
-           title=bquote(tau),ncol=1,lty=2,cex=0.75,lwd=2,
-           text.width = 0.2*c(strwidth("1"),strwidth("2")),y.intersp = 0.75)
+    legend("topleft",col=1:3,legend=c(0.3,0.5,0.7),
+           title=expression(delta[tau]),ncol=2,lty=2,cex=0.75,lwd=2,
+           text.width = 0.6*c(strwidth("0.3"),strwidth("0.5"),strwidth("0.7")),
+           y.intersp = 0.5)
   }
 }
 ###

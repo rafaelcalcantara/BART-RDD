@@ -11,7 +11,7 @@ scripts <- scripts[-grep("master|data|results|bart_rdd",scripts)]
 scripts <- paste0("R/",scripts)
 ## Samples to estimate
 s0 <- 1
-s1 <- 500
+s1 <- 250
 ## Take command line arguments
 args <- commandArgs(trailingOnly = T)
 if (length(args) > 0)
@@ -26,7 +26,7 @@ p_categorical <- 0
 ntrees        <- 10
 num_sweeps    <- 150
 burnin        <- 50
-Ow            <- c(0.066,0.034,0.03,0.014)
+Ow            <- c(0.057,0.029,0.01,0.007)
 for (j in scripts)
 {
   print(paste0("Script: ",j))

@@ -15,6 +15,8 @@ fit <- function(i)
                         num_cutpoints = n,
                         num_sweeps = num_sweeps,
                         burnin = burnin,
+                        num_trees_con = 10,
+                        num_trees_mod = 5,
                         p_categorical_con = p_categorical,
                         p_categorical_mod = p_categorical,
                         tau_con = 2*var(y)/30,
@@ -30,14 +32,32 @@ mu.prior <- function(x,w) w + 1/(1+exp(-5*x)) + (1-abs(x-c))*sin(x)/10
 tau.prior <- function(x,w,tau.bar) tau.bar - log(x+1)/50 + (w - mean(w))
 ate <- 0.5
 c <- 0
-s <- no_cores*3 ## no of samples of th synthetic DGP
+s <- no_cores ## no of samples of th synthetic DGP
 N <- c(500,1000,2500,5000)
 Omin <- c(1,3,5)
 Opct <- c(0.6,0.75,0.95)
-h.list <- list(`500`=quantile(abs(2*rbeta(500,2,4)-0.75),c(0.025,0.05,0.1)),
-               `1000`=quantile(abs(2*rbeta(500,2,4)-0.75),c(0.025,0.05,0.1)),
-               `2500`=quantile(abs(2*rbeta(500,2,4)-0.75),c(0.025,0.05,0.1)),
-               `5000`=quantile(abs(2*rbeta(500,2,4)-0.75),c(0.025,0.05,0.1)))
+h.grid <- function(x,c,grid)
+{
+  abs.x <- sort(abs(x))
+  out <- rep(0,length(grid))
+  names(out) <- grid
+  for(total in grid)
+  {
+    i <- 1
+    sum <- 0
+    while(sum < total) 
+    {
+      sum <- sum(c-abs.x[i] < x & x < c+abs.x[i])
+      i <- i+1
+    }
+    out[as.character(total)] <- abs.x[i]
+  }
+  return(out)
+}
+h.list <- list(`500`=h.grid(2*rbeta(500,2,4)-0.75,c,1:5*10),
+               `1000`=h.grid(2*rbeta(1000,2,4)-0.75,c,1:5*10),
+               `2500`=h.grid(2*rbeta(2500,2,4)-0.75,c,1:5*10),
+               `5000`=h.grid(2*rbeta(5000,2,4)-0.75,c,1:5*10))
 #### Loop
 params <- c("N","ATE","Omin","Opct","h")
 num_sweeps    <- 120
@@ -94,7 +114,7 @@ par(mfrow=c(2,2),bty="L")
 for (n in N)
 {
   rmse.plot <- reshape(subset(rmse,N==n,select=c("Omin","Opct","h","RMSE")),direction="wide",timevar = "Omin",idvar=c("h","Opct"))
-  rmse.plot <- reshape(rmse.plot,direction="wide",timevar = "Opct",idvar="h")
+  rmse.plot <- reshape(rmse.plot,direction="wide",timevar = "Opct",idvar="h")[-1,]
   matplot(x=rmse.plot[,1],rmse.plot[,-1],type="b",lty=2,col=rep(1:length(Omin),length(Opct)),
           pch=c(rep(15,length(Opct)),rep(16,length(Opct)),rep(17,length(Opct))),
           cex.axis=0.75,cex.lab=0.75,cex=0.75,
@@ -107,4 +127,4 @@ for (n in N)
   }
 }
 # dev.off()
-for (n in N) print(subset(rmse[rmse$N==n,],RMSE==min(RMSE)))
+for (n in N) print(subset(rmse[rmse$N==n,],RMSE==min(RMSE,na.rm=T)))

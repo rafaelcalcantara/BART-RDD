@@ -39,22 +39,22 @@ for (i in files)
   {
     Owidth <- Ow[1]
     Omin <- 1
-    Opct <- 0.9
+    Opct <- 0.95
   } else if (n==1000)
   {
     Owidth <- Ow[2]
     Omin <- 1
-    Opct <- 0.9
+    Opct <- 0.95
   } else if (n==2500)
   {
     Owidth <- Ow[3]
     Omin <- 1
-    Opct <- 0.9
+    Opct <- 0.95
   } else
   {
     Owidth <- Ow[4]
     Omin <- 1
-    Opct <- 0.9
+    Opct <- 0.95
   }
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
