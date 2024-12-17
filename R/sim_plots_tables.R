@@ -22,9 +22,9 @@ for (i in c(500,1000,2500,5000))
   }
 }
 ###
-sample <- 1000
-dgp <- 2
-Owidth <- Ow[1]
+sample <- 10
+dgp <- 12
+Owidth <- Ow[4]
 bart.rdd.cate.est <- bart.rdd.cate[[dgp]][[sample]]
 sbart.cate.est <- sbart.cate[[dgp]][[sample]]
 tbart.cate.est <- tbart.cate[[dgp]][[sample]]

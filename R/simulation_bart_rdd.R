@@ -53,7 +53,7 @@ for (i in files)
   } else
   {
     Owidth <- Ow[4]
-    Omin <- 1
+    Omin <- 3
     Opct <- 0.95
   }
   cl <- makeCluster(no_cores,type="SOCK")

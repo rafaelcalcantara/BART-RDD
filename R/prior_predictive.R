@@ -32,7 +32,7 @@ mu.prior <- function(x,w) w + 1/(1+exp(-5*x)) + (1-abs(x-c))*sin(x)/10
 tau.prior <- function(x,w,tau.bar) tau.bar - log(x+1)/50 + (w - mean(w))
 ate <- 0.5
 c <- 0
-s <- no_cores ## no of samples of th synthetic DGP
+s <- no_cores*5 ## no of samples of th synthetic DGP
 N <- c(500,1000,2500,5000)
 Omin <- c(1,3,5)
 Opct <- c(0.6,0.75,0.95)
@@ -54,10 +54,10 @@ h.grid <- function(x,c,grid)
   }
   return(out)
 }
-h.list <- list(`500`=h.grid(2*rbeta(500,2,4)-0.75,c,1:5*10),
-               `1000`=h.grid(2*rbeta(1000,2,4)-0.75,c,1:5*10),
-               `2500`=h.grid(2*rbeta(2500,2,4)-0.75,c,1:5*10),
-               `5000`=h.grid(2*rbeta(5000,2,4)-0.75,c,1:5*10))
+h.list <- list(`500`=h.grid(2*rbeta(500,2,4)-0.75,c,2:8*10),
+               `1000`=h.grid(2*rbeta(1000,2,4)-0.75,c,2:8*10),
+               `2500`=h.grid(2*rbeta(2500,2,4)-0.75,c,2:8*10),
+               `5000`=h.grid(2*rbeta(5000,2,4)-0.75,c,2:8*10))
 #### Loop
 params <- c("N","ATE","Omin","Opct","h")
 num_sweeps    <- 120
@@ -114,7 +114,7 @@ par(mfrow=c(2,2),bty="L")
 for (n in N)
 {
   rmse.plot <- reshape(subset(rmse,N==n,select=c("Omin","Opct","h","RMSE")),direction="wide",timevar = "Omin",idvar=c("h","Opct"))
-  rmse.plot <- reshape(rmse.plot,direction="wide",timevar = "Opct",idvar="h")[-1,]
+  rmse.plot <- reshape(rmse.plot,direction="wide",timevar = "Opct",idvar="h")
   matplot(x=rmse.plot[,1],rmse.plot[,-1],type="b",lty=2,col=rep(1:length(Omin),length(Opct)),
           pch=c(rep(15,length(Opct)),rep(16,length(Opct)),rep(17,length(Opct))),
           cex.axis=0.75,cex.lab=0.75,cex=0.75,
@@ -127,4 +127,4 @@ for (n in N)
   }
 }
 # dev.off()
-for (n in N) print(subset(rmse[rmse$N==n,],RMSE==min(RMSE,na.rm=T)))
+for (n in N) print(subset(rmse[rmse$N==n,],RMSE==min(RMSE)))

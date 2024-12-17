@@ -10,8 +10,8 @@ scripts <- list.files("R")[grep("simulation",list.files("R"))]
 scripts <- scripts[-grep("master|data|results",scripts)]
 scripts <- paste0("R/",scripts)
 ## Samples to estimate
-s0 <- 1
-s1 <- 250
+s0 <- 251
+s1 <- 375
 ## Take command line arguments
 args <- commandArgs(trailingOnly = T)
 if (length(args) > 0)
@@ -26,7 +26,7 @@ p_categorical <- 0
 ntrees        <- 10
 num_sweeps    <- 150
 burnin        <- 50
-Ow            <- c(0.057,0.029,0.01,0.007)
+Ow            <- c(0.057,0.016,0.012,0.009)
 for (j in scripts)
 {
   print(paste0("Script: ",j))

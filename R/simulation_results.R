@@ -3,7 +3,7 @@ files <- length(list.files("Data"))
 Ow <- c(0.057,0.029,0.01,0.007)
 params <- data.frame(delta.mu=rep(0,files),delta.tau=rep(0,files),
                      level=rep(0,files),n=rep(0,files),sig_error=rep(0,files))
-samples <- 1:500
+samples <- 1:250
 ##
 bart.rdd.cate <- vector("list",files)
 bart.rdd.cate.rmse <- rep(0,files)
