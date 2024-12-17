@@ -28,6 +28,7 @@ for (i in files)
 {
   print(paste0("DGP: ",i))
   data <- readRDS(paste0("Data/dgp_",i,".rds"))
+  s <- ncol(data$y)
   if (paste0("tbart_",i,".rds") %in% list.files("Results/") == T)
   {
     res <- readRDS(paste0("Results/tbart_",i,".rds"))
@@ -36,7 +37,6 @@ for (i in files)
     res <- list(results=vector("list",s))
   }
   n <- data$n
-  s <- ncol(data$y)
   c <- data$c
   if (n==500)
   {
