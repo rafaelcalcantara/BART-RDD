@@ -5,6 +5,7 @@ library(XBART)
 library(lattice)
 ### Parallelization
 no_cores <- detectCores()-1
+no_cores <- 125
 ## Fitting function for prior predictive
 fit <- function(i)
 {
@@ -34,7 +35,7 @@ ate <- 0.5
 c <- 0
 s <- no_cores*5 ## no of samples of th synthetic DGP
 N <- c(500,1000,2500,5000)
-Omin <- c(1,3,5)
+Omin <- 1:10
 Opct <- c(0.6,0.75,0.95)
 h.grid <- function(x,c,grid)
 {
@@ -44,20 +45,21 @@ h.grid <- function(x,c,grid)
   for(total in grid)
   {
     i <- 1
-    sum <- 0
-    while(sum < total) 
+    sum.right <- sum.left <- 0
+    while(sum.right < total/2 & sum.left < total/2) 
     {
-      sum <- sum(c-abs.x[i] < x & x < c+abs.x[i])
+      sum.left <- sum(c-abs.x[i] < x & x < c)
+      sum.right <- sum(c < x & x < c+abs.x[i])
       i <- i+1
     }
     out[as.character(total)] <- abs.x[i]
   }
   return(out)
 }
-h.list <- list(`500`=h.grid(2*rbeta(500,2,4)-0.75,c,2:8*10),
-               `1000`=h.grid(2*rbeta(1000,2,4)-0.75,c,2:8*10),
-               `2500`=h.grid(2*rbeta(2500,2,4)-0.75,c,2:8*10),
-               `5000`=h.grid(2*rbeta(5000,2,4)-0.75,c,2:8*10))
+h.list <- list(`500`=h.grid(2*rbeta(500,2,4)-0.75,c,2:10*10),
+               `1000`=h.grid(2*rbeta(1000,2,4)-0.75,c,2:10*10),
+               `2500`=h.grid(2*rbeta(2500,2,4)-0.75,c,2:10*10),
+               `5000`=h.grid(2*rbeta(5000,2,4)-0.75,c,2:10*10))
 #### Loop
 params <- c("N","ATE","Omin","Opct","h")
 num_sweeps    <- 120
@@ -72,7 +74,7 @@ for (n in N)
   cate <- tau.prior(c,w,ate)
   h <- h.list[[as.character(n)]]
   Ey <- mu.prior(x,w) + tau.prior(x,w,ate)*z
-  ys <-  Ey + matrix(rnorm(n*s,0,0.1*sd(tau.prior(x,w,ate))),n,s)
+  ys <-  Ey + matrix(rnorm(n*s,0,0.1*sd(Ey)),n,s)
   for (Om in Omin)
   {
     for (Op in Opct)
