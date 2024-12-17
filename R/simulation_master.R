@@ -7,7 +7,7 @@ no_cores <- 125
 if (!dir.exists("Results")) dir.create("Results")
 ## Get simulation script names
 scripts <- list.files("R")[grep("simulation",list.files("R"))]
-scripts <- scripts[-grep("master|data|results",scripts)]
+scripts <- scripts[-grep("master|data|results|bart_rdd",scripts)]
 scripts <- paste0("R/",scripts)
 ## Samples to estimate
 s0 <- 1
