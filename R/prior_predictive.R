@@ -42,17 +42,21 @@ Omin <- c(1,3,5)
 Opct <- c(0.6,0.75,0.95)
 h.grid <- function(x,c,grid)
 {
-  abs.x <- sort(abs(x))
+  abs.x <- sort(abs(x-c))
   out <- rep(0,length(grid))
   names(out) <- grid
+  x.right <- sum(c < x)
+  x.left <- sum(x < c)
+  x.tot <- length(x)
   for(total in grid)
   {
     i <- 1
     sum.right <- sum.left <- 0
-    while(sum.right < total/2 & sum.left < total/2) 
+    while(sum.right < total/2 | sum.left < total/2) 
     {
-      sum.left <- sum(c-abs.x[i] < x & x < c)
-      sum.right <- sum(c < x & x < c+abs.x[i])
+      sum.left <- sum(c-abs.x[i] <= x & x < c)
+      sum.right <- sum(c < x & x <= c+abs.x[i])
+      if (sum.left == sum(x<c) & sum.right == sum(c<x)) break
       i <- i+1
     }
     out[as.character(total)] <- abs.x[i]
@@ -63,7 +67,7 @@ x.list <- list(`500`=NA,`1000`=NA,`2500`=NA,`5000`=NA)
 h.list <- list(`500`=NA,`1000`=NA,`2500`=NA,`5000`=NA)
 for (n in N) {
   x.list[[as.character(n)]] <- 2*rbeta(n,2,4)-0.75
-  h.list[[as.character(n)]] <- h.grid(x[[as.character(n)]],c,c(20,40,60))
+  h.list[[as.character(n)]] <- h.grid(x.list[[as.character(n)]],c,c(20,40,60))
 }
 #### Loop
 params <- c("N","ATE","Omin","Opct","h")
