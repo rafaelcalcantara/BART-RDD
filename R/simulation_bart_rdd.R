@@ -1,6 +1,29 @@
 ## Setup
 set.seed(0)
 ### Functions
+h.grid <- function(x,c,grid)
+{
+  abs.x <- sort(abs(x-c))
+  out <- rep(0,length(grid))
+  names(out) <- grid
+  x.right <- sum(c < x)
+  x.left <- sum(x < c)
+  x.tot <- length(x)
+  for(total in grid)
+  {
+    i <- 1
+    sum.right <- sum.left <- 0
+    while(sum.right < total | sum.left < total) 
+    {
+      sum.left <- sum(c-abs.x[i] <= x & x < c)
+      sum.right <- sum(c < x & x <= c+abs.x[i])
+      if (sum.left == sum(x<c) & sum.right == sum(c<x)) break
+      i <- i+1
+    }
+    out[as.character(total)] <- abs.x[i]
+  }
+  return(out)
+}
 fit <- function(i)
 {
   print(paste0("Sample: ",i))
@@ -8,7 +31,8 @@ fit <- function(i)
   ws <- as.matrix(data$w[,i])
   xs <- data$x[,i]
   Owidth <- data$h[i]
-  train <- c-h.grid(xs,c,500) < xs & xs < c+h.grid(xs,c,500)
+  sample <- h.grid(xs,c,250)
+  train <- c-sample < xs & xs < c+sample
   fit <- XBART::XBCF.rd(ys[train], ws[train], xs[train], c,
                         Owidth = Owidth, Omin = Omin, Opct = Opct,
                         num_cutpoints = n,

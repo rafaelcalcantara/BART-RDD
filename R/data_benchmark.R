@@ -1,9 +1,9 @@
 setwd("~/Git/BART-RDD")
 library(doParallel)
-data <- readRDS("Data/dgp_7.rds")
-no_cores <- 125
+data <- readRDS("Data/dgp_1.rds")
+no_cores <- 11
 s <- 1000
-n <- 2500
+n <- 500
 c <- 0
 ate <- 1
 dt <- 2

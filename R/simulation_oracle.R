@@ -14,7 +14,7 @@ fit <- function(i)
   if (lvl==2) w2 <- sin(7*pi*w)*(w-0.5)/(5+exp(-2*w))
   bw <- rdrobust::rdbwselect(y,x,c=c,covs=cbind(w,w2),p=deg.x,q=deg.x+1)$bws[4]
   reg <- subset(data.frame(y=y,x=x,w=w,w2=w2,z=data$z[,i]),x>=-bw & x<=bw)
-  model <- lm(y~((exp(x)-1)/(1+exp(x))+w2)*z+poly(x,deg.x,raw=T)*as.factor(as.integer(10*w)%%2==0)+poly(w,deg.w,raw=T),data=reg)
+  model <- lm(y~((exp(x)-1)/(1+exp(x))+w2)*z+poly(x,deg.x,raw=T)+poly(w,deg.w,raw=T),data=reg)
   test.sample <- x>=-Owidth & x<=Owidth
   test1 <- data.frame(x=0,w=w,w2=w2,z=1)[test.sample,]
   test0 <- data.frame(x=0,w=w,w2=w2,z=0)[test.sample,]
