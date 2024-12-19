@@ -79,7 +79,7 @@ for (n in N)
   cate <- tau.prior(c,w,c)
   h <- h.list[[as.character(n)]]
   Ey <- mu.prior(x,w) + z*ate + tau.prior(x,w,c)*z
-  ys <-  Ey + matrix(rnorm(n*s,0,1),n,s)
+  ys <-  Ey + matrix(rnorm(n*s,0,sqrt(0.5)),n,s)
   for (Om in Omin)
   {
     for (Op in Opct)
