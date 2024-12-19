@@ -8,6 +8,7 @@ fit <- function(i)
   ws <- as.matrix(data$w[,i])
   xs <- data$x[,i]
   zs <- data$z[,i]
+  Owidth <- data$h[i]
   fit <- XBART::XBART(ys, cbind(xs,ws,zs), num_trees = ntrees,
                       num_cutpoints = n, num_sweeps = num_sweeps,
                       burnin = burnin, p_categorical = p_categorical,
@@ -34,19 +35,6 @@ for (i in files)
     res <- list(results=vector("list",s))
   }
   n <- data$n
-  if (n==500)
-  {
-    Owidth <- Ow[1]
-  } else if (n==1000)
-  {
-    Owidth <- Ow[2]
-  } else if (n==2500)
-  {
-    Owidth <- Ow[3]
-  } else
-  {
-    Owidth <- Ow[4]
-  }
   c <- data$c
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)

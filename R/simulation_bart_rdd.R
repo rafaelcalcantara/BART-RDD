@@ -7,6 +7,7 @@ fit <- function(i)
   ys <- data$y[,i]
   ws <- as.matrix(data$w[,i])
   xs <- data$x[,i]
+  Owidth <- data$h[i]
   train <- c-h.grid(xs,c,500) < xs & xs < c+h.grid(xs,c,500)
   fit <- XBART::XBCF.rd(ys[train], ws[train], xs[train], c,
                         Owidth = Owidth, Omin = Omin, Opct = Opct,
@@ -21,29 +22,9 @@ fit <- function(i)
   pred <- XBART::predict.XBCFrd(fit,ws[test,],rep(c,sum(test)))
   pred$tau.adj[,(burnin+1):num_sweeps]
 }
-h.grid <- function(x,c,grid)
-{
-  abs.x <- sort(abs(x-c))
-  out <- rep(0,length(grid))
-  names(out) <- grid
-  x.right <- sum(c < x)
-  x.left <- sum(x < c)
-  x.tot <- length(x)
-  for(total in grid)
-  {
-    i <- 1
-    sum.right <- sum.left <- 0
-    while(sum.right < total/2 | sum.left < total/2) 
-    {
-      sum.left <- sum(c-abs.x[i] <= x & x < c)
-      sum.right <- sum(c < x & x <= c+abs.x[i])
-      if (sum.left == sum(x<c) & sum.right == sum(c<x)) break
-      i <- i+1
-    }
-    out[as.character(total)] <- abs.x[i]
-  }
-  return(out)
-}
+### Parameters
+Omin <- 1
+Opct <- 9
 ### BEGIN LOOP
 for (i in files)
 {
@@ -59,27 +40,6 @@ for (i in files)
   }
   n <- data$n
   c <- data$c
-  if (n==500)
-  {
-    Owidth <- Ow[1]
-    Omin <- 1
-    Opct <- 0.9
-  } else if (n==1000)
-  {
-    Owidth <- Ow[2]
-    Omin <- 3
-    Opct <- 0.9
-  } else if (n==2500)
-  {
-    Owidth <- Ow[3]
-    Omin <- 3
-    Opct <- 0.9
-  } else
-  {
-    Owidth <- Ow[4]
-    Omin <- 3
-    Opct <- 0.9
-  }
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
   clusterExport(cl,varlist=ls())

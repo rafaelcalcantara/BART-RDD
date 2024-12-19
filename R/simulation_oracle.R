@@ -7,6 +7,7 @@ fit <- function(i)
   w <- data$w[,i]
   y <- data$y[,i]
   x <- data$x[,i]
+  Owidth <- data$h[i]
   deg.x <- 5
   deg.w <- 2
   if (lvl==1) w2 <- sin(3*pi*w)
@@ -37,19 +38,6 @@ for (i in files)
   n <- data$n
   lvl <- data$level
   c <- data$c
-  if (n==500)
-  {
-    Owidth <- Ow[1]
-  } else if (n==1000)
-  {
-    Owidth <- Ow[2]
-  } else if (n==2500)
-  {
-    Owidth <- Ow[3]
-  } else
-  {
-    Owidth <- Ow[4]
-  }
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)
   clusterExport(cl,varlist=ls())

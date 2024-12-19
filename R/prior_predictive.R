@@ -123,16 +123,17 @@ for (n in N)
 {
   rmse.plot <- reshape(subset(rmse,N==n,select=c("Omin","Opct","h","RMSE")),direction="wide",timevar = "Omin",idvar=c("h","Opct"))
   rmse.plot <- reshape(rmse.plot,direction="wide",timevar = "Opct",idvar="h")
-  matplot(x=rmse.plot[,1],rmse.plot[,-1],type="b",lty=2,col=1:length(Omin),
-          pch=c(15,16),
+  matplot(x=rmse.plot[,1],rmse.plot[,-1]/2.4,type="b",lty=2,col=1:length(Omin),
+          pch=c(15,15,16,16),
           cex.axis=0.75,cex.lab=0.75,cex=0.75,
           ylab="RMSE",xlab="h",main=paste0("N=",n))
-  # if (n==1000)
-  # {
-  #   legend("top",title=expression(N[Omin]),legend=Omin,bty="n",cex=0.65,ncol=2,lty=2,
-  #          col=1:length(Omin),lwd=2)
-  #   legend("topright",title=bquote(alpha),legend=Opct,bty="n",cex=0.65,pt.cex=0.85,ncol=2,pch=15:17)
-  # }
+  abline(h=1,lty=2)
+  if (n==500)
+  {
+    legend("bottom",title=expression(N[Omin]),legend=Omin,bty="n",cex=0.65,ncol=2,lty=2,
+           col=1:length(Omin),lwd=2)
+    legend("bottomright",title=bquote(alpha),legend=Opct,bty="n",cex=0.65,pt.cex=0.85,ncol=2,pch=15:17)
+  }
 }
 # dev.off()
 for (n in N) print(subset(rmse[rmse$N==n,],RMSE==min(RMSE)))
