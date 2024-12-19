@@ -7,11 +7,11 @@ no_cores <- 125
 if (!dir.exists("Results")) dir.create("Results")
 ## Get simulation script names
 scripts <- list.files("R")[grep("simulation",list.files("R"))]
-scripts <- scripts[-grep("master|data|results",scripts)]
+scripts <- scripts[-grep("master|data|results|polynomial_1|polynomial_2|polynomial_3",scripts)]
 scripts <- paste0("R/",scripts)
 ## Samples to estimate
-s0 <- 251
-s1 <- 375
+s0 <- 1
+s1 <- 11
 ## Take command line arguments
 args <- commandArgs(trailingOnly = T)
 if (length(args) > 0)
@@ -19,14 +19,14 @@ if (length(args) > 0)
   files <- args
 } else
 {
-  files <- length(list.files("Data"))
+  files <- 1:length(list.files("Data"))
 }
 ### Parameters
 p_categorical <- 0
 ntrees        <- 10
 num_sweeps    <- 150
 burnin        <- 50
-Ow            <- c(0.057,0.016,0.012,0.009)
+Ow            <- c(0.015,0.007,0.003,0.002)
 for (j in scripts)
 {
   print(paste0("Script: ",j))

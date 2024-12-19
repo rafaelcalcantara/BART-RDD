@@ -1,4 +1,4 @@
-setwd("../")
+setwd("~/Git/BART-RDD")
 load("Results/sims.RData")
 ###
 rmse.plot <- cbind(params,rmse.cate/params$delta.tau)

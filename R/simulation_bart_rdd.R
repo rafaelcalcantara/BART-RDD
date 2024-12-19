@@ -7,7 +7,8 @@ fit <- function(i)
   ys <- data$y[,i]
   ws <- as.matrix(data$w[,i])
   xs <- data$x[,i]
-  fit <- XBART::XBCF.rd(ys, ws, xs, c,
+  train <- c-h.grid(xs,c,500) < xs & xs < c+h.grid(xs,c,500)
+  fit <- XBART::XBCF.rd(ys[train], ws[train], xs[train], c,
                         Owidth = Owidth, Omin = Omin, Opct = Opct,
                         num_cutpoints = n,
                         num_trees_con = 10, num_trees_mod = 5,
@@ -15,10 +16,33 @@ fit <- function(i)
                         burnin = burnin,
                         p_categorical_con = p_categorical,
                         p_categorical_mod = p_categorical,
-                        tau_con = 2*var(ys)/10, tau_mod = 0.5*var(ys)/5)
+                        tau_con = 2*var(ys[train])/10, tau_mod = 0.5*var(ys[train])/5)
   test <- -Owidth+c<=xs & xs<=Owidth+c
   pred <- XBART::predict.XBCFrd(fit,ws[test,],rep(c,sum(test)))
   pred$tau.adj[,(burnin+1):num_sweeps]
+}
+h.grid <- function(x,c,grid)
+{
+  abs.x <- sort(abs(x-c))
+  out <- rep(0,length(grid))
+  names(out) <- grid
+  x.right <- sum(c < x)
+  x.left <- sum(x < c)
+  x.tot <- length(x)
+  for(total in grid)
+  {
+    i <- 1
+    sum.right <- sum.left <- 0
+    while(sum.right < total/2 | sum.left < total/2) 
+    {
+      sum.left <- sum(c-abs.x[i] <= x & x < c)
+      sum.right <- sum(c < x & x <= c+abs.x[i])
+      if (sum.left == sum(x<c) & sum.right == sum(c<x)) break
+      i <- i+1
+    }
+    out[as.character(total)] <- abs.x[i]
+  }
+  return(out)
 }
 ### BEGIN LOOP
 for (i in files)
@@ -39,22 +63,22 @@ for (i in files)
   {
     Owidth <- Ow[1]
     Omin <- 1
-    Opct <- 0.95
+    Opct <- 0.9
   } else if (n==1000)
   {
     Owidth <- Ow[2]
-    Omin <- 1
-    Opct <- 0.95
+    Omin <- 3
+    Opct <- 0.9
   } else if (n==2500)
   {
     Owidth <- Ow[3]
-    Omin <- 1
-    Opct <- 0.95
+    Omin <- 3
+    Opct <- 0.9
   } else
   {
     Owidth <- Ow[4]
     Omin <- 3
-    Opct <- 0.95
+    Opct <- 0.9
   }
   cl <- makeCluster(no_cores,type="SOCK")
   registerDoParallel(cl)

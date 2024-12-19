@@ -36,7 +36,7 @@ s <- 1000
 c <- 0
 ate <- 1
 delta_mu <- 2
-delta_tau <- c(0.3,0.5,0.7)
+delta_tau <- c(0.7)
 level <- 1
 N <- c(500,1000,2500,5000)
 sig_error <- 1
