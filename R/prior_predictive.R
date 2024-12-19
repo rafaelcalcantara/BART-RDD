@@ -32,9 +32,9 @@ mu.prior <- function(x,w) 10*w + 6.5*x^5 - 2.6*x^3 + 1.25*x + 0.5
 tau.prior <- function(x,w,c) log(x-c+1) + 2*sin(3*pi*w)-mean(2*sin(3*pi*w))
 ate <- 2
 c <- 0
-s <- no_cores*2 ## no of samples of th synthetic DGP
+s <- no_cores ## no of samples of th synthetic DGP
 N <- c(500,1000,2500,5000)
-Omin <- c(1,3,5)
+Omin <- c(1,5)
 Opct <- c(0.75,0.9)
 h.grid <- function(x,c,grid)
 {
@@ -48,7 +48,7 @@ h.grid <- function(x,c,grid)
   {
     i <- 1
     sum.right <- sum.left <- 0
-    while(sum.right < total/2 | sum.left < total/2) 
+    while(sum.right < total | sum.left < total) 
     {
       sum.left <- sum(c-abs.x[i] <= x & x < c)
       sum.right <- sum(c < x & x <= c+abs.x[i])
@@ -63,7 +63,7 @@ x.list <- list(`500`=NA,`1000`=NA,`2500`=NA,`5000`=NA)
 h.list <- list(`500`=NA,`1000`=NA,`2500`=NA,`5000`=NA)
 for (n in N) {
   x.list[[as.character(n)]] <- 2*rbeta(n,2,4)-0.75
-  h.list[[as.character(n)]] <- h.grid(x.list[[as.character(n)]],c,c(20,50,100))
+  h.list[[as.character(n)]] <- h.grid(x.list[[as.character(n)]],c,c(10,30,50))
 }
 #### Loop
 params <- c("N","ATE","Omin","Opct","h")
@@ -87,7 +87,7 @@ for (n in N)
       for (hs in h)
       {
         print(paste(params,c(n,ate,Om,Op,hs),sep=": "))
-        train <- c-h.grid(x,c,500) < x & x < c+h.grid(x,c,500)
+        train <- c-h.grid(x,c,250) < x & x < c+h.grid(x,c,250)
         ## Fit the model
         cl <- makeCluster(no_cores,type="SOCK")
         registerDoParallel(cl)

@@ -6,16 +6,14 @@ library(XBART)
 par(bty="L")
 Omin          <- 1
 Opct          <- 0.9
-ntrees_con    <- 30
-ntrees_mod    <- 30
-Nmin          <- 5
 num_sweeps    <- 250
 burnin        <- 150
 p_categorical <- 0
+ntrees <- 30
 ###
 mu <- function(x,w)
 {
-  out <- 10*w + 6.5*x^5 - 2.6*x^3 + 1.25*x + 0.5
+  out <- w + 6.5*x^5 - 2.6*x^3 + 1.25*x + 0.5
   # 32.5*x^4 - 7.8*x^2 + 1.25
   # out <- out/sd(out)*2
   return(out)
@@ -38,7 +36,7 @@ h.grid <- function(x,c,grid)
   {
     i <- 1
     sum.right <- sum.left <- 0
-    while(sum.right < total/2 | sum.left < total/2)
+    while(sum.right < total | sum.left < total)
     {
       sum.left <- sum(c-abs.x[i] <= x & x < c)
       sum.right <- sum(c < x & x <= c+abs.x[i])
@@ -51,35 +49,35 @@ h.grid <- function(x,c,grid)
 }
 ate <- 2
 c <- 0
-n <- 10000
+n <- 5000
 #### Data
 x <- 2*rbeta(n,2,4)-0.75
-Owidth <- h.grid(x,c,50)
+Owidth <- h.grid(x,c,30)
 z <- as.numeric(x>=c)
 w <- runif(n,0,1)
 Ey <- mu(x,w) + (ate+tau(x,w,c))*z
-y <- Ey + rnorm(n,0,sqrt(1))
+y <- Ey + rnorm(n,0,sqrt(0.5))
 #####
 par(mfrow=c(1,1))
 plot(x,y,col=z+1,pch=19)
 abline(v=c,lty=2)
 #####
-train <- c-h.grid(x,c,500) < x & x < c+h.grid(x,c,500)
+train <- c-h.grid(x,c,250) < x & x < c+h.grid(x,c,250)
 x <- x[train]
 y <- y[train]
 w <- w[train]
 ### BART-RDD
 fit <- XBART::XBCF.rd(y, w, x, c,
                       Owidth = Owidth, Omin = Omin, Opct = Opct,
-                      num_trees_mod = ntrees_mod,
-                      num_trees_con = ntrees_con,
+                      num_trees_mod = 10,
+                      num_trees_con = ntrees,
                       num_cutpoints = n,
                       num_sweeps = num_sweeps,
-                      burnin = burnin, Nmin = Nmin,
+                      burnin = burnin,
                       p_categorical_con = p_categorical,
                       p_categorical_mod = p_categorical,
-                      tau_con = 2*var(y)/ntrees_con,
-                      tau_mod = 0.5*var(y)/ntrees_mod,parallel=T,nthread=10)
+                      tau_con = 2*var(y)/ntrees,
+                      tau_mod = 0.5*var(y)/10,parallel=T,nthread=10)
 #### Plot
 cate <- tau(c,w,c)+ate
 test <- -Owidth+c <= x & x <= c+Owidth
