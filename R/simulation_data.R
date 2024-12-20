@@ -1,7 +1,7 @@
 setwd("~/Git/BART-RDD")
 library(doParallel)
 set.seed(0)
-no_cores <- 11
+no_cores <- 6
 if (!dir.exists("Data")) dir.create("Data") ## Create data folder
 if (length(list.files("Data"))!=0) ## Clean up folder
 {
@@ -9,13 +9,13 @@ if (length(list.files("Data"))!=0) ## Clean up folder
   for (i in files) file.remove(i)
 }
 ### Functions
-mu0.x <- function(x) 6.5*x^5 - 2.6*x^3 + 1.25*x + 0.5
-mu0.w <- function(w) w
+mu0.x <- function(x) 1.5*x^5 - 0.6*x^3 + 0.25*x + 0.5
+mu0.w <- function(w) -15*sin(w)
 tau0.x <- function(x,c) log(x-c+1)
 tau0.w <- function(w,level) {
   if (level==1) out <- sin(3*pi*w)/10 ## 5th degree polynomial on W
   if (level==2) out <- sin(7*pi*w)*(w-0.5)/(5+exp(-2*w)) ## 14th degree polynomial on W
-  out <- 2*sin(3*pi*w)-mean(2*sin(3*pi*w))
+  out <- sin(3*pi*w) #-mean(2*sin(3*pi*w))
   return(out)
 }
 mu <- function(x,w) mu0.x(x) + mu0.w(w)
@@ -49,8 +49,8 @@ c <- 0
 ate <- 1
 delta_tau <- 1
 level <- 1
-# N <- c(500,1000,2500)
-# sig_error <- 3
+#N <- c(500,1000,2500)
+#sig_error <- 3
 ind <- 0
 params <- expand.grid(delta_tau,level,N,sig_error)
 gen.data <- function(ind)
@@ -61,9 +61,13 @@ gen.data <- function(ind)
   n <- row[3]
   sig <- row[4]
   x <- matrix(2*rbeta(n*s,2,4)-0.75,n,s)
-  h <- apply(x,2,function(i) h.grid(i,c,pts_in_window))
+  h <- apply(x,2,function(i) h.grid(i,c,75))
   z <- apply(x,2,function(i) as.numeric(i>=c))
-  w <- matrix(runif(n*s),n,s)
+  mtemp <- (x+0.75)/2
+  stemp <- 50
+  w <- matrix(rbeta(n*s,mtemp*stemp,(1-mtemp)*stemp),n,s)
+  
+  
   cate <- apply(w, 2, function(i) tau(c,c,i,dt,lvl,ate))
   y <- sapply(1:s, function(i) mu(x[,i],w[,i]) + tau(x[,i],c,w[,i],dt,lvl,ate)*z[,i] + rnorm(n,0,sqrt(sig)))
   ## Save data

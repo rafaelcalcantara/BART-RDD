@@ -7,8 +7,8 @@ pts_in_window <- 75
 source("R/simulation_data.R")
 rm(list=ls())
 gc()
-Omin <- 5
-Opct <- 0.3
+Omin <- 2
+Opct <- 0.4
 source("R/simulation_master.R")
 rm(list=ls())
 gc()
