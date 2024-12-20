@@ -23,7 +23,7 @@ for (i in c(500,1000,2500))
 }
 ###
 # sample <- 1
-dgp <- 1
+dgp <- 3
 # bart.rdd.cate.est <- bart.rdd.cate[[dgp]][[sample]]
 # sbart.cate.est <- sbart.cate[[dgp]][[sample]]
 # tbart.cate.est <- tbart.cate[[dgp]][[sample]]
