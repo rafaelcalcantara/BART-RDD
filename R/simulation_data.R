@@ -49,8 +49,8 @@ c <- 0
 ate <- 1
 delta_tau <- 1
 level <- 1
-N <- c(500,1000,2500)
-sig_error <- 3
+# N <- c(500,1000,2500)
+# sig_error <- 3
 ind <- 0
 params <- expand.grid(delta_tau,level,N,sig_error)
 gen.data <- function(ind)
@@ -61,7 +61,7 @@ gen.data <- function(ind)
   n <- row[3]
   sig <- row[4]
   x <- matrix(2*rbeta(n*s,2,4)-0.75,n,s)
-  h <- apply(x,2,function(i) h.grid(i,c,75))
+  h <- apply(x,2,function(i) h.grid(i,c,pts_in_window))
   z <- apply(x,2,function(i) as.numeric(i>=c))
   w <- matrix(runif(n*s),n,s)
   cate <- apply(w, 2, function(i) tau(c,c,i,dt,lvl,ate))

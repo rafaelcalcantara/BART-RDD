@@ -31,7 +31,7 @@ fit <- function(i)
   ws <- as.matrix(data$w[,i])
   xs <- data$x[,i]
   Owidth <- data$h[i]
-  sample <- h.grid(xs,c,1250)
+  sample <- h.grid(xs,c,250)
   train <- c-sample < xs & xs < c+sample
   fit <- XBART::XBCF.rd(ys[train], ws[train], xs[train], c,
                         Owidth = Owidth, Omin = Omin, Opct = Opct,
@@ -48,8 +48,8 @@ fit <- function(i)
   pred$tau.adj[,(burnin+1):num_sweeps]
 }
 ### Parameters
-Omin <- 5
-Opct <- 0.75
+# Omin <- 5
+# Opct <- 0.75
 ### BEGIN LOOP
 for (i in files)
 {
