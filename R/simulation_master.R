@@ -11,7 +11,7 @@ scripts <- scripts[-grep("master|data|results|polynomial_1|polynomial_2|polynomi
 scripts <- paste0("R/",scripts)
 ## Samples to estimate
 s0 <- 1
-s1 <- 1000
+s1 <- 500
 ## Take command line arguments
 args <- commandArgs(trailingOnly = T)
 if (length(args) > 0)

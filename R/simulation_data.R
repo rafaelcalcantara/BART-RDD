@@ -19,7 +19,7 @@ tau0.w <- function(w,level) {
   return(out)
 }
 mu <- function(x,w) mu0.x(x) + mu0.w(w)
-tau <- function(x,c,w,dt,level) tau0.x(x,c) + tau0.w(w,level)*dt
+tau <- function(x,c,w,dt,level,ate) tau0.x(x,c) + tau0.w(w,level)*dt + ate
 h.grid <- function(x,c,grid)
 {
   abs.x <- sort(abs(x-c))
@@ -47,7 +47,7 @@ h.grid <- function(x,c,grid)
 s <- 1000
 c <- 0
 ate <- 1
-delta_tau <- c(2,4,6)
+delta_tau <- 1:3
 level <- 1
 N <- c(500,1000,2500,5000)
 sig_error <- 0.5
@@ -61,11 +61,11 @@ gen.data <- function(ind)
   n <- row[3]
   sig <- row[4]
   x <- matrix(2*rbeta(n*s,2,4)-0.75,n,s)
-  h <- apply(x,2,function(i) h.grid(i,c,10))
+  h <- apply(x,2,function(i) h.grid(i,c,30))
   z <- apply(x,2,function(i) as.numeric(i>=c))
   w <- matrix(runif(n*s),n,s)
-  cate <- apply(w, 2, function(i) tau(c,c,i,dt,lvl))
-  y <- sapply(1:s, function(i) mu(x[,i],w[,i]) + tau(x[,i],c,w[,i],dt,lvl)*z[,i] + rnorm(n,0,sqrt(sig)))
+  cate <- apply(w, 2, function(i) tau(c,c,i,dt,lvl,ate))
+  y <- sapply(1:s, function(i) mu(x[,i],w[,i]) + tau(x[,i],c,w[,i],dt,lvl,ate)*z[,i] + rnorm(n,0,sqrt(sig)))
   ## Save data
   out <- list(y=y,x=x,z=z,w=w,c=c,h=h,tau.x=cate,tau=ate,delta_tau=dt,level=lvl,n=n,sig_error=sig)
   saveRDS(out,paste0("Data/dgp_",ind,".rds"))
