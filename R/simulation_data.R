@@ -44,13 +44,14 @@ h.grid <- function(x,c,grid)
   return(out)
 }
 ## Parameters
+N <- c(500,1000,2500)
+sig_error <- 3
+pts_in_window <- 75
 s <- 1000
 c <- 0
 ate <- 1
 delta_tau <- 1
 level <- 1
-#N <- c(500,1000,2500)
-#sig_error <- 3
 ind <- 0
 params <- expand.grid(delta_tau,level,N,sig_error)
 gen.data <- function(ind)
