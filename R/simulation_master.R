@@ -11,7 +11,7 @@ scripts <- scripts[-grep("master|data|results|polynomial_1|polynomial_2|polynomi
 scripts <- paste0("R/",scripts)
 ## Samples to estimate
 s0 <- 1
-s1 <- 500
+s1 <- 10
 ## Take command line arguments
 args <- commandArgs(trailingOnly = T)
 if (length(args) > 0)
@@ -26,7 +26,7 @@ p_categorical <- 0
 ntrees        <- 10
 num_sweeps    <- 150
 burnin        <- 50
-Ow            <- c(0.015,0.007,0.003,0.002)
+# Ow            <- c(0.015,0.007,0.003,0.002)
 for (j in scripts)
 {
   print(paste0("Script: ",j))

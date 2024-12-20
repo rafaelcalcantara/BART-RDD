@@ -9,13 +9,13 @@ if (length(list.files("Data"))!=0) ## Clean up folder
   for (i in files) file.remove(i)
 }
 ### Functions
-mu0.x <- function(x) 3*x^5 - 2.5*x^4 - 1.5*x^3 + 2*x^2 + 3*x + 2
-mu0.w <- function(w) 0.5*w^2 - w
-tau0.x <- function(x,c) (exp(x)-exp(c))/(1+exp(x))
+mu0.x <- function(x) 6.5*x^5 - 2.6*x^3 + 1.25*x + 0.5
+mu0.w <- function(w) w
+tau0.x <- function(x,c) log(x-c+1)
 tau0.w <- function(w,level) {
   if (level==1) out <- sin(3*pi*w)/10 ## 5th degree polynomial on W
   if (level==2) out <- sin(7*pi*w)*(w-0.5)/(5+exp(-2*w)) ## 14th degree polynomial on W
-  out <- out-mean(out)
+  out <- 2*sin(3*pi*w)-mean(2*sin(3*pi*w))
   return(out)
 }
 mu <- function(x,w) mu0.x(x) + mu0.w(w)
@@ -47,10 +47,10 @@ h.grid <- function(x,c,grid)
 s <- 1000
 c <- 0
 ate <- 1
-delta_tau <- 1:3
+delta_tau <- 1
 level <- 1
-N <- c(500,1000,2500,5000)
-sig_error <- 0.5
+N <- c(500,1000,2500)
+sig_error <- 3
 ind <- 0
 params <- expand.grid(delta_tau,level,N,sig_error)
 gen.data <- function(ind)
@@ -61,7 +61,7 @@ gen.data <- function(ind)
   n <- row[3]
   sig <- row[4]
   x <- matrix(2*rbeta(n*s,2,4)-0.75,n,s)
-  h <- apply(x,2,function(i) h.grid(i,c,30))
+  h <- apply(x,2,function(i) h.grid(i,c,75))
   z <- apply(x,2,function(i) as.numeric(i>=c))
   w <- matrix(runif(n*s),n,s)
   cate <- apply(w, 2, function(i) tau(c,c,i,dt,lvl,ate))

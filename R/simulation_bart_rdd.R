@@ -31,14 +31,15 @@ fit <- function(i)
   ws <- as.matrix(data$w[,i])
   xs <- data$x[,i]
   Owidth <- data$h[i]
-  sample <- h.grid(xs,c,250)
+  sample <- h.grid(xs,c,1250)
   train <- c-sample < xs & xs < c+sample
   fit <- XBART::XBCF.rd(ys[train], ws[train], xs[train], c,
                         Owidth = Owidth, Omin = Omin, Opct = Opct,
                         num_cutpoints = n,
-                        num_trees_con = 10, num_trees_mod = 5,
-                        num_sweeps = num_sweeps,
-                        burnin = burnin,
+                        num_trees_con = 20, num_trees_mod = 10,
+                        num_sweeps = 250,
+                        burnin = 50,
+                        Nmin = 1,
                         p_categorical_con = p_categorical,
                         p_categorical_mod = p_categorical,
                         tau_con = 2*var(ys[train])/10, tau_mod = 0.5*var(ys[train])/5)
@@ -47,8 +48,8 @@ fit <- function(i)
   pred$tau.adj[,(burnin+1):num_sweeps]
 }
 ### Parameters
-Omin <- 1
-Opct <- 9
+Omin <- 5
+Opct <- 0.75
 ### BEGIN LOOP
 for (i in files)
 {
@@ -73,6 +74,13 @@ for (i in files)
   stopCluster(cl)
   print(time)
   res$results[s0:s1] <- out
+  ### DEBUG
+  test <- sapply(1:10, function(i) -data$h[i]<=data$x[,i] & data$x[,i] <= data$h[i])
+  cate <- unlist(sapply(1:10,function(i) data$tau.x[test[,i],i]))
+  w <- unlist(sapply(1:10,function(i) data$w[test[,i],i]))
+  pred <- unlist(sapply(out[1:10],rowMeans))
+  matplot(w,cbind(pred,cate))
+  ###
   saveRDS(list(results=res$results,time=time),paste0("Results/bart_rdd_",i,".rds"))
   rm(out)
   gc()

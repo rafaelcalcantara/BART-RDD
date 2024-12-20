@@ -1,4 +1,4 @@
-set.seed(7)
+set.seed(100)
 setwd("~/Git/BART-RDD/")
 devtools::install_github("JingyuHe/XBART@XBCF-RDD")
 library(XBART)

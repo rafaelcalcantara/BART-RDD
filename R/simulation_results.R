@@ -2,7 +2,7 @@ setwd("~/Git/BART-RDD")
 files <- length(list.files("Data"))
 params <- data.frame(delta.tau=rep(0,files),level=rep(0,files),
                      n=rep(0,files),sig_error=rep(0,files))
-samples <- 1:1000
+samples <- 1:10
 ##
 bart.rdd.cate <- vector("list",files)
 bart.rdd.cate.rmse <- rep(0,files)
