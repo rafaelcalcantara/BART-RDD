@@ -1,0 +1,8 @@
+setwd("~/Git/BART-RDD")
+source("R/simulation_data.R")
+.rs.restartR(clean=T)
+source("R/simulation_master.R")
+.rs.restartR(clean=T)
+source("R/simulation_results.R")
+.rs.restartR(clean=T)
+source("R/sim_plots_tables.R")
