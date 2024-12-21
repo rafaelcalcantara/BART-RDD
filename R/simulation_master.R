@@ -2,7 +2,7 @@ setwd("~/Git/BART-RDD")
 library(doParallel)
 library(XBART)
 ### Parallelization
-no_cores <- 16
+no_cores <- 11
 ## Create results folder
 if (!dir.exists("Results")) dir.create("Results")
 ## Get simulation script names

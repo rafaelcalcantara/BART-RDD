@@ -1,7 +1,7 @@
 setwd("~/Git/BART-RDD")
 library(doParallel)
 set.seed(0)
-no_cores <- 6
+no_cores <- 11
 if (!dir.exists("Data")) dir.create("Data") ## Create data folder
 if (length(list.files("Data"))!=0) ## Clean up folder
 {
@@ -45,12 +45,12 @@ h.grid <- function(x,c,grid)
 }
 ## Parameters
 N <- c(500,1000,1500)
-sig_error <- 3
+sig_error <- c(0.75,1.5)
 pts_in_window <- 75
 s <- 1000
 c <- 0
 ate <- 1
-delta_tau <- 1
+delta_tau <- c(0,0.3)
 level <- 1
 ind <- 0
 params <- expand.grid(delta_tau,level,N,sig_error)
@@ -66,7 +66,7 @@ gen.data <- function(ind)
   z <- apply(x,2,function(i) as.numeric(i>=c))
   mtemp <- (x+0.75)/2
   stemp <- 50
-  w <- matrix(rbeta(n*s,mtemp*stemp,(1-mtemp)*stemp),n,s)
+  w <- matrix(rbeta(n*s,mtemp*stemp,(1-mtemp)*stemp) + rnorm(n*s,0,dt),n,s)
   
   
   cate <- apply(w, 2, function(i) tau(c,c,i,dt,lvl,ate))

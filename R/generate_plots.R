@@ -1,8 +1,8 @@
 setwd("~/Git/BART-RDD")
 rm(list = ls())
 gc()
-N <- c(500,1000,2500)
-sig_error <- 3
+N <- c(500,1000,1500)
+sig_error <- 0.72
 pts_in_window <- 75
 source("R/simulation_data.R")
 rm(list=ls())
