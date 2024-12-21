@@ -3,7 +3,7 @@ load("Results/sims.RData")
 ###
 rmse.plot <- cbind(params,rmse.cate/ate.cate)
 par(mfrow=c(2,2))
-for (i in c(500,1000,2500))
+for (i in c(500,1000,1500))
 {
   rmse <- subset(rmse.plot,n==i)
   matplot(t(rmse[,-c(1:4)]),bty="n",pch=16,col=1:3,
