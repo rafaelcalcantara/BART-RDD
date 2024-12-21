@@ -9,7 +9,7 @@ txt[5] <- "#SBATCH --mail-user=rafael.campellodealcantara@mccombs.utexas.edu # W
 txt[6] <- "#SBATCH --mem=10G # Total memory limit"
 txt[7] <- "#SBATCH --time=04:00:00 # Time limit hrs:min:sec"
 txt[8] <- "#SBATCH --nice"
-for (i in 1:3) {
+for (i in 4:12) {
   txt[9] <- paste0("Rscript simulation_master.R ", i, " &")
   writeLines(txt,paste0("R/run_sims",i,".sh"))
 }
