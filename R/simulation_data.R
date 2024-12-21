@@ -44,7 +44,7 @@ h.grid <- function(x,c,grid)
   return(out)
 }
 ## Parameters
-N <- c(500,1000,2500)
+N <- c(500,1000,1500)
 sig_error <- 3
 pts_in_window <- 75
 s <- 1000
