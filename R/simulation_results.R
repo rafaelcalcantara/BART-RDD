@@ -123,23 +123,25 @@ rmse.cate <- cbind(`Oracle`=oracle.cate.rmse,
                    # `Poly_3`=polynomial.3.cate.rmse
                    )
 # ## Bias
-# bias.cate <- cbind(`Oracle`=oracle.cate.bias,
-#                    `BART-RDD`=bart.rdd.cate.bias,
-#                    `T-BART`=tbart.cate.bias,
-#                    `S-BART`=sbart.cate.bias,
-#                    `Poly_1`=polynomial.1.cate.bias,
-#                    `Poly_2`=polynomial.2.cate.bias,
-#                    `Poly_3`=polynomial.3.cate.bias,
-#                    `Poly_full`=polynomial.full.cate.bias)
-# ## Variance
-# var.cate <- cbind(`Oracle`=oracle.cate.var,
-#                    `BART-RDD`=bart.rdd.cate.var,
-#                    `T-BART`=tbart.cate.var,
-#                    `S-BART`=sbart.cate.var,
-#                    `Poly_1`=polynomial.1.cate.var,
-#                    `Poly_2`=polynomial.2.cate.var,
-#                    `Poly_3`=polynomial.3.cate.var,
-#                    `Poly_full`=polynomial.full.cate.var)
+bias.cate <- cbind(`Oracle`=oracle.cate.bias,
+                   `BART-RDD`=bart.rdd.cate.bias,
+                   `Poly_full`=polynomial.full.cate.bias,
+                   `T-BART`=tbart.cate.bias,
+                   `S-BART`=sbart.cate.bias
+                   # `Poly_1`=polynomial.1.cate.bias,
+                   # `Poly_2`=polynomial.2.cate.bias,
+                   # `Poly_3`=polynomial.3.cate.bias
+                   )
+## Variance
+var.cate <- cbind(`Oracle`=oracle.cate.var,
+                   `BART-RDD`=bart.rdd.cate.var,
+                  `Poly_full`=polynomial.full.cate.var,
+                   `T-BART`=tbart.cate.var,
+                   `S-BART`=sbart.cate.var
+                   # `Poly_1`=polynomial.1.cate.var,
+                   # `Poly_2`=polynomial.2.cate.var,
+                   # `Poly_3`=polynomial.3.cate.var,
+                   )
 # ## Delta_tau
 # dt.cate <- cbind(`Oracle`=oracle.cate.dt,
 #                    `BART-RDD`=bart.rdd.cate.dt,

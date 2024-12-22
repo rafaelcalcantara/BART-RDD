@@ -21,7 +21,7 @@ legend("bottom",pch=16:17,legend=c(1,2),
        title=expression(sigma~"/sd("~tau(x==c,w)~")"),ncol=2,cex=0.75)
 ###
 # sample <- 1
-dgp <- 3
+dgp <- 11
 # bart.rdd.cate.est <- bart.rdd.cate[[dgp]][[sample]]
 # sbart.cate.est <- sbart.cate[[dgp]][[sample]]
 # tbart.cate.est <- tbart.cate[[dgp]][[sample]]
