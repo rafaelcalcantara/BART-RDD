@@ -15,8 +15,8 @@ for (i in c(500,1000,1500))
        lty = 2, col = "gray", lwd = 1)
 }
 plot.new()
-legend("top",col=2:3,legend=c(0.9,0.65),
-       title="cor(X,W)",ncol=2,lty=1,cex=0.75,lwd=2)
+legend("top",col=2:3,legend=c("No noise","Added noise"),
+       title="P(X,W)",ncol=2,lty=1,cex=0.75,lwd=2)
 legend("bottom",pch=16:17,legend=c(1,2),
        title=expression(sigma~"/sd("~tau(x==c,w)~")"),ncol=2,cex=0.75)
 ###
