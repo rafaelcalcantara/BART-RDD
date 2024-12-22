@@ -70,7 +70,7 @@ gen.data <- function(ind)
   
   
   cate <- apply(w, 2, function(i) tau(c,c,i,lvl,ate))
-  y <- sapply(1:s, function(i) mu(x[,i],w[,i]) + tau(x[,i],c,w[,i],lvl,ate)*z[,i] + rnorm(n,0,sqrt(sig)))
+  y <- sapply(1:s, function(i) mu(x[,i],w[,i]) + tau(x[,i],c,w[,i],lvl,ate)*z[,i] + rnorm(n,0,sig))
   ## Save data
   out <- list(y=y,x=x,z=z,w=w,c=c,h=h,tau.x=cate,tau=ate,delta_tau=dt,level=lvl,n=n,sig_error=sig)
   saveRDS(out,paste0("Data/dgp_",ind,".rds"))
