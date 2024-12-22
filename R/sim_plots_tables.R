@@ -6,21 +6,19 @@ par(mfrow=c(2,2))
 for (i in c(500,1000,1500))
 {
   rmse <- subset(rmse.plot,n==i)
-  matplot(t(rmse[,-c(1:4)]),bty="n",pch=16,col=1:3,
+  matplot(t(rmse[,-c(1:4)]),bty="n",pch=c(16,16,17,17),col=2:3,
           lty=2,type="b",ylab="RMSE/RMSE (ATE)",
           xaxt="n",main=bquote(N==.(i)))
   axis(1,at=1:(ncol(rmse)-4),labels=names(rmse)[-c(1:4)],cex.axis=0.8)
   grid(nx = NA,
        ny = NULL,
        lty = 2, col = "gray", lwd = 1)
-  # if (i==500)
-  # {
-  #   legend("topleft",col=1:3,legend=unique(params$delta.tau),
-  #          title=expression(tau~"'/"~mu~"'"),ncol=2,lty=2,cex=0.75,lwd=2,
-  #          text.width = 0.4*c(strwidth("0.3"),strwidth("0.5"),strwidth("0.7")),
-  #          y.intersp = 0.5)
-  # }
 }
+plot.new()
+legend("top",col=2:3,legend=c(0.9,0.5),
+       title="cor(X,W)",ncol=2,lty=1,cex=0.75,lwd=2)
+legend("bottom",pch=16:17,legend=c(1,2),
+       title=expression(sigma~"/sd("~tau(x==c,w)~")"),ncol=2,cex=0.75)
 ###
 # sample <- 1
 dgp <- 3

@@ -50,7 +50,7 @@ pts_in_window <- 75
 s <- 1000
 c <- 0
 ate <- 1
-delta_tau <- c(0,0.5)
+delta_tau <- c(0,0.2)
 level <- 1
 ind <- 0
 params <- expand.grid(delta_tau,level,N,sig_error)
