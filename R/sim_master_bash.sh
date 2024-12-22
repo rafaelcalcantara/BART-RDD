@@ -6,5 +6,5 @@ for i in $scripts
 do
 chmod u+x $i
 $i &
-sleep 1
+sleep 3
 done
