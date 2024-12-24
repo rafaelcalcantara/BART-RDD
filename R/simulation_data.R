@@ -12,14 +12,15 @@ if (length(list.files("Data"))!=0) ## Clean up folder
 mu0.x <- function(x) 1.5*x^5 - 0.6*x^3 + 0.25*x + 0.5
 mu0.w <- function(w) -15*sin(w)
 tau0.x <- function(x,c) log(x-c+1)
-tau0.w <- function(w,level) {
-  if (level==1) out <- sin(3*pi*w)/10 ## 5th degree polynomial on W
-  if (level==2) out <- sin(7*pi*w)*(w-0.5)/(5+exp(-2*w)) ## 14th degree polynomial on W
-  out <- sin(3*pi*w) #-mean(2*sin(3*pi*w))
-  return(out)
+tau0.w <- function(w) sin(3*pi*w)
+mu <- function(x,w) {
+  mu.w <- mu0.w(w)
+  mu0.x(x) + mu.w/sd(mu.w)
 }
-mu <- function(x,w) mu0.x(x) + mu0.w(w)
-tau <- function(x,c,w,level,ate) tau0.x(x,c) + tau0.w(w,level) + ate
+tau <- function(x,c,w,ate) {
+  tau.w <- tau0.w(w)
+  tau0.x(x,c) + tau.w/sd(tau.w) + ate
+}
 h.grid <- function(x,c,grid)
 {
   abs.x <- sort(abs(x-c))
@@ -44,35 +45,31 @@ h.grid <- function(x,c,grid)
   return(out)
 }
 ## Parameters
-N <- c(500,1000,1500)
-sig_error <- c(0.75,1.5)
-pts_in_window <- 75
+# N <- c(500,1000,1500)
+# rho <- c(0.7,0.8,0.9)
+# pts_in_window <- 75
 s <- 1000
 c <- 0
 ate <- 1
-delta_tau <- c(0,0.15)
-level <- 1
+sig_error <- 1
 ind <- 0
-params <- expand.grid(delta_tau,level,N,sig_error)
+params <- expand.grid(N,rho)
 gen.data <- function(ind)
 {
   row <- as.numeric(params[ind,])
-  dt <- row[1]
-  lvl <- row[2]
-  n <- row[3]
-  sig <- row[4]
-  x <- matrix(2*rbeta(n*s,2,4)-0.75,n,s)
-  h <- apply(x,2,function(i) h.grid(i,c,75))
+  n <- row[1]
+  Rho <- row[2]
+  u1 <- rnorm(n*s)
+  u2 <- rnorm(n*s,Rho*u1,sqrt(1-Rho^2))
+  u <- pnorm(cbind(u1,u2))
+  x <- matrix(2*qbeta(u[,1],2,4)-0.75,n,s)
+  h <- apply(x,2,function(i) h.grid(i,c,pts_in_window))
   z <- apply(x,2,function(i) as.numeric(i>=c))
-  mtemp <- (x+0.75)/2
-  stemp <- 50
-  w <- matrix(rbeta(n*s,mtemp*stemp,(1-mtemp)*stemp) + rnorm(n*s,0,dt),n,s)
-  
-  
-  cate <- apply(w, 2, function(i) tau(c,c,i,lvl,ate))
-  y <- sapply(1:s, function(i) mu(x[,i],w[,i]) + tau(x[,i],c,w[,i],lvl,ate)*z[,i] + rnorm(n,0,sig))
+  w <- matrix(qunif(u[,2]),n,s)
+  cate <- apply(w, 2, function(i) tau(c,c,i,ate))
+  y <- sapply(1:s, function(i) mu(x[,i],w[,i]) + tau(x[,i],c,w[,i],ate)*z[,i] + rnorm(n,0,sig_error))
   ## Save data
-  out <- list(y=y,x=x,z=z,w=w,c=c,h=h,tau.x=cate,tau=ate,delta_tau=dt,level=lvl,n=n,sig_error=sig)
+  out <- list(y=y,x=x,z=z,w=w,c=c,h=h,tau.x=cate,tau=ate,n=n,rho=Rho,sig_error=sig_error)
   saveRDS(out,paste0("Data/dgp_",ind,".rds"))
 }
 ##

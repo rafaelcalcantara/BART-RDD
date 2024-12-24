@@ -1,8 +1,7 @@
 setwd("~/Git/BART-RDD")
 files <- length(list.files("Data"))
-params <- data.frame(delta.tau=rep(0,files),level=rep(0,files),
-                     n=rep(0,files),sig_error=rep(0,files))
-samples <- 1:1000
+params <- data.frame(n=rep(0,files),rho=rep(0,files))
+# samples <- 1:1000
 ##
 bart.rdd.cate <- vector("list",files)
 bart.rdd.cate.rmse <- rep(0,files)
@@ -57,7 +56,7 @@ for (i in 1:files)
   Owidth <- data$h
   test <- sapply(samples,function(i) -Owidth[i] <= data$x[,i] & data$x[,i] <= Owidth[i])
   cate <- sapply(samples, function(i) data$tau.x[test[,i],i])
-  params[i,] <- c(data$delta_mu,data$delta_tau,data$level,n,data$sig_error)
+  params[i,] <- c(n,data$rho)
   ate.cate[i] <- mean(sapply(cate,function(i) sqrt(mean((i-data$tau)^2))))
   bart.rdd <- readRDS(paste0("Results/bart_rdd_",i,".rds"))
   sbart <- readRDS(paste0("Results/sbart_",i,".rds"))
