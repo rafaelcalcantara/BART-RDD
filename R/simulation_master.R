@@ -11,15 +11,16 @@ scripts <- scripts[-grep("master|data|results|polynomial_1|polynomial_2|polynomi
 scripts <- paste0("R/",scripts)
 ## Samples to estimate
 s0 <- 1
-s1 <- 1000
 ## Take command line arguments
 args <- commandArgs(trailingOnly = T)
 if (length(args) > 0)
 {
-  files <- args
+  files <- args[1]
+  s1 <- args[2]
 } else
 {
   files <- 1:length(list.files("Data"))
+  s1 <- 10
 }
 ### Parameters
 p_categorical <- 0
