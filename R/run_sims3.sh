@@ -6,4 +6,4 @@
 #SBATCH --mem=10G # Total memory limit
 #SBATCH --time=04:00:00 # Time limit hrs:min:sec
 #SBATCH --nice
-Rscript simulation_master.R 3 &
+Rscript simulation_master.R 3 250 &
