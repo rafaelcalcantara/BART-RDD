@@ -1,4 +1,5 @@
 setwd("~/Git/BART-RDD")
+file.remove(paste0("R/",dir("R")[grep("run",dir("R"))])) ## Remove existing bash scripts for running sims
 dgps <- 1:length(list.files("Data"))
 txt <- rep(NA,9)
 txt[1] <- "#! /bin/bash"
