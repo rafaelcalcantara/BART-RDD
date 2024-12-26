@@ -11,6 +11,6 @@ txt[6] <- "#SBATCH --mem=10G # Total memory limit"
 txt[7] <- "#SBATCH --time=04:00:00 # Time limit hrs:min:sec"
 txt[8] <- "#SBATCH --nice"
 for (i in dgps) {
-  txt[9] <- paste0("Rscript simulation_master.R ", i, " ", 250, " &")
+  txt[9] <- paste0("Rscript simulation_master.R ", i, " ", 200, " &")
   writeLines(txt,paste0("R/run_sims",i,".sh"))
 }
