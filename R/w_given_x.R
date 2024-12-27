@@ -44,7 +44,7 @@ u1 <- rnorm(n)
 u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
 u <- pnorm(cbind(u1,u2))
 x <- 2*qbeta(u[,1],2,4)-1
-w <- 2*qbeta(u[,2],2,5)-1
+w <- 2*qbeta(u[,2],10,10)-1
 c <- 0
 z <- as.numeric(x>=c)
 y <- mu(x,w) + tau(x,c,w,ate)*z + rnorm(n)
@@ -56,8 +56,10 @@ plot(x,w)
 abline(v=0)
 plot(x[test],w[test])
 abline(v=0)
-plot(w,tau0.w(w))
+plot(w,tau(c,c,w,ate))
 # plot(w,mu0.w(w))
 cor(x,w,meth="spearman")
 summary(tau(c,c,w,ate))
-sd(w)
+sd(w[test])/mean(w[test])
+mean(w[test])
+sd(w[test])
