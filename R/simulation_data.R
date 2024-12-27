@@ -19,7 +19,7 @@ mu <- function(x,w) {
 }
 tau <- function(x,c,w,ate) {
   tau.w <- tau0.w(w)
-  tau0.x(x,c) + tau.w/sd(tau.w) + ate
+  tau0.x(x,c) + (tau.w-mean(tau.w))/sd(tau.w) + ate
 }
 h.grid <- function(x,c,grid)
 {
