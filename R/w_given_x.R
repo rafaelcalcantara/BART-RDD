@@ -36,14 +36,14 @@ n <- 1500
 # summary(w)
 # var(w)
 ####
-rho <- 0.95
+rho <- -0.75
 u1 <- rnorm(n)
 u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
 u <- pnorm(cbind(u1,u2))
 x <- 2*qbeta(u[,1],2,4)-1
 w <- 2*qbeta(u[,2],2,5)-1
 # x <- qunif(u[,1],-0.5,0.5)
-# w <- qunif(u[,2],0.1,1)
+# w <- qbeta(u[,2],2.2,5.1)
 test <- c-h.grid(x,c,75) <= x & x <= c+h.grid(x,c,75)
 # sum(test)
 par(mfrow=c(1,3))
@@ -51,7 +51,7 @@ plot(x,w)
 abline(v=0)
 plot(x[test],w[test])
 abline(v=0)
-plot(w,sin(3*pi*w))
+plot(w,sin(1.5*pi*w))
 cor(x,w,meth="spearman")
 # summary(x)
 # summary(w)
