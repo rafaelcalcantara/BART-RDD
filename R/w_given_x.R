@@ -39,12 +39,12 @@ c <- 0
 n <- 500
 ate <- 1
 ####
-rho <- 0.8
+rho <- 0.4
 u1 <- rnorm(n)
 u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
 u <- pnorm(cbind(u1,u2))
-x <- 2*qbeta(u[,1],2,4)-1
-w <- 2*qbeta(u[,2],2,5)-1
+x <- 2*qbeta(u[,1],5,1)-1
+w <- 2*qbeta(u[,2],1,5)-1
 c <- 0
 z <- as.numeric(x>=c)
 y <- mu(x,w) + tau(x,c,w,ate)*z + rnorm(n)
