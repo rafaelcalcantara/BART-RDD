@@ -36,7 +36,7 @@ h.grid <- function(x,c,grid)
   return(out)
 }
 c <- 0
-n <- 500
+n <- 1500
 ate <- 1
 ####
 rho <- 0.5
@@ -44,7 +44,7 @@ u1 <- rnorm(n)
 u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
 u <- pnorm(cbind(u1,u2))
 x <- 2*qbeta(u[,1],2,4)-1
-w <- 2*qbeta(u[,2],50,5)-1
+w <- 2*qbeta(u[,2],2,5)-1
 c <- 0
 z <- as.numeric(x>=c)
 y <- mu(x,w) + tau(x,c,w,ate)*z + rnorm(n)
@@ -60,3 +60,4 @@ plot(w,tau0.w(w))
 # plot(w,mu0.w(w))
 cor(x,w,meth="spearman")
 summary(tau(c,c,w,ate))
+sd(w)
