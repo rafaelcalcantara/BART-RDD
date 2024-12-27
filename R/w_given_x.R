@@ -36,7 +36,7 @@ cor(x,w)
 summary(w)
 var(w)
 ####
-rho <- 0.75
+rho <- -0.95
 u1 <- rnorm(n)
 u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
 u <- pnorm(cbind(u1,u2))

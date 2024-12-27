@@ -46,7 +46,7 @@ h.grid <- function(x,c,grid)
 }
 ## Parameters
 N <- c(500,1000,1500)
-rho <- c(0.75,0.95)
+rho <- -c(0.75,0.95)
 pts_in_window <- 75
 s <- 1000
 c <- 0
@@ -62,7 +62,7 @@ gen.data <- function(ind)
   u1 <- rnorm(n*s)
   u2 <- rnorm(n*s,Rho*u1,sqrt(1-Rho^2))
   u <- pnorm(cbind(u1,u2))
-  x <- matrix(2*qbeta(u[,1],2,4)-1,n,s)
+  x <- matrix(2*qbeta(u[,1],4,2)-1,n,s)
   # x <- matrix(qunif(u[,1],-1,0.2),n,s)
   h <- apply(x,2,function(i) h.grid(i,c,pts_in_window))
   z <- apply(x,2,function(i) as.numeric(i>=c))
