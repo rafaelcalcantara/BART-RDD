@@ -36,12 +36,14 @@ cor(x,w)
 summary(w)
 var(w)
 ####
-rho <- -0.9
+rho <- 0.95
 u1 <- rnorm(n)
 u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
 u <- pnorm(cbind(u1,u2))
-x <- 2*qbeta(u[,1],2,4)-0.75
-w <- qbeta(u[,2],2.2,5.13)
+# x <- 2*qbeta(u[,1],2,4)-0.75
+# w <- qbeta(u[,2],2.2,5.13)
+x <- qunif(u[,1],-0.5,1)
+w <- qunif(u[,2],0.1,1)
 test <- c-h.grid(x,c,75) <= x & x <= c+h.grid(x,c,75)
 par(mfrow=c(1,2))
 plot(x,w)
