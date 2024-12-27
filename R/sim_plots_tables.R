@@ -22,11 +22,11 @@ for (i in c(500,1000,1500))
   #      lty = 2, col = "gray", lwd = 1)
 }
 plot.new()
-legend("center",col=1:3,legend=c("0","0.8"),
+legend("center",col=1:3,legend=c("0.45","0.9"),
        title=bquote(rho),ncol=2,lty=1,pch=19,cex=0.75,lwd=2)
 ###
 # sample <- 1
-dgp <- 6
+dgp <- 5
 # bart.rdd.cate.est <- bart.rdd.cate[[dgp]][[sample]]
 # sbart.cate.est <- sbart.cate[[dgp]][[sample]]
 # tbart.cate.est <- tbart.cate[[dgp]][[sample]]
