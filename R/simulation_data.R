@@ -15,7 +15,7 @@ tau0.x <- function(x,c) log(x-c+1)
 tau0.w <- function(w) sin(1.5*pi*w)
 mu <- function(x,w) {
   mu.w <- mu0.w(w)
-  mu0.x(x) + sqrt(3)*mu.w/sd(mu.w)
+  mu0.x(x) + sqrt(2)*mu.w/sd(mu.w)
 }
 tau <- function(x,c,w,ate) {
   tau.w <- tau0.w(w)
@@ -46,7 +46,7 @@ h.grid <- function(x,c,grid)
 }
 ## Parameters
 N <- c(500,1000,1500)
-rho <- c(0.75,0.95)
+rho <- c(0.75,0.98)
 pts_in_window <- 75
 s <- 1000
 c <- 0
