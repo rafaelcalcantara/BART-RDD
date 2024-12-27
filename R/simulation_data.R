@@ -51,7 +51,7 @@ pts_in_window <- 75
 s <- 1000
 c <- 0
 ate <- 1
-sig_error <- 1
+sig_error <- 0.5
 ind <- 0
 params <- expand.grid(N,rho)
 gen.data <- function(ind)
