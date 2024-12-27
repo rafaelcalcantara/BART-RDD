@@ -22,7 +22,7 @@ for (i in c(500,1000,1500))
   #      lty = 2, col = "gray", lwd = 1)
 }
 plot.new()
-legend("center",col=1:3,legend=c("0.75","0.95"),
+legend("center",col=1:3,legend=c("0.95","0.98"),
        title=bquote(rho),ncol=2,lty=1,pch=19,cex=0.75,lwd=2)
 ###
 # sample <- 1
