@@ -36,15 +36,15 @@ h.grid <- function(x,c,grid)
   return(out)
 }
 c <- 0
-n <- 1500
+n <- 500
 ate <- 1
 ####
-rho <- 0.5
+rho <- 0.8
 u1 <- rnorm(n)
 u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
 u <- pnorm(cbind(u1,u2))
 x <- 2*qbeta(u[,1],2,4)-1
-w <- 2*qbeta(u[,2],10,10)-1
+w <- 2*qbeta(u[,2],2,5)-1
 c <- 0
 z <- as.numeric(x>=c)
 y <- mu(x,w) + tau(x,c,w,ate)*z + rnorm(n)
