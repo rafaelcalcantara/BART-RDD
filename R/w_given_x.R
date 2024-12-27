@@ -36,7 +36,7 @@ n <- 1500
 # summary(w)
 # var(w)
 ####
-rho <- 0.98
+rho <- 0.99
 u1 <- rnorm(n)
 u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
 u <- pnorm(cbind(u1,u2))
