@@ -36,19 +36,24 @@ cor(x,w)
 summary(w)
 var(w)
 ####
-rho <- -0.75
+rho <- 0.95
 u1 <- rnorm(n)
 u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
 u <- pnorm(cbind(u1,u2))
-# x <- 2*qbeta(u[,1],2,4)-0.75
-# w <- qbeta(u[,2],2.2,5.13)
-x <- qunif(u[,1],-1,0.2)
-w <- qunif(u[,2],0.1,1)
+x <- 2*qbeta(u[,1],2,2)-1
+w <- qbeta(u[,2],3,3)-0.5
+# x <- qunif(u[,1],-0.5,0.5)
+# w <- qunif(u[,2],0.1,1)
 test <- c-h.grid(x,c,75) <= x & x <= c+h.grid(x,c,75)
 sum(test)
 par(mfrow=c(1,2))
 plot(x,w)
+abline(v=0)
 plot(x[test],w[test])
+abline(v=0)
 cor(x,w,meth="spearman")
+summary(x)
 summary(w)
 h.grid(x,c,75)
+hist(x)
+hist(w)

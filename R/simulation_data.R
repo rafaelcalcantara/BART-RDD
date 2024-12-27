@@ -46,7 +46,7 @@ h.grid <- function(x,c,grid)
 }
 ## Parameters
 N <- c(500,1000,1500)
-rho <- -c(0.75,0.95)
+rho <- c(0.75,0.95)
 pts_in_window <- 75
 s <- 1000
 c <- 0
@@ -62,12 +62,12 @@ gen.data <- function(ind)
   u1 <- rnorm(n*s)
   u2 <- rnorm(n*s,Rho*u1,sqrt(1-Rho^2))
   u <- pnorm(cbind(u1,u2))
-  # x <- matrix(2*qbeta(u[,1],2,4)-0.75,n,s)
-  x <- matrix(qunif(u[,1],-1,0.2),n,s)
+  x <- matrix(2*qbeta(u[,1],2,2)-1,n,s)
+  # x <- matrix(qunif(u[,1],-1,0.2),n,s)
   h <- apply(x,2,function(i) h.grid(i,c,pts_in_window))
   z <- apply(x,2,function(i) as.numeric(i>=c))
-  # w <- matrix(qbeta(u[,2],2.2,5.13),n,s)
-  w <- matrix(qunif(u[,2],0.1,1),n,s)
+  w <- matrix(qbeta(u[,2],3,3),n,s)
+  # w <- matrix(qunif(u[,2],0.1,1),n,s)
   cate <- apply(w, 2, function(i) tau(c,c,i,ate))
   y <- sapply(1:s, function(i) mu(x[,i],w[,i]) + tau(x[,i],c,w[,i],ate)*z[,i] + rnorm(n,0,sig_error))
   ## Save data
