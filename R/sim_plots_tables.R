@@ -26,7 +26,7 @@ legend("center",col=1:3,legend=c("0.75","0.98"),
        title=bquote(rho),ncol=2,lty=1,pch=19,cex=0.75,lwd=2)
 ###
 # sample <- 1
-dgp <- 1
+dgp <- 4
 # bart.rdd.cate.est <- bart.rdd.cate[[dgp]][[sample]]
 # sbart.cate.est <- sbart.cate[[dgp]][[sample]]
 # tbart.cate.est <- tbart.cate[[dgp]][[sample]]
