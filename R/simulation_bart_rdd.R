@@ -48,7 +48,7 @@ fit <- function(i)
   pred$tau.adj[,(burnin+1):num_sweeps]
 }
 ### Parameters
-Omin <- 1
+Omin <- 2
 Opct <- 0.4
 ### BEGIN LOOP
 for (i in files)
