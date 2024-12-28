@@ -47,7 +47,7 @@ n <- 1500
 # u <- pnorm(cbind(u1,u2))
 # x <- 2*qbeta(u[,1],2,4)-1
 # w <- qbeta(u[,2],2.2,5.13)-0.5
-rho <- 1
+rho <- 0.9
 x <- rnorm(n)
 w <- rnorm(n,rho*x,sqrt(1-rho^2))
 test <- c-h.grid(x,c,75) <= x & x <= c+h.grid(x,c,75)
