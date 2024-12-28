@@ -12,10 +12,10 @@ if (length(list.files("Data"))!=0) ## Clean up folder
 mu0.x <- function(x) 1.5*x^5 - 0.6*x^3 + 0.25*x + 0.5
 mu0.w <- function(w) -15*sin(w)
 tau0.x <- function(x,c) log(x-c+1)
-tau0.w <- function(w) sin(pi*w)
+tau0.w <- function(w) sin(3*pi*w)
 mu <- function(x,w) {
   mu.w <- mu0.w(w)
-  mu0.x(x) + sqrt(3)*mu.w/sd(mu.w)
+  mu0.x(x) + sqrt(4)*mu.w/sd(mu.w)
 }
 tau <- function(x,c,w,ate) {
   tau.w <- tau0.w(w)

@@ -3,14 +3,14 @@ set.seed(7)
 mu0.x <- function(x) 1.5*x^5 - 0.6*x^3 + 0.25*x + 0.5
 mu0.w <- function(w) -15*sin(w)
 tau0.x <- function(x,c) log(x-c+1)
-tau0.w <- function(w) sin(pi*w)
+tau0.w <- function(w) sin(3*pi*w)
 mu <- function(x,w) {
   mu.w <- mu0.w(w)
-  mu0.x(x) + sqrt(3)*mu.w/sd(mu.w)
+  mu0.x(x) + mu.w
 }
 tau <- function(x,c,w,ate) {
   tau.w <- tau0.w(w)
-  tau0.x(x,c) + (tau.w-mean(tau.w))/sd(tau.w) + ate
+  tau0.x(x,c) + tau.w + ate
 }
 h.grid <- function(x,c,grid)
 {
@@ -36,33 +36,19 @@ h.grid <- function(x,c,grid)
   return(out)
 }
 c <- 0
-n <- 500
 ate <- 1
-####
-# rho <- 0.4
-# u1 <- rnorm(n)
-# u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
-# u <- pnorm(cbind(u1,u2))
-# x <- 2*qbeta(u[,1],5,1)-1
-# w <- 2*qbeta(u[,2],1,5)-1
-k <- 2
-x <- 2*rbeta(n,2,4)-1
-w <- rnorm(n,x^3+k*x^2+k*x,sqrt(0.2))
-c <- 0
-z <- as.numeric(x>=c)
-y <- mu(x,w) + tau(x,c,w,ate)*z + rnorm(n)
+n <- 1500
+x <- 2*rbeta(n,2,4)-0.75
+mtemp <- (x+0.75)/2
+stemp <- 50
+w <- rbeta(n,mtemp*stemp,(1-mtemp)*stemp)
 test <- c-h.grid(x,c,75) <= x & x <= c+h.grid(x,c,75)
-par(mfrow=c(2,2))
-plot(x,y,col=z+1,pch=19)
-abline(v=c,lty=2)
+par(mfrow=c(1,2))
 plot(x,w)
-abline(v=0)
 plot(x[test],w[test])
-abline(v=0)
-plot(w[test],tau(c,c,w,ate)[test])
-# plot(w,mu0.w(w))
-cor(x,w,meth="spearman")
-summary(tau(c,c,w,ate))
-sd(w[test])/mean(w[test])
-mean(w[test])
-sd(w[test])
+cor(x,w)
+summary(w)
+var(w)
+sd(mu(c,w))
+sd(tau(c,c,w,ate))
+sd(mu(c,w))/sd(tau(c,c,w,ate))
