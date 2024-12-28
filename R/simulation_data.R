@@ -9,10 +9,10 @@ if (length(list.files("Data"))!=0) ## Clean up folder
   for (i in files) file.remove(i)
 }
 ### Functions
-mu0.x <- function(x) 0.5*x^3
-mu0.w <- function(w) 0.07*w
-tau0.x <- function(x,c) 0.5*x^3
-tau0.w <- function(w) 0.07*w
+mu0.x <- function(x) x^3-2.5*x
+mu0.w <- function(w) 3*w
+tau0.x <- function(x,c) x^3
+tau0.w <- function(w) w
 mu <- function(x,w) {
   mu.w <- mu0.w(w)
   mu0.x(x) + mu.w
@@ -51,7 +51,7 @@ pts_in_window <- 75
 s <- 1000
 c <- 0
 ate <- 1
-sig_error <- 2
+sig_error <- 1
 ind <- 0
 params <- expand.grid(N,rho)
 gen.data <- function(ind)
