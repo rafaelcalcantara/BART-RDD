@@ -11,7 +11,7 @@ if (length(list.files("Data"))!=0) ## Clean up folder
 ### Functions
 mu0.x <- function(x) 1.5*x^5 - 0.6*x^3 + 0.25*x + 0.5
 mu0.w <- function(w) -15*sin(w)
-tau0.x <- function(x,c) x
+tau0.x <- function(x,c) sin(0.5*pi*x)
 tau0.w <- function(w) sin(0.5*pi*w)
 mu <- function(x,w) {
   mu.w <- mu0.w(w)
@@ -46,7 +46,7 @@ h.grid <- function(x,c,grid)
 }
 ## Parameters
 N <- c(500,1000,1500)
-rho <- c(0.9,0.99)
+rho <- c(0.75,0.95)
 pts_in_window <- 75
 s <- 1000
 c <- 0
