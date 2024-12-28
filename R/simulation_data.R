@@ -15,7 +15,7 @@ tau0.x <- function(x,c) log(x-c+1)
 tau0.w <- function(w) sin(3*pi*w)
 mu <- function(x,w) {
   mu.w <- mu0.w(w)
-  mu0.x(x) + sqrt(4)*mu.w/sd(mu.w)
+  mu0.x(x) + sqrt(3)*mu.w/sd(mu.w)
 }
 tau <- function(x,c,w,ate) {
   tau.w <- tau0.w(w)
@@ -51,7 +51,7 @@ pts_in_window <- 75
 s <- 1000
 c <- 0
 ate <- 1
-sig_error <- 1
+sig_error <- 2
 ind <- 0
 params <- expand.grid(N,rho)
 gen.data <- function(ind)
