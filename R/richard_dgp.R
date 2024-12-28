@@ -3,8 +3,8 @@ set.seed(7)
 #### Steep mu.x
 # mu0.x <- function(x) 0.05*x^5 - 0.6*x^3 + 1.5*x^2 + 0.25*x + 0.5
 #### Not steep mu.x
-mu0.x <- function(x) x^3 + 0.1*x^2 + 0.1
-mu0.w <- function(w) 3*w
+mu0.x <- function(x) 0.5*x^3
+mu0.w <- function(w) 0.07*w
 #### Steep tau.x
 # tau0.x <- function(x,c) sin(0.5*pi*x)
 #### Not steep tau.x
@@ -62,5 +62,5 @@ sd(mu(c,w))
 sd(tau(c,c,w,ate))
 sd(mu(c,w))/sd(tau(c,c,w,ate))
 ### Checking functions near x=c
-plot(seq(-0.5,0.5,length.out=1000),mu0.x(seq(-0.5,0.5,length.out=1000)))
-plot(seq(-0.5,0.5,length.out=1000),tau0.x(seq(-0.5,0.5,length.out=1000)))
+plot(x[test],mu(x,w)[test])
+plot(x[test],tau(x,c,w,ate)[test])
