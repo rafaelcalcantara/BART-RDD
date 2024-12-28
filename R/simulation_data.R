@@ -12,7 +12,7 @@ if (length(list.files("Data"))!=0) ## Clean up folder
 mu0.x <- function(x) 1.5*x^5 - 0.6*x^3 + 0.25*x + 0.5
 mu0.w <- function(w) -15*sin(w)
 tau0.x <- function(x,c) log(x-c+1)
-tau0.w <- function(w) sin(1.5*pi*w)
+tau0.w <- function(w) sin(pi*w)
 mu <- function(x,w) {
   mu.w <- mu0.w(w)
   mu0.x(x) + sqrt(3)*mu.w/sd(mu.w)
@@ -67,7 +67,7 @@ gen.data <- function(ind)
   x <- matrix(2*rbeta(n*s,2,4)-1,n,s)
   h <- apply(x,2,function(i) h.grid(i,c,pts_in_window))
   z <- apply(x,2,function(i) as.numeric(i>=c))
-  w <- apply(x,2,function(i) rnorm(n,-i^5+i^3+Rho*i,0.15))
+  w <- apply(x,2,function(i) rnorm(n,i^5+Rho*i^3+Rho*i,sqrt(0.5)))
   # w <- matrix(2*qbeta(u[,2],2,5)-1,n,s)
   # w <- matrix(qunif(u[,2],0.1,1),n,s)
   cate <- apply(w, 2, function(i) tau(c,c,i,ate))

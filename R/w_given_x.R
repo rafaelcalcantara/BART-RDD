@@ -3,7 +3,7 @@ set.seed(7)
 mu0.x <- function(x) 1.5*x^5 - 0.6*x^3 + 0.25*x + 0.5
 mu0.w <- function(w) -15*sin(w)
 tau0.x <- function(x,c) log(x-c+1)
-tau0.w <- function(w) sin(1.5*pi*w)
+tau0.w <- function(w) sin(pi*w)
 mu <- function(x,w) {
   mu.w <- mu0.w(w)
   mu0.x(x) + sqrt(3)*mu.w/sd(mu.w)
@@ -47,7 +47,7 @@ ate <- 1
 # w <- 2*qbeta(u[,2],1,5)-1
 k <- 1
 x <- 2*rbeta(n,2,4)-1
-w <- rnorm(n,-x^5+x^3+k*x,sd(x^5))
+w <- rnorm(n,x^5+k*x^3+k*x,sqrt(0.5))
 c <- 0
 z <- as.numeric(x>=c)
 y <- mu(x,w) + tau(x,c,w,ate)*z + rnorm(n)
