@@ -15,11 +15,11 @@ tau0.x <- function(x,c) sin(0.5*pi*x)
 tau0.w <- function(w) w
 mu <- function(x,w) {
   mu.w <- mu0.w(w)
-  mu0.x(x) + sqrt(3)*mu.w/sd(mu.w)
+  mu0.x(x) + mu.w
 }
 tau <- function(x,c,w,ate) {
   tau.w <- tau0.w(w)
-  tau0.x(x,c) + (tau.w-mean(tau.w))/sd(tau.w) + ate
+  tau0.x(x,c) + tau.w + ate
 }
 h.grid <- function(x,c,grid)
 {
