@@ -1,8 +1,14 @@
 set.seed(7)
 ### Functions
-mu0.x <- function(x) 0.05*x^5 - 0.6*x^3 + 1.5*x^2 + 0.25*x + 0.5
+#### Steep mu.x
+# mu0.x <- function(x) 0.05*x^5 - 0.6*x^3 + 1.5*x^2 + 0.25*x + 0.5
+#### Not steep mu.x
+mu0.x <- function(x) 0.05*x^5 + 0.5
 mu0.w <- function(w) -5*sin(w)
-tau0.x <- function(x,c) sin(0.2*pi*x)
+#### Steep tau.x
+tau0.x <- function(x,c) sin(0.5*pi*x)
+#### Not steep tau.x
+# tau0.x <- function(x,c) sin(0.2*pi*x)
 tau0.w <- function(w) w
 mu <- function(x,w) mu0.x(x) + mu0.w(w)
 tau <- function(x,c,w,ate) tau0.x(x,c) + tau0.w(w) + ate
@@ -58,7 +64,7 @@ sd(mu(c,w))/sd(tau(c,c,w,ate))
 ### Checking derivatives near x=c
 dmu.dx <- function(x) 0.25*x^4-1.8*x^2+3*x+0.25
 dmu.dw <- function(w) -5*cos(w)
-dtau.dx <- function(x) 0.2*pi*cos(0.2*pi*x)
+dtau.dx <- function(x) 0.5*pi*cos(0.5*pi*x)
 dtau.dw <- function(w) 1
 e <- seq(-0.5,0.5,length.out=1000)
 par(mfrow=c(1,2))
