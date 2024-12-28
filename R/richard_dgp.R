@@ -3,7 +3,7 @@ set.seed(7)
 mu0.x <- function(x) 1.5*x^5 - 0.6*x^3 + 0.25*x + 0.5
 mu0.w <- function(w) -15*sin(w)
 tau0.x <- function(x,c) sin(0.5*pi*x)
-tau0.w <- function(w) sin(0.5*pi*w)
+tau0.w <- function(w) w
 mu <- function(x,w) {
   mu.w <- mu0.w(w)
   mu0.x(x) + mu.w
@@ -36,7 +36,7 @@ h.grid <- function(x,c,grid)
 }
 c <- 0
 ate <- 1
-n <- 1500
+n <- 500
 # x <- 2*rbeta(n,2,4)-1
 # mtemp <- (x+1)/2
 # stemp <- 20
@@ -47,7 +47,7 @@ n <- 1500
 # u <- pnorm(cbind(u1,u2))
 # x <- 2*qbeta(u[,1],2,4)-1
 # w <- qbeta(u[,2],2.2,5.13)-0.5
-rho <- 1
+rho <- 0.9
 x <- rnorm(n)
 w <- rnorm(n,rho*x,sqrt(1-rho^2))
 test <- c-h.grid(x,c,75) <= x & x <= c+h.grid(x,c,75)
