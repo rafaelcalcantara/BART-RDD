@@ -11,8 +11,8 @@ if (length(list.files("Data"))!=0) ## Clean up folder
 ### Functions
 mu0.x <- function(x) 1.5*x^5 - 0.6*x^3 + 0.25*x + 0.5
 mu0.w <- function(w) -15*sin(w)
-tau0.x <- function(x,c) log(x-c+1)
-tau0.w <- function(w) sin(3*pi*w)
+tau0.x <- function(x,c) x
+tau0.w <- function(w) sin(0.5*pi*w)
 mu <- function(x,w) {
   mu.w <- mu0.w(w)
   mu0.x(x) + sqrt(3)*mu.w/sd(mu.w)
@@ -46,12 +46,12 @@ h.grid <- function(x,c,grid)
 }
 ## Parameters
 N <- c(500,1000,1500)
-rho <- c(0,2)
+rho <- c(0.85,0.95)
 pts_in_window <- 75
 s <- 1000
 c <- 0
 ate <- 1
-sig_error <- sqrt(2)
+sig_error <- sqrt(1)
 ind <- 0
 params <- expand.grid(N,rho)
 gen.data <- function(ind)
@@ -64,10 +64,10 @@ gen.data <- function(ind)
   # u <- pnorm(cbind(u1,u2))
   # x <- matrix(2*qbeta(u[,1],2,4)-1,n,s)
   # x <- matrix(qunif(u[,1],-1,0.2),n,s)
-  x <- matrix(2*rbeta(n*s,2,4)-1,n,s)
+  x <- matrix(rnorm(n*s),n,s)
   h <- apply(x,2,function(i) h.grid(i,c,pts_in_window))
   z <- apply(x,2,function(i) as.numeric(i>=c))
-  w <- apply(x,2,function(i) rnorm(n,i^3+Rho*i^2+Rho*i,sqrt(0.2)))
+  w <- apply(x,2,function(i) rnorm(n,Rho*i,sqrt(1-Rho^2)))
   # w <- matrix(2*qbeta(u[,2],2,5)-1,n,s)
   # w <- matrix(qunif(u[,2],0.1,1),n,s)
   cate <- apply(w, 2, function(i) tau(c,c,i,ate))

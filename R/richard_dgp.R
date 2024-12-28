@@ -2,15 +2,14 @@ set.seed(7)
 ### Functions
 mu0.x <- function(x) 1.5*x^5 - 0.6*x^3 + 0.25*x + 0.5
 mu0.w <- function(w) -15*sin(w)
-tau0.x <- function(x,c) log(x-c+1)
-tau0.w <- function(w) sin(3*pi*w)
+tau0.x <- function(x,c) x
+tau0.w <- function(w) sin(0.5*pi*w)
 mu <- function(x,w) {
   mu.w <- mu0.w(w)
   mu0.x(x) + mu.w
 }
 tau <- function(x,c,w,ate) {
-  tau.w <- tau0.w(w)
-  tau0.x(x,c) + tau.w + ate
+  tau0.x(x,c) + tau0.w(w) + ate
 }
 h.grid <- function(x,c,grid)
 {
@@ -38,14 +37,23 @@ h.grid <- function(x,c,grid)
 c <- 0
 ate <- 1
 n <- 1500
-x <- 2*rbeta(n,2,4)-0.75
-mtemp <- (x+0.75)/2
-stemp <- 50
-w <- rbeta(n,mtemp*stemp,(1-mtemp)*stemp)
+# x <- 2*rbeta(n,2,4)-1
+# mtemp <- (x+1)/2
+# stemp <- 20
+# w <- rbeta(n,mtemp*stemp,(1-mtemp)*stemp)-0.5
+# rho <- 0
+# u1 <- rnorm(n)
+# u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
+# u <- pnorm(cbind(u1,u2))
+# x <- 2*qbeta(u[,1],2,4)-1
+# w <- qbeta(u[,2],2.2,5.13)-0.5
+rho <- 1
+x <- rnorm(n)
+w <- rnorm(n,rho*x,sqrt(1-rho^2))
 test <- c-h.grid(x,c,75) <= x & x <= c+h.grid(x,c,75)
 par(mfrow=c(1,2))
 plot(x,w)
-plot(x[test],w[test])
+plot(x,tau(x,c,w,ate))
 cor(x,w)
 summary(w)
 var(w)
