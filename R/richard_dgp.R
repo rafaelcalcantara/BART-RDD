@@ -3,12 +3,12 @@ set.seed(7)
 #### Steep mu.x
 # mu0.x <- function(x) 0.05*x^5 - 0.6*x^3 + 1.5*x^2 + 0.25*x + 0.5
 #### Not steep mu.x
-mu0.x <- function(x) 0.05*x^5 + 0.5
-mu0.w <- function(w) -5*sin(w)
+mu0.x <- function(x) x^3 + 0.1*x^2 + 0.1
+mu0.w <- function(w) 3*w
 #### Steep tau.x
-tau0.x <- function(x,c) sin(0.5*pi*x)
+# tau0.x <- function(x,c) sin(0.5*pi*x)
 #### Not steep tau.x
-# tau0.x <- function(x,c) sin(0.2*pi*x)
+tau0.x <- function(x,c) x^3 + 0.1*x^2 + 0.1
 tau0.w <- function(w) w
 mu <- function(x,w) mu0.x(x) + mu0.w(w)
 tau <- function(x,c,w,ate) tau0.x(x,c) + tau0.w(w) + ate
@@ -61,12 +61,6 @@ var(w)
 sd(mu(c,w))
 sd(tau(c,c,w,ate))
 sd(mu(c,w))/sd(tau(c,c,w,ate))
-### Checking derivatives near x=c
-dmu.dx <- function(x) 0.25*x^4-1.8*x^2+3*x+0.25
-dmu.dw <- function(w) -5*cos(w)
-dtau.dx <- function(x) 0.5*pi*cos(0.5*pi*x)
-dtau.dw <- function(w) 1
-e <- seq(-0.5,0.5,length.out=1000)
-par(mfrow=c(1,2))
-matplot(e,cbind(dmu.dx(e),dmu.dw(e)))
-matplot(e,cbind(dtau.dx(e),dtau.dw(e)))
+### Checking functions near x=c
+plot(seq(-0.5,0.5,length.out=1000),mu0.x(seq(-0.5,0.5,length.out=1000)))
+plot(seq(-0.5,0.5,length.out=1000),tau0.x(seq(-0.5,0.5,length.out=1000)))
