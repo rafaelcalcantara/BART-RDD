@@ -1,6 +1,6 @@
 set.seed(7)
 ### Functions
-mu0.x <- function(x) 1.5*x^5 - 0.6*x^3 + 0.25*x + 0.5
+mu0.x <- function(x) 0.05*x^5 - 0.6*x^3 + 0.25*x + 0.5
 mu0.w <- function(w) -5*sin(w)
 tau0.x <- function(x,c) sin(0.5*pi*x)
 tau0.w <- function(w) w
@@ -47,12 +47,12 @@ n <- 500
 # u <- pnorm(cbind(u1,u2))
 # x <- 2*qbeta(u[,1],2,4)-1
 # w <- qbeta(u[,2],2.2,5.13)-0.5
-rho <- 0.4
+rho <- 0
 x <- rnorm(n)
 w <- rnorm(n,rho*x,sqrt(1-rho^2))
 test <- c-h.grid(x,c,75) <= x & x <= c+h.grid(x,c,75)
 par(mfrow=c(1,2))
-plot(x,w)
+plot(x,mu(x,w))
 plot(x,tau(x,c,w,ate))
 cor(x,w)
 summary(w)
