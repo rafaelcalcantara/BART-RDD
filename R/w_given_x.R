@@ -45,9 +45,9 @@ ate <- 1
 # u <- pnorm(cbind(u1,u2))
 # x <- 2*qbeta(u[,1],5,1)-1
 # w <- 2*qbeta(u[,2],1,5)-1
-k <- 1
+k <- 0
 x <- 2*rbeta(n,2,4)-1
-w <- rnorm(n,k*x,1)
+w <- rnorm(n,k*x,0.3)
 c <- 0
 z <- as.numeric(x>=c)
 y <- mu(x,w) + tau(x,c,w,ate)*z + rnorm(n)
