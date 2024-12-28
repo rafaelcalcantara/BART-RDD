@@ -6,10 +6,10 @@ par(mfrow=c(2,2))
 for (i in c(500,1000,1500))
 {
   rmse <- subset(rmse.plot,n==i)
-  matplot(t(rmse[,-c(1:3,7)]),bty="n",pch=19,col=1:2,
+  matplot(t(rmse[,4:5]),bty="n",pch=19,col=1:2,
           lty=2,type="b",ylab="RMSE/RMSE (ATE)",
           xaxt="n",main=bquote(N==.(i)))
-  axis(1,at=1:(ncol(rmse)-4),labels=names(rmse)[-c(1:3,7)],cex.axis=0.8)
+  axis(1,at=1:2,labels=names(rmse)[4:5],cex.axis=0.8)
   grid(nx = NA,
        ny = NULL,
        lty = 2, col = "gray", lwd = 1)
