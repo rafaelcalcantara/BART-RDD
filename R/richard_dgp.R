@@ -3,12 +3,12 @@ set.seed(7)
 #### Steep mu.x
 # mu0.x <- function(x) 0.05*x^5 - 0.6*x^3 + 1.5*x^2 + 0.25*x + 0.5
 #### Not steep mu.x
-mu0.x <- function(x,k) k*x^2 + (6*k-3)*x
-mu0.w <- function(w) 3*w
+mu0.x <- function(x,k) k*x^2 + (6*k-1)*x
+mu0.w <- function(w) w
 #### Steep tau.x
 # tau0.x <- function(x,c) sin(0.5*pi*x)
 #### Not steep tau.x
-tau0.x <- function(x,c) 0.1*x^3 - x
+tau0.x <- function(x,c) 0.1*x^2 - 0.4*x
 tau0.w <- function(w) w
 mu <- function(x,w,k) mu0.x(x,k) + mu0.w(w)
 tau <- function(x,c,w,ate) tau0.x(x,c) + tau0.w(w) + ate
@@ -48,7 +48,7 @@ n <- 1500
 # u <- pnorm(cbind(u1,u2))
 # x <- 2*qbeta(u[,1],2,4)-1
 # w <- qbeta(u[,2],2.2,5.13)-0.5
-rho <- 1
+rho <- 0.75
 k <- 0.1
 x <- rnorm(n)
 w <- rnorm(n,rho*x,sqrt(1-rho^2))
@@ -65,6 +65,9 @@ sd(mu(c,w,k))/sd(tau(c,c,w,ate))
 ### Checking functions near x=c
 plot(x[test],mu(x,w,k)[test])
 plot(x[test],tau(x,c,w,ate)[test])
+### Checking functions at x=c
+plot(w[test],mu(c,w,k)[test])
+plot(w[test],tau(c,c,w,ate)[test])
 ## Checking y
 z <- as.numeric(x>=c)
 y <- mu(x,w,k) + tau(x,c,w,ate)*z + rnorm(n)

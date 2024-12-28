@@ -11,7 +11,7 @@ if (length(list.files("Data"))!=0) ## Clean up folder
 ### Functions
 mu0.x <- function(x) 0.1*x^2 - 2.4*x
 mu0.w <- function(w) 3*w
-tau0.x <- function(x,c) 0.1*x^3 - x
+tau0.x <- function(x,c) 0.1*x^2 - 0.4*x
 tau0.w <- function(w) w
 mu <- function(x,w) {
   mu.w <- mu0.w(w)
