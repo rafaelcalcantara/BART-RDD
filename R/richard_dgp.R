@@ -1,8 +1,8 @@
 set.seed(7)
 ### Functions
-mu0.x <- function(x) 0.05*x^5 - 6*x^3 + 0.25*x + 0.5
+mu0.x <- function(x) 0.05*x^5 - 0.6*x^3 + 0.25*x + 0.5
 mu0.w <- function(w) -5*sin(w)
-tau0.x <- function(x,c) 0.5*x^3
+tau0.x <- function(x,c) sin(0.5*pi*w)
 tau0.w <- function(w) w
 mu <- function(x,w) mu0.x(x) + mu0.w(w)
 tau <- function(x,c,w,ate) tau0.x(x,c) + tau0.w(w) + ate
