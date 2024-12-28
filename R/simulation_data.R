@@ -46,7 +46,7 @@ h.grid <- function(x,c,grid)
 }
 ## Parameters
 N <- c(500,1000,1500)
-rho <- c(0,1)
+rho <- c(0,2)
 pts_in_window <- 75
 s <- 1000
 c <- 0

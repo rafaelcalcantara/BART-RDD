@@ -45,7 +45,7 @@ ate <- 1
 # u <- pnorm(cbind(u1,u2))
 # x <- 2*qbeta(u[,1],5,1)-1
 # w <- 2*qbeta(u[,2],1,5)-1
-k <- 2
+k <- 1
 x <- 2*rbeta(n,2,4)-1
 w <- rnorm(n,x^3+k*x^2+k*x,sqrt(0.2))
 c <- 0
