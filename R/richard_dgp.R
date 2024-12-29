@@ -42,7 +42,7 @@ n <- 500
 # mtemp <- (x+1)/2
 # stemp <- 20
 # w <- rbeta(n,mtemp*stemp,(1-mtemp)*stemp)-0.5
-rho <- 0.9
+rho <- 1
 k <- 0.2
 u1 <- rnorm(n)
 u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
@@ -71,7 +71,7 @@ plot(w[test],mu(c,w,k)[test])
 plot(w[test],tau(c,c,w,ate)[test])
 ## Checking y
 z <- as.numeric(x>=c)
-y <- mu(x,w,k) + tau(x,c,w,ate)*z + rnorm(n,0,sqrt(1.5))
+y <- mu(x,w,k) + tau(x,c,w,ate)*z + rnorm(n,0,sqrt(1))
 par(mfrow=c(1,1))
 plot(x,y,col=z+1,pch=19,bty="l")
 abline(v=c,lty=2)

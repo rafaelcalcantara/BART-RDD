@@ -46,12 +46,12 @@ h.grid <- function(x,c,grid)
 }
 ## Parameters
 N <- c(500,1000,1500)
-rho <- c(0.75,0.95)
+rho <- c(0,0.5,0.75,0.95)
 pts_in_window <- 75
 s <- 1000
 c <- 0
 ate <- 1
-sig_error <- sqrt(1.5)
+sig_error <- 1
 ind <- 0
 params <- expand.grid(N,rho)
 gen.data <- function(ind)
