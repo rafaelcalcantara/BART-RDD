@@ -4,7 +4,7 @@ set.seed(7)
 # mu0.x <- function(x) 0.05*x^5 - 0.6*x^3 + 1.5*x^2 + 0.25*x + 0.5
 #### Not steep mu.x
 mu0.x <- function(x,k) k*x^2 + (6*k)*x
-mu0.w <- function(w) 0.5*w
+mu0.w <- function(w) cos(w)
 #### Steep tau.x
 # tau0.x <- function(x,c) sin(0.5*pi*x)
 #### Not steep tau.x
@@ -42,7 +42,7 @@ n <- 500
 # mtemp <- (x+1)/2
 # stemp <- 20
 # w <- rbeta(n,mtemp*stemp,(1-mtemp)*stemp)-0.5
-rho <- 0.9
+rho <- 0
 k <- 0.2
 u1 <- rnorm(n)
 u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
