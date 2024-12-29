@@ -4,12 +4,12 @@ set.seed(7)
 # mu0.x <- function(x) 0.05*x^5 - 0.6*x^3 + 1.5*x^2 + 0.25*x + 0.5
 #### Not steep mu.x
 mu0.x <- function(x,k) k*x^2 + (6*k)*x
-mu0.w <- function(w) 6*sin(w)
+mu0.w <- function(w) sin(w)
 #### Steep tau.x
 # tau0.x <- function(x,c) sin(0.5*pi*x)
 #### Not steep tau.x
 tau0.x <- function(x,c) 2*x^2 + 12*x
-tau0.w <- function(w) 6*sin(w)
+tau0.w <- function(w) sin(w)
 mu <- function(x,w,k) mu0.x(x,k) + mu0.w(w)
 tau <- function(x,c,w,ate) tau0.x(x,c) + tau0.w(w) + ate
 h.grid <- function(x,c,grid)
