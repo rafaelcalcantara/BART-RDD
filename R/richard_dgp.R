@@ -9,7 +9,7 @@ mu0.w <- function(w) 0.5*w
 # tau0.x <- function(x,c) sin(0.5*pi*x)
 #### Not steep tau.x
 tau0.x <- function(x,c) 0.2*x^2 + 1.2*x
-tau0.w <- function(w) 1.5*cos(w)
+tau0.w <- function(w) 1.5*cos(0.5*pi*w)
 mu <- function(x,w,k) mu0.x(x,k) + mu0.w(w)
 tau <- function(x,c,w,ate) tau0.x(x,c) + tau0.w(w) + ate
 h.grid <- function(x,c,grid)
@@ -42,7 +42,7 @@ n <- 500
 # mtemp <- (x+1)/2
 # stemp <- 20
 # w <- rbeta(n,mtemp*stemp,(1-mtemp)*stemp)-0.5
-rho <- 1
+rho <- 0.9
 k <- 0.2
 u1 <- rnorm(n)
 u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
@@ -58,7 +58,7 @@ par(mfrow=c(1,2))
 plot(x,mu(x,w,k))
 plot(x,tau(x,c,w,ate))
 cor(x,w)
-summary(w)
+summary(w[test])
 var(w)
 sd(mu(c,w,k))
 sd(tau(c,c,w,ate))
