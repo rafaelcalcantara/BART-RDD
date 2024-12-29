@@ -4,12 +4,12 @@ set.seed(7)
 # mu0.x <- function(x) 0.05*x^5 - 0.6*x^3 + 1.5*x^2 + 0.25*x + 0.5
 #### Not steep mu.x
 mu0.x <- function(x,k) k*x^2 + (6*k)*x
-mu0.w <- function(w) 0.5*cos(0.5*pi*w)
+mu0.w <- function(w) cos(w)
 #### Steep tau.x
 # tau0.x <- function(x,c) sin(0.5*pi*x)
 #### Not steep tau.x
 tau0.x <- function(x,c) 0.2*x^2 + 1.2*x
-tau0.w <- function(w) 0.5*cos(0.5*pi*w)
+tau0.w <- function(w) cos(w)
 mu <- function(x,w,k) mu0.x(x,k) + mu0.w(w)
 tau <- function(x,c,w,ate) tau0.x(x,c) + tau0.w(w) + ate
 h.grid <- function(x,c,grid)
@@ -42,7 +42,7 @@ n <- 500
 # mtemp <- (x+1)/2
 # stemp <- 20
 # w <- rbeta(n,mtemp*stemp,(1-mtemp)*stemp)-0.5
-rho <- 0
+rho <- 0.9
 k <- 0.2
 u1 <- rnorm(n)
 u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
@@ -71,7 +71,7 @@ plot(w[test],mu(c,w,k)[test])
 plot(w[test],tau(c,c,w,ate)[test])
 ## Checking y
 z <- as.numeric(x>=c)
-y <- mu(x,w,k) + tau(x,c,w,ate)*z + rnorm(n)
+y <- mu(x,w,k) + tau(x,c,w,ate)*z + rnorm(n,0,sqrt(1.5))
 par(mfrow=c(1,1))
 plot(x,y,col=z+1,pch=19,bty="l")
 abline(v=c,lty=2)
