@@ -6,7 +6,7 @@ par(mfrow=c(2,2))
 for (i in c(500,1000,1500))
 {
   rmse <- subset(rmse.plot,n==i)
-  matplot(t(rmse[,4:5]),bty="n",pch=19,col=1:4,
+  matplot(t(rmse[,4:5]),bty="n",pch=19,col=1:3,
           lty=2,type="b",ylab="RMSE/RMSE (ATE)",
           xaxt="n",main=bquote(N==.(i)))
   axis(1,at=1:2,labels=names(rmse)[4:5],cex.axis=0.8)
@@ -22,7 +22,7 @@ for (i in c(500,1000,1500))
   #      lty = 2, col = "gray", lwd = 1)
 }
 plot.new()
-legend("center",col=1:4,legend=c(0,0.5,0.75,0.95),
+legend("center",col=1:3,legend=c(0,0.5,0.9),
        title=expression(rho),ncol=2,lty=1,pch=19,cex=0.75,lwd=2)
 ###
 # sample <- 1

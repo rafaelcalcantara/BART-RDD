@@ -8,7 +8,7 @@ mu0.w <- function(w) 6*sin(w)
 #### Steep tau.x
 # tau0.x <- function(x,c) sin(0.5*pi*x)
 #### Not steep tau.x
-tau0.x <- function(x,c) 0.2*x^2 + 1.2*x
+tau0.x <- function(x,c) 2*x^2 + 12*x
 tau0.w <- function(w) 6*sin(w)
 mu <- function(x,w,k) mu0.x(x,k) + mu0.w(w)
 tau <- function(x,c,w,ate) tau0.x(x,c) + tau0.w(w) + ate
@@ -43,7 +43,7 @@ n <- 500
 # stemp <- 20
 # w <- rbeta(n,mtemp*stemp,(1-mtemp)*stemp)-0.5
 rho <- 0.9
-k <- 2
+k <- 0.2
 u1 <- rnorm(n)
 u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
 u <- pnorm(cbind(u1,u2))
