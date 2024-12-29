@@ -42,7 +42,7 @@ n <- 500
 # mtemp <- (x+1)/2
 # stemp <- 20
 # w <- rbeta(n,mtemp*stemp,(1-mtemp)*stemp)-0.5
-rho <- 0
+rho <- 0.9
 k <- 0.2
 u1 <- rnorm(n)
 u2 <- rnorm(n,rho*u1,sqrt(1-rho^2))
