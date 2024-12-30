@@ -3,7 +3,7 @@ set.seed(7)
 #### Steep mu.x
 # mu0.x <- function(x) 0.05*x^5 - 0.6*x^3 + 1.5*x^2 + 0.25*x + 0.5
 #### Not steep mu.x
-mu0.x <- function(x,k) 0.03*x^5 - 0.012*x^3 + 0.005*x + 3.5
+mu0.x <- function(x,k) 0.015*x^5 - 0.006*x^3 + 0.0025*x + 3.5
 mu0.w <- function(w) sin(w)
 #### Steep tau.x
 # tau0.x <- function(x,c) sin(0.5*pi*x)
@@ -37,7 +37,7 @@ h.grid <- function(x,c,grid)
 }
 c <- 0
 ate <- 1
-n <- 500
+n <- 1500
 # x <- 2*rbeta(n,2,4)-1
 # mtemp <- (x+1)/2
 # stemp <- 20
@@ -71,7 +71,7 @@ plot(w[test],mu(c,w,k)[test])
 plot(w[test],tau(c,c,w,ate)[test])
 ## Checking y
 z <- as.numeric(x>=c)
-y <- mu(x,w,k) + tau(x,c,w,ate)*z + rnorm(n,0,sqrt(1))
+y <- mu(x,w,k) + tau(x,c,w,ate)*z + rnorm(n,0,sqrt(0.01))
 par(mfrow=c(1,1))
 plot(x,y,col=z+1,pch=19,bty="l")
 abline(v=c,lty=2)
