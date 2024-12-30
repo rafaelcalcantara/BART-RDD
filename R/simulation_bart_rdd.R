@@ -49,7 +49,7 @@ fit <- function(i)
 }
 ### Parameters
 Omin <- 2
-Opct <- 0.4
+Opct <- 0.6
 ### BEGIN LOOP
 for (i in files)
 {
