@@ -9,7 +9,7 @@ if (length(list.files("Data"))!=0) ## Clean up folder
   for (i in files) file.remove(i)
 }
 ### Functions
-mu0.x <- function(x) x
+mu0.x <- function(x) x + 5
 mu0.w <- function(w) sin(0.5*w)
 tau0.x <- function(x,c) x
 tau0.w <- function(w) sin(w)
