@@ -9,9 +9,9 @@ if (length(list.files("Data"))!=0) ## Clean up folder
   for (i in files) file.remove(i)
 }
 ### Functions
-mu0.x <- function(x) sin(x) + 0.5
+mu0.x <- function(x) -0.03*x^5 + 0.5*x^3 + 0.1*x^2 - 0.1*x + 1.72
 mu0.w <- function(w) sin(w)
-tau0.x <- function(x,c) x
+tau0.x <- function(x,c) 1/(1-exp(-4-x)) - 1/(1-exp(-4))
 tau0.w <- function(w) sin(w)
 mu <- function(x,w) mu0.x(x) + mu0.w(w)
 tau <- function(x,c,w,ate) tau0.x(x,c) + tau0.w(w) + ate
@@ -46,7 +46,7 @@ pts_in_window <- 75
 s <- 1000
 c <- 0
 ate <- 1
-sig_error <- 0.5
+sig_error <- 0.65
 ind <- 0
 params <- expand.grid(N,rho)
 gen.data <- function(ind)
@@ -54,7 +54,7 @@ gen.data <- function(ind)
   row <- as.numeric(params[ind,])
   n <- row[1]
   Rho <- row[2]
-  k <- row[3]
+  # k <- row[3]
   # u1 <- rnorm(n*s)
   # u2 <- rnorm(n*s,Rho*u1,sqrt(1-Rho^2))
   # u <- pnorm(cbind(u1,u2))
