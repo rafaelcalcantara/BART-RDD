@@ -3,8 +3,8 @@ set.seed(7)
 #### Steep mu.x
 # mu0.x <- function(x) 0.05*x^5 - 0.6*x^3 + 1.5*x^2 + 0.25*x + 0.5
 #### Not steep mu.x
-mu0.x <- function(x,k) 100*x + 0.5
-mu0.w <- function(w) sin(w)
+mu0.x <- function(x,k) 0.5*cos(x) + 0.5
+mu0.w <- function(w) 0.5*sin(pi*w)
 #### Steep tau.x
 # tau0.x <- function(x,c) sin(0.5*pi*x)
 #### Not steep tau.x
@@ -53,7 +53,7 @@ w <- qnorm(u[,2],0,sqrt(1))
 # k <- 0.1
 # x <- rnorm(n)
 # w <- rnorm(n,rho*x,sqrt(1-rho^2))
-test <- c-h.grid(x,c,75) <= x & x <= c+h.grid(x,c,75)
+test <- c-h.grid(x,c,30) <= x & x <= c+h.grid(x,c,30)
 par(mfrow=c(1,2))
 plot(x,mu(x,w,k))
 plot(x,tau(x,c,w,ate))
