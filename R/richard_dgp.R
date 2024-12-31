@@ -9,7 +9,7 @@ mu0.w <- function(w) sin(pi*w)
 # tau0.x <- function(x,c) sin(0.5*pi*x)
 #### Not steep tau.x
 tau0.x <- function(x,c) 1/(1-exp(-4-x)) - 1/(1-exp(-4))
-tau0.w <- function(w) sin(w)
+tau0.w <- function(w) sin(pi*w)
 mu <- function(x,w,k) mu0.x(x,k) + mu0.w(w)
 tau <- function(x,c,w,ate) tau0.x(x,c) + tau0.w(w) + ate
 h.grid <- function(x,c,grid)
