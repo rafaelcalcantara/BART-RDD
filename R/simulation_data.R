@@ -9,11 +9,11 @@ if (length(list.files("Data"))!=0) ## Clean up folder
   for (i in files) file.remove(i)
 }
 ### Functions
-mu0.x <- function(x,k) k*x*cos(1.5*pi*x) + x + 0.5
+mu0.x <- function(x) x*cos(1.5*pi*x) + x + 0.5
 mu0.w <- function(w) 2*sin(pi*w)
 tau0.x <- function(x,c) 0.5*sin(x) + x
 tau0.w <- function(w) 0.6*sin(pi*w)
-mu <- function(x,w,k) mu0.x(x,k) + mu0.w(w)
+mu <- function(x,w) mu0.x(x) + mu0.w(w)
 tau <- function(x,c,w,ate) tau0.x(x,c) + tau0.w(w) + ate
 h.grid <- function(x,c,grid)
 {
@@ -48,7 +48,7 @@ c <- 0
 ate <- 1
 sig_error <- 0.5
 ind <- 0
-params <- expand.grid(N,rho,k)
+params <- expand.grid(N,rho)
 gen.data <- function(ind)
 {
   row <- as.numeric(params[ind,])
@@ -67,7 +67,7 @@ gen.data <- function(ind)
   # w <- matrix(2*qbeta(u[,2],2,5)-1,n,s)
   # w <- matrix(qunif(u[,2],0.1,1),n,s)
   cate <- apply(w, 2, function(i) tau(c,c,i,ate))
-  y <- sapply(1:s, function(i) mu(x[,i],w[,i],k) + tau(x[,i],c,w[,i],ate)*z[,i] + rnorm(n,0,sig_error))
+  y <- sapply(1:s, function(i) mu(x[,i],w[,i]) + tau(x[,i],c,w[,i],ate)*z[,i] + rnorm(n,0,sig_error))
   ## Save data
   out <- list(y=y,x=x,z=z,w=w,c=c,h=h,tau.x=cate,tau=ate,n=n,rho=Rho,sig_error=sig_error)
   saveRDS(out,paste0("Data/dgp_",ind,".rds"))
