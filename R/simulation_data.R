@@ -10,9 +10,9 @@ if (length(list.files("Data"))!=0) ## Clean up folder
 }
 ### Functions
 mu0.x <- function(x) x + 0.5
-mu0.w <- function(w) 5*sin(w)
-tau0.x <- function(x,c) 0.5*sin(x) + x
-tau0.w <- function(w) 0.6*sin(pi*w)
+mu0.w <- function(w) sin(w)
+tau0.x <- function(x,c) x
+tau0.w <- function(w) 0.3*sin(w)
 mu <- function(x,w) mu0.x(x) + mu0.w(w)
 tau <- function(x,c,w,ate) tau0.x(x,c) + tau0.w(w) + ate
 h.grid <- function(x,c,grid)
