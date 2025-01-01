@@ -42,7 +42,7 @@ h.grid <- function(x,c,grid)
 N <- c(500,1000,1500)
 rho <- c(0.5,0.9)
 k <- 1:3
-pts_in_window <- 50
+pts_in_window <- 75
 s <- 1000
 c <- 0
 ate <- 1
