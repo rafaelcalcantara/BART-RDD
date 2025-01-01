@@ -9,7 +9,7 @@ fit <- function(i)
   x <- data$x[,i]
   Owidth <- data$h[i]
   deg.x <- 5
-  deg.w <- 5
+  deg.w <- 4
   bw <- rdrobust::rdbwselect(y,x,c=c,covs=w,p=deg.x,q=deg.x+1)$bws[4]
   reg <- subset(data.frame(y=y,x=x,w=w,z=data$z[,i]),x>=-bw & x<=bw)
   model <- lm(y~(poly(x,deg.x,raw=T)+poly(w,deg.w,raw=T))*z,data=reg)
