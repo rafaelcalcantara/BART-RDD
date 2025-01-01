@@ -5,7 +5,7 @@ rmse.plot <- cbind(params,rmse.cate/ate.cate)
 par(mfrow=c(2,2))
 for (i in c(500,1000,1500))
 {
-  # rmse <- subset(rmse.plot,n==i)
+  rmse <- subset(rmse.plot,n==i)
   # matplot(t(rmse[,4:5]),bty="n",pch=19,col=1:3,
   #         lty=2,type="b",ylab="RMSE/RMSE (ATE)",
   #         xaxt="n",main=bquote(N==.(i)))
@@ -26,7 +26,7 @@ legend("center",col=1:2,legend=c(0.5,0.9),
        title=expression(rho),ncol=2,lty=1,pch=19,cex=0.75,lwd=2)
 ###
 # sample <- 1
-dgp <- 3
+dgp <- 4
 # bart.rdd.cate.est <- bart.rdd.cate[[dgp]][[sample]]
 # sbart.cate.est <- sbart.cate[[dgp]][[sample]]
 # tbart.cate.est <- tbart.cate[[dgp]][[sample]]
