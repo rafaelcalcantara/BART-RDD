@@ -3,8 +3,8 @@ set.seed(7)
 #### Steep mu.x
 # mu0.x <- function(x) 0.05*x^5 - 0.6*x^3 + 1.5*x^2 + 0.25*x + 0.5
 #### Not steep mu.x
-mu0.x <- function(x) -0.03*x^5 + 2.5*x^3 + 0.1*x^2 - 0.1*x + 1.72
-mu0.w <- function(w) 3*sin(w)
+mu0.x <- function(x) -0.02*x^5 + 0.1*x^3 + 0.1*x^2 - 0.1*x + 1.72
+mu0.w <- function(w) sin(w)
 #### Steep tau.x
 # tau0.x <- function(x,c) sin(0.5*pi*x)
 #### Not steep tau.x
@@ -71,7 +71,7 @@ plot(w[test],mu(c,w)[test])
 plot(w[test],tau(c,c,w,ate)[test])
 ## Checking y
 z <- as.numeric(x>=c)
-y <- mu(x,w) + tau(x,c,w,ate)*z + rnorm(n,0,sqrt(1))
+y <- mu(x,w) + tau(x,c,w,ate)*z + rnorm(n,0,sqrt(0.65))
 par(mfrow=c(1,1))
 plot(x,y,col=z+1,pch=19,bty="l")
 abline(v=c,lty=2)
