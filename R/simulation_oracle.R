@@ -9,7 +9,7 @@ fit <- function(i)
   x <- data$x[,i]
   Owidth <- data$h[i]
   deg.x <- 5
-  w1 <- sin(w)
+  w1 <- cos(w)
   w2 <- sin(w)
   bw <- rdrobust::rdbwselect(y,x,c=c,covs=cbind(w,w2),p=deg.x,q=deg.x+1)$bws[4]
   reg <- subset(data.frame(y=y,x=x,w1=w1,w2=w2,z=data$z[,i]),x>=-bw & x<=bw)
