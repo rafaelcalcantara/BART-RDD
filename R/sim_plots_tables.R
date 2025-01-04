@@ -19,7 +19,7 @@ for (i in 1:nrow(params))
        lty = 2, col = "gray", lwd = 1)
 }
 ###
-dgp <- 4
+dgp <- 15
 bart.rdd.cate.est <- unlist(bart.rdd.cate[[dgp]])
 sbart.cate.est <- unlist(sbart.cate[[dgp]])
 tbart.cate.est <- unlist(tbart.cate[[dgp]])

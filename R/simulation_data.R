@@ -39,10 +39,11 @@ h.grid <- function(x,c,grid)
   return(out)
 }
 ## Parameters
-N <- c(500,1000,1500)
-rho <- c(0.5,0.9)
+N <- c(500,1000)
+rho <- c(0.9,0.99)
 k1 <- c(1,5)
 k2 <- c(1,3)
+k1 <- k2 <- 1
 pts_in_window <- 75
 s <- 1000
 c <- 0
