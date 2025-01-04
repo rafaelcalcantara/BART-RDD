@@ -14,13 +14,13 @@ ntrees_mod <- 30
 ntrees <- 30
 ## Generate data---------------------------------------------------------------
 ### Functions
-mu0.x <- function(x,k) -0.03*x^5 + k*0.5*x^3 + 0.1*x^2 - 0.1*x + 1.72
+mu0.x <- function(x,k,ate) -0.03*x^5 + k*0.5*x^3 + 0.1*x^2 - 0.1*x + ate
 # mu0.w <- function(w,k) k*2.9*cos(w)
-mu0.w <- function(w,k) k*1.4*cos(w)
-tau0.x <- function(x,c) 1/(1-exp(-4-x)) - 1.02
-tau0.w <- function(w) sin(3*w)
-mu <- function(x,w,k1,k2) mu0.x(x,k1) + mu0.w(w,k2)
-tau <- function(x,c,w,ate) tau0.x(x,c) + tau0.w(w) + ate
+mu0.w <- function(w,k) k*cos(w)
+tau0.x <- function(x,c) 0.1/(4+x)
+tau0.w <- function(w,k) k*sin(3*w)
+mu <- function(x,w,k1,k3,ate) mu0.x(x,k1,ate) + mu0.w(w,k3)
+tau <- function(x,c,w,ate,k2) tau0.x(x,c) + tau0.w(w,k2) + ate
 h.grid <- function(x,c,grid)
 {
   abs.x <- sort(abs(x-c))
@@ -48,21 +48,31 @@ h.grid <- function(x,c,grid)
 n <- 1000
 p <- 3 # Dim of w
 rho <- 0.2
-k1 <- 4 ## Makes mu0.x harder for T-BART
-k2 <- 1 ## Makes mu0.w larger
+c <- 0
+ate <- 0.25
+k1 <- 4 ## variability in mu0.x
+k2 <- ate-0.05 ## amplitude of tau0.w
+k3 <- 0.5*sd(k2*sin(3*rnorm(n)))/sd(cos(rnorm(n))) ## amplitude of mu0.w
 pts_in_window <- 50
 s <- 25 ## Sim reps
-c <- 0
-ate <- 1
-sig_error <- 0.2
+sig_error <- 0.5*sd(k2*sin(3*rnorm(n)))
 x <- matrix(rnorm(n*s),n,s)
 h <- apply(x,2,function(i) h.grid(i,c,pts_in_window))
 test <- sapply(1:s, function(i) c-h[i] <= x[,i] & x[,i] <= c+h[i])
 z <- apply(x,2,function(i) as.numeric(i>=c))
 w <- lapply(1:s, function(i) matrix(rnorm(n*p,rep(x[,i],p)*rho,sqrt(1-rho^2)),n,p))
-cate <- apply(sapply(w,rowMeans), 2, function(i) tau(c,c,i,ate))
+cate <- apply(sapply(w,rowMeans), 2, function(i) tau(c,c,i,ate,k2))
 cate <- sapply(1:s, function(i) cate[test[,i],i])
-y <- sapply(1:s, function(i) mu(x[,i],rowMeans(w[[i]]),k1,k2) + tau(x[,i],c,rowMeans(w[[i]]),ate)*z[,i] + rnorm(n,0,sig_error))
+y <- sapply(1:s, function(i) mu(x[,i],rowMeans(w[[i]]),k1,k3,ate) + tau(x[,i],c,rowMeans(w[[i]]),ate,k2)*z[,i] + rnorm(n,0,sig_error))
+plot(x[,1],y[,1],col=z[,1]+1,pch=19)
+plot(rowMeans(w[[1]])[test[,1]],mu(c,rowMeans(w[[1]]),k1,k3,ate)[test[,1]])
+plot(rowMeans(w[[1]])[test[,1]],cate[[1]])
+plot(rowMeans(w[[1]])[test[,1]],
+     mu(c,rowMeans(w[[1]]),k1,k3,ate)[test[,1]]+cate[[1]]*z[test[,1],1],
+     col=z[test[,1],1]+1)
+plot(rowMeans(w[[1]])[test[,1]],
+     mu(c,rowMeans(w[[1]]),k1,k3,ate)[test[,1]]+cate[[1]]*z[test[,1],1]+rnorm(sum(test[,1]),0,sig_error),
+     col=z[test[,1],1]+1)
 ## BARDDT fit------------------------------------------------------------------
 fit.barddt <- function(i)
 {
