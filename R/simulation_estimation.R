@@ -1,89 +1,20 @@
-setwd("~/Git/BART-RDD")
 library(doParallel)
 no_cores <- 10
-# Common parameters
-## DGP
-n <- 5000
-ate <- 1
-k1 <- 1 ## variability in mu0.x
-k2 <- 0.5 ## amplitude of tau0.w relative to ATE (set from 0 to 1)
-k3 <- 6 ## sd of mu0.w relative to sd of tau
-sig_error <- 1 ## relative to sd of tau
-p <- 4 # Dim of w
-rho <- 0.8
-c <- 1
-s <- 25 ## Sim reps
-## Estimation
+## Common parameters
 p_categorical <- 0
 burnin <- 50
 num_sweeps <- 150
-pts_in_window <- 50
 # BARDDT parameters
 Omin <- 1
-Opct <- 0.5
+Opct <- 0.25
 ntrees_con <- 30
 ntrees_mod <- 30
 # T-BART parameters
 ntrees <- 30
-## Generate data---------------------------------------------------------------
-### Functions
-mu0.x <- function(x,k,ate) -0.03*x^5 + k*0.5*x^3 + 0.1*x^2 - 0.1*x + 2
-mu0.w <- function(w,k) k*cos(w)
-tau0.x <- function(x,c) 0.1/(4+x)
-tau0.w <- function(w,k) k*sin(3*w)
-mu0 <- function(x,w,k1,k3,ate) mu0.x(x,k1,ate) + mu0.w(w,k3)
-tau0 <- function(x,c,w,ate,k2) tau0.x(x,c) + tau0.w(w,k2)
-#### Setting k2, k3 and sigma relative to tau and demeaning mu and tau
-x0 <- rnorm(n,c,1)
-w0 <- rnorm(n,c,1)
-k2 <- k2*ate
-k3 <- k3*sd(k2*sin(3*w0))/sd(cos(w0))
-sig_error <- sig_error*sd(k2*sin(3*w0))
-mu.bar <- mean(mu0(c,w0,k1,k3,ate))
-tau.bar <- mean(tau0(c,c,w0,ate,k2))
-mu <- function(x,w,k1,k3,ate,mu.bar) mu0(x,w,k1,k3,ate) - mu.bar 
-tau <- function(x,c,w,ate,k2,tau.bar) tau0(x,c,w,ate,k2) - tau.bar + ate
-h.grid <- function(x,c,grid)
-{
-  abs.x <- sort(abs(x-c))
-  out <- rep(0,length(grid))
-  names(out) <- grid
-  x.right <- sum(c < x)
-  x.left <- sum(x < c)
-  x.tot <- length(x)
-  for(total in grid)
-  {
-    i <- 1
-    sum.right <- sum.left <- 0
-    while(sum.right < total | sum.left < total) 
-    {
-      sum.left <- sum(c-abs.x[i] <= x & x < c)
-      sum.right <- sum(c < x & x <= c+abs.x[i])
-      if (sum.left == sum(x<c) & sum.right == sum(c<x)) break
-      i <- i+1
-    }
-    out[as.character(total)] <- abs.x[i]
-  }
-  return(out)
-}
-### Samples
-x <- matrix(rnorm(n*s,c,1),n,s)
+## Set Owidth and test set
 h <- apply(x,2,function(i) h.grid(i,c,pts_in_window))
 test <- sapply(1:s, function(i) c-h[i] <= x[,i] & x[,i] <= c+h[i])
-z <- apply(x,2,function(i) as.numeric(i>=c))
-w <- lapply(1:s, function(i) matrix(rnorm(n*p,rep(x[,i],p)*rho,sqrt(1-rho^2)),n,p))
-cate <- apply(sapply(w,rowMeans), 2, function(i) tau(c,c,i,ate,k2,tau.bar))
 cate <- sapply(1:s, function(i) cate[test[,i],i])
-y <- sapply(1:s, function(i) mu(x[,i],rowMeans(w[[i]]),k1,k3,ate,mu.bar) + tau(x[,i],c,rowMeans(w[[i]]),ate,k2,tau.bar)*z[,i] + rnorm(n,0,sig_error))
-plot(x[,1],y[,1],col=z[,1]+1,pch=19)
-plot(rowMeans(w[[1]])[test[,1]],mu(c,rowMeans(w[[1]]),k1,k3,ate,mu.bar)[test[,1]])
-plot(rowMeans(w[[1]])[test[,1]],cate[[1]])
-plot(rowMeans(w[[1]])[test[,1]],
-     mu(c,rowMeans(w[[1]]),k1,k3,ate,mu.bar)[test[,1]]+cate[[1]]*z[test[,1],1],
-     col=z[test[,1],1]+1)
-plot(rowMeans(w[[1]])[test[,1]],
-     mu(c,rowMeans(w[[1]]),k1,k3,ate,mu.bar)[test[,1]]+cate[[1]]*z[test[,1],1]+rnorm(sum(test[,1]),0,sig_error),
-     col=z[test[,1],1]+1)
 ## BARDDT fit------------------------------------------------------------------
 fit.barddt <- function(i)
 {
@@ -92,7 +23,7 @@ fit.barddt <- function(i)
   ws <- as.matrix(w[[i]])
   xs <- x[,i]
   Owidth <- h[i]
-  sample <- 3*Owidth
+  sample <- 5*Owidth
   train <- c-sample < xs & xs < c+sample
   fit <- XBART::XBCF.rd(ys[train], ws[train,], xs[train], c,
                         Owidth = Owidth, Omin = Omin, Opct = Opct,
@@ -103,18 +34,37 @@ fit.barddt <- function(i)
                         Nmin = 1,
                         p_categorical_con = p_categorical,
                         p_categorical_mod = p_categorical,
-                        tau_con = var(ys[train])/ntrees_con, tau_mod = var(ys[train])/ntrees_mod)
+                        tau_con = var(ys[train])/ntrees_con, tau_mod = var(ys[train])/ntrees_mod,
+                        alpha_mod = 0.95, beta_mod = 1.25, update_tau = TRUE,
+                        parallel=F)
   test <- -Owidth+c<=xs & xs<=Owidth+c
   pred <- XBART::predict.XBCFrd(fit,ws[test,],rep(c,sum(test)))
-  pred$tau.adj[,(burnin+1):num_sweeps]
+  list(pred=pred$tau.adj[,(burnin+1):num_sweeps],
+       count1=fit$count_fail_1[(burnin+1):num_sweeps],
+       count2=fit$count_fail_2[(burnin+1):num_sweeps],
+       cutoff_nodes_con=fit$cutoff_nodes_con[(burnin+1):num_sweeps,],
+       invalid_nodes_1_con=fit$invalid_nodes_1_con[(burnin+1):num_sweeps,],
+       invalid_nodes_2_con=fit$invalid_nodes_2_con[(burnin+1):num_sweeps,],
+       cutoff_nodes_mod=fit$cutoff_nodes_mod[(burnin+1):num_sweeps,],
+       invalid_nodes_1_mod=fit$invalid_nodes_1_mod[(burnin+1):num_sweeps,],
+       invalid_nodes_2_mod=fit$invalid_nodes_2_mod[(burnin+1):num_sweeps,])
 }
-cl <- makeCluster(no_cores,type="SOCK")
+cl <- makeCluster(no_cores,type="SOCK",outfile="")
 registerDoParallel(cl)
 clusterExport(cl,varlist=ls())
 time.barddt <- system.time({
   barddt <- parLapply(cl,1:s,fit.barddt)
 })
 stopCluster(cl)
+### Save count of splits rejected per constraint
+constraint.fails.1 <- lapply(barddt, function(i) i$count1)
+constraint.fails.2 <- lapply(barddt, function(i) i$count2)
+cutoff.nodes.con <- lapply(barddt, function(i) i$cutoff_nodes_con)
+invalid.nodes.1.con <- lapply(barddt, function(i) i$invalid_nodes_1_con)
+invalid.nodes.2.con <- lapply(barddt, function(i) i$invalid_nodes_2_con)
+cutoff.nodes.mod <- lapply(barddt, function(i) i$cutoff_nodes_mod)
+invalid.nodes.1.mod <- lapply(barddt, function(i) i$invalid_nodes_1_mod)
+invalid.nodes.2.mod <- lapply(barddt, function(i) i$invalid_nodes_2_mod)
 ## T-BART fit------------------------------------------------------------------
 fit.tbart <- function(i)
 {
@@ -124,7 +74,7 @@ fit.tbart <- function(i)
   xs <- x[,i]
   zs <- z[,i]
   Owidth <- h[i]
-  sample <- 3*Owidth
+  sample <- 5*Owidth
   train <- c-sample < xs & xs < c+sample
   ys <- ys[train]
   xs <- xs[train]
@@ -144,7 +94,7 @@ fit.tbart <- function(i)
   pred0 <- XBART::predict.XBART(fit0,test.sample)[,(burnin+1):num_sweeps]
   pred1-pred0
 }
-cl <- makeCluster(no_cores,type="SOCK")
+cl <- makeCluster(no_cores,type="SOCK",outfile="")
 registerDoParallel(cl)
 clusterExport(cl,varlist=ls())
 time.tbart <- system.time({
@@ -152,19 +102,16 @@ time.tbart <- system.time({
 })
 stopCluster(cl)
 ## Calculate RMSE--------------------------------------------------------------
-barddt <- sapply(barddt,rowMeans)
+barddt <- sapply(barddt,function(i) rowMeans(i$pred))
 tbart <- sapply(tbart,rowMeans)
 rmse.barddt <- mapply(function(fit,tau) sqrt(mean((fit-tau)^2)),barddt,cate)
 rmse.tbart <- mapply(function(fit,tau) sqrt(mean((fit-tau)^2)),tbart,cate)
 rmse.ate <- sapply(cate, function(tau) sqrt(mean((tau-ate)^2)))
-print("RMSE for BARDDT")
-summary(rmse.barddt/rmse.ate)
-print("RMSE for T-BART")
-summary(rmse.tbart/rmse.ate)
+print(c("RMSE for BARDDT: ",mean(rmse.barddt/rmse.ate)))
+print(c("RMSE for T-BART: ",mean(rmse.tbart/rmse.ate)))
 plot(rmse.barddt/rmse.ate,rmse.tbart/rmse.ate,bty="n",pch=19,col="darkblue")
 abline(a=0,b=1,col="red")
 ##
-sample <- 10
 plot(cate[[sample]],barddt[[sample]],bty="n",pch=19,col="darkblue")
 abline(a=0,b=1,col="red")
 plot(cate[[sample]],tbart[[sample]],bty="n",pch=19,col="darkblue")
