@@ -16,41 +16,11 @@ print.params <- T ## sanity check
 ## DGP functions
 mu0.x <- function(x,c) 0.1*(x-c+1)^3
 mu0.w <- function(w) (rowMeans(w)+2)^2
-# tau0.x <- function(x,c) 0 # cheating to make this constant?
-# tau0.w <- function(w,k) k*(2*pnorm(rowMeans(w),0,0.3)-1)
 mu <- function(x,w,k1,k2,c) k1*mu0.x(x,c)+k2*mu0.w(w)
-# mu0 <- function(x,w,k1,k3,c) k1*mu0.x(x,c) + k3*mu0.w(w)
-# tau0 <- function(x,w,k2,c) tau0.w(w,k2) + tau0.x(x,c)
 tau0 <- function(w,ate) ate*(pnorm(rowMeans(w)+2,0,1) + pnorm(rowMeans(w)+1,0,1)/4 + dnorm(2*rowMeans(w),0,1) + dnorm(rowMeans(w)-1,0,1))
-# mu <- function(x,w,k1,k3,mu.bar,c) mu0(x,w,k1,k3,c)
-# tau <- function(x,w,ate,k2,tau.bar,c) tau0(x,w,k2,c) - tau.bar + ate
 tau <- function(w,ate,tau.bar) tau0(w,ate) - tau.bar + ate
-h.grid <- function(x,c,grid)
-{
-  abs.x <- sort(abs(x-c))
-  out <- rep(0,length(grid))
-  names(out) <- grid
-  x.right <- sum(c < x)
-  x.left <- sum(x < c)
-  x.tot <- length(x)
-  for(total in grid)
-  {
-    i <- 1
-    sum.right <- sum.left <- 0
-    while(sum.right < total | sum.left < total) 
-    {
-      sum.left <- sum(c-abs.x[i] <= x & x < c)
-      sum.right <- sum(c < x & x <= c+abs.x[i])
-      if (sum.left == sum(x<c) & sum.right == sum(c<x)) break
-      i <- i+1
-    }
-    out[as.character(total)] <- abs.x[i]
-  }
-  return(out)
-}
 ## Set parameters and demean data
 x0 <- rnorm(n,x.center,1)
-# x0 <- 2*rbeta(n,2,4)-1
 w0 <- matrix(rnorm(n*p,rho*x.center,sqrt(1-rho^2)),n,p)
 k2 <- k2*sd(tau0(w0,ate))/sd(mu(c,w0,k1,1,c))
 mu.bar <- mean(mu(c,w0,k1,k2,c))
@@ -58,7 +28,6 @@ tau.bar <- mean(tau0(w0,ate))
 sig_error <- sig_error*max(abs(mean(tau(w0,ate,tau.bar))),2*sd(tau(w0,ate,tau.bar)))
 ## Samples
 x <- rnorm(n,x.center,1)
-# x <- 2*rbeta(n,2,4)-1
 z <- as.numeric(x>=c)
 w <- matrix(rnorm(n*p,rep(x,p)*rho,sqrt(1-rho^2)),n,p)
 prog <- mu(x,w,k1,k2,c)
@@ -66,17 +35,14 @@ cate <- tau(w,ate,tau.bar)
 y <- prog + cate*z + rnorm(n,0,sig_error)
 c <- c/sd(x)
 x <- x/sd(x)
-# c <- 0
-# z <- as.numeric(x>=c)
 prog <- mu(c,w,k1,k2,c)
 cate <- tau(w,ate,tau.bar)
-if (print.params)
-{
-  print(paste(c("K1: ","K2: ","sigma: ","ATE: ","sd(mu): ","sd(tau): "),
-              c(k1,k2,sig_error,mean(cate),sd(prog),sd(cate))))
-}
+# if (print.params)
+# {
+#   print(paste(c("K1: ","K2: ","sigma: ","ATE: ","sd(mu): ","sd(tau): "),
+#               c(k1,k2,sig_error,mean(cate),sd(prog),sd(cate))))
+# }
 ## Plotting the data
-# Owidth <- h.grid(x,c,pts_in_window)
 Owidth <- 0.05
 test <- -Owidth+c<=x & x<=Owidth+c
 par(mfrow=c(2,2))
@@ -87,9 +53,12 @@ abline(v=c,lty=2)
 plot(rowMeans(w)[test],prog[test])
 plot(rowMeans(w)[test],cate[test])
 # Estimation-------------------------------------------------------------------
-B <- cbind(z*x, x, z,1)
-B1 <- cbind(rep(c,n), rep(c,n), rep(1,n), rep(1,n))
-B0 <- cbind(rep(0,n), rep(c,n), rep(0,n), rep(1,n))
+B <- cbind(z*x, x, z,rep(1,n))
+s <- 1/sqrt(sum(apply(B,2,var)))
+B <- s*B
+test <- -Owidth+c<=x & x<=Owidth+c
+B1 <- s*cbind(rep(c,n), rep(c,n), rep(1,n), rep(1,n))
+B0 <- s*cbind(rep(0,n), rep(c,n), rep(0,n), rep(1,n))
 ### If using stochtree prior to separate param lists
 parmlist <- list(num_trees_mean =50,sigma2_init = 0.01,
                  sample_sigma_global=TRUE,min_samples_leaf_mean=20, alpha_mean = 0.95, beta_mean=2,
@@ -106,7 +75,7 @@ mean.parmlist <- list(num_trees=50, min_samples_leaf=20, alpha=0.95, beta=10, ma
 # })
 ### If using stochtree with separate param lists
 time.barddt.fit <- system.time({
-  barddt.fit = bart(X_train= as.matrix(cbind(x*(!test),w)), y_train=y,
+  barddt.fit = bart(X_train= as.matrix(cbind(x,w)), y_train=y,
                     W_train = B, mean_forest_params=mean.parmlist,
                     general_params=global.parmlist,
                     num_mcmc=1000,num_gfr=30)
