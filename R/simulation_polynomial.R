@@ -4,19 +4,21 @@ set.seed(0)
 fit <- function(i)
 {
   print(paste0("Sample: ",i))
-  w <- data$w[,i]
+  z <- data$z[,i]
+  w <- data$w[[i]]
   y <- data$y[,i]
   x <- data$x[,i]
   Owidth <- data$h[i]
-  deg.x <- 5
-  deg.w <- 4
-  bw <- rdrobust::rdbwselect(y,x,c=c,covs=w,p=deg.x,q=deg.x+1)$bws[4]
-  reg <- subset(data.frame(y=y,x=x,w=w,z=data$z[,i]),x>=-bw & x<=bw)
-  model <- lm(y~(poly(x,deg.x,raw=T)+poly(w,deg.w,raw=T))*z,data=reg)
+  poly.data <- data.frame(y=y,x=x,w1=w[,1],w2=w[,2],z=z)
+  poly.data <- subset(poly.data, c-Owidth <= x & x <= c+Owidth)
+  deg.x <- 3
+  deg.w.mu <- 2
+  deg.w.tau <- 3
+  poly.fit <- lm(y~(poly(x,degree=deg.x,raw=T)*(poly(w1,degree=deg.w.mu,raw=T)*poly(w2,degree=deg.w.mu,raw=T)))+(poly(w1,degree=deg.w.tau,raw=T)*poly(w2,degree=deg.w.tau,raw=T))*z,data=poly.data)
   test.sample <- x>=-Owidth & x<=Owidth
-  test1 <- data.frame(x=0,w=w,z=1)[test.sample,]
-  test0 <- data.frame(x=0,w=w,z=0)[test.sample,]
-  tau <- predict(model,newdata=test1)-predict(model,newdata=test0)
+  test1 <- data.frame(x=0,w1=w[,1],w2=w[,2],z=1)[test.sample,]
+  test0 <- data.frame(x=0,w1=w[,1],w2=w[,2],z=0)[test.sample,]
+  tau <- predict(poly.fit,newdata=test1)-predict(poly.fit,newdata=test0)
   return(tau)
 }
 ##

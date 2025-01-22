@@ -1,12 +1,12 @@
 # Setup------------------------------------------------------------------------
 library(stochtree)
 ## DGP parameters
-n <- 2000
+n <- 5000
 ate <- 0.25
 k1 <- 8 ## variability in mu0.x
 k2 <- 1 ## amplitude of tau0.w relative to ATE (set from 0 to 1)
 # k3 <- 1 ## sd of mu0.w relative to sd of tau
-sig_error <- 0.25 ## relative to sd of tau
+sig_error <- 0.5 ## relative to sd of tau
 p <- 2 # Dim of w
 rho <- 0
 c <- 0
@@ -23,7 +23,6 @@ tau <- function(w,ate,tau.bar) tau0(w,ate) - tau.bar + ate
 x0 <- rnorm(n,x.center,1)
 w0 <- matrix(rnorm(n*p,rho*x.center,sqrt(1-rho^2)),n,p)
 k2 <- k2*sd(tau0(w0,ate))/sd(mu(c,w0,k1,1,c))
-mu.bar <- mean(mu(c,w0,k1,k2,c))
 tau.bar <- mean(tau0(w0,ate))
 sig_error <- sig_error*max(abs(mean(tau(w0,ate,tau.bar))),2*sd(tau(w0,ate,tau.bar)))
 ## Samples
@@ -43,7 +42,7 @@ cate <- tau(w,ate,tau.bar)
 #               c(k1,k2,sig_error,mean(cate),sd(prog),sd(cate))))
 # }
 ## Plotting the data
-Owidth <- 0.05
+Owidth <- rdrobust::rdbwselect(y,x,c,covs=w)$bws[2]
 test <- -Owidth+c<=x & x<=Owidth+c
 par(mfrow=c(2,2))
 plot(x,y,col=z+1,pch=19,bty="n")
@@ -132,8 +131,7 @@ time.sbart.pred <- system.time({
 sbart.pred <- pred1 - pred0
 ## Polynomial------------------------------------------------------------------
 poly.data <- data.frame(y=y,x=x,w1=w[,1],w2=w[,2],z=z)
-bw <- rdrobust::rdbwselect(y,x,c,covs=w)$bws[2]
-poly.data <- subset(poly.data, c-bw <= x & x <= c+bw)
+poly.data <- subset(poly.data, c-Owidth <= x & x <= c+Owidth)
 time.polynomial.fit <- system.time({
   poly.fit <- lm(y~(poly(x,degree=2,raw=T)*(poly(w1,degree=2,raw=T)*poly(w2,degree=2,raw=T)))+(poly(w1,degree=3,raw=T)*poly(w2,degree=3,raw=T))*z,data=poly.data)
 })

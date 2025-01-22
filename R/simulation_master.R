@@ -1,13 +1,12 @@
 setwd("~/Git/BART-RDD")
 library(doParallel)
-library(XBART)
 ### Parallelization
 no_cores <- 10
 ## Create results folder
 if (!dir.exists("Results")) dir.create("Results")
 ## Get simulation script names
 scripts <- list.files("R")[grep("simulation",list.files("R"))]
-scripts <- scripts[-grep("master|data|results|polynomial_1|polynomial_2|polynomial_3",scripts)]
+scripts <- scripts[grep("barddt_v2|tbart|sbart|polynomial",scripts)]
 scripts <- paste0("R/",scripts)
 ## Samples to estimate
 s0 <- 1
@@ -22,12 +21,10 @@ if (length(args) > 0)
   files <- 1:length(list.files("Data"))
   s1 <- 10
 }
-### Parameters
-p_categorical <- 0
-ntrees        <- 10
-num_sweeps    <- 150
-burnin        <- 50
-# Ow            <- c(0.015,0.007,0.003,0.002)
+## Stochtree paramlist
+global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
+mean.parmlist <- list(num_trees=50, min_samples_leaf=20, alpha=0.95, beta=10, max_depth=10, sample_sigma2_leaf=FALSE)
+## Run estimation scripts
 for (j in scripts)
 {
   print(paste0("Script: ",j))

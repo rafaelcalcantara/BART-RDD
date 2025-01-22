@@ -4,23 +4,21 @@ set.seed(0)
 fit <- function(i)
 {
   print(paste0("Sample: ",i))
+  Owidth <- data$h[i]
   ys <- data$y[,i]
-  ws <- as.matrix(data$w[,i])
+  ws <- as.matrix(data$w[[i]])
   xs <- data$x[,i]
   zs <- data$z[,i]
-  Owidth <- data$h[i]
-  fit <- XBART::XBART(ys, cbind(xs,ws,zs), num_trees = ntrees,
-                      num_cutpoints = n, num_sweeps = num_sweeps,
-                      burnin = burnin, p_categorical = p_categorical,
-                      tau = var(ys)/ntrees, parallel=F)
+  sbart.fit = stochtree::bart(X_train= as.matrix(cbind(xs,ws,zs)), y_train=ys,
+                                mean_forest_params=mean.parmlist,
+                                general_params=global.parmlist,num_mcmc=1000,num_gfr=30)
   test <- -Owidth+c<=xs & xs<=Owidth+c
-  test.sample.0 <- cbind(c,ws,0)[test,]
-  test.sample.1 <- cbind(c,ws,1)[test,]
-  pred1 <- XBART::predict.XBART(fit,test.sample.1)[,(burnin+1):num_sweeps]
-  pred0 <- XBART::predict.XBART(fit,test.sample.0)[,(burnin+1):num_sweeps]
+  xmat_test_1 <- cbind(c,ws,1)[test,]
+  xmat_test_0 <- cbind(c,ws,0)[test,]
+  pred1 <- predict(sbart.fit,xmat_test_1)$y_hat
+  pred0 <- predict(sbart.fit,xmat_test_0)$y_hat
   pred1-pred0
 }
-##
 ### BEGIN LOOP
 for (i in files)
 {

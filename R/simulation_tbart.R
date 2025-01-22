@@ -4,23 +4,21 @@ set.seed(0)
 fit <- function(i)
 {
   print(paste0("Sample: ",i))
+  Owidth <- data$h[i]
   ys <- data$y[,i]
-  ws <- as.matrix(data$w[,i])
+  ws <- as.matrix(data$w[[i]])
   xs <- data$x[,i]
   zs <- data$z[,i]
-  Owidth <- data$h[i]
-  fit1 <- XBART::XBART(ys[zs==1], cbind(xs,ws)[zs==1,], num_trees = ntrees,
-                num_cutpoints = sum(zs==1), num_sweeps = num_sweeps,
-                burnin = burnin, p_categorical = p_categorical,
-                tau = var(ys[zs==1])/ntrees, parallel=F)
-  fit0 <- XBART::XBART(ys[zs==0], cbind(xs,ws)[zs==0,], num_trees = ntrees,
-                num_cutpoints = sum(zs==0), num_sweeps = num_sweeps,
-                burnin = burnin, p_categorical = p_categorical,
-                tau = var(ys[zs==0])/ntrees, parallel=F)
+  tbart.fit.0 = stochtree::bart(X_train= as.matrix(cbind(xs,ws)[zs==0,]), y_train=ys[zs==0],
+                                mean_forest_params=mean.parmlist,
+                                general_params=global.parmlist,num_mcmc=1000,num_gfr=30)
+  tbart.fit.1 = stochtree::bart(X_train= as.matrix(cbind(xs,ws)[zs==1,]), y_train=ys[zs==1],
+                                mean_forest_params=mean.parmlist,
+                                general_params=global.parmlist,num_mcmc=1000,num_gfr=30)
   test <- -Owidth+c<=xs & xs<=Owidth+c
-  test.sample <- cbind(c,ws)[test,]
-  pred1 <- XBART::predict.XBART(fit1,test.sample)[,(burnin+1):num_sweeps]
-  pred0 <- XBART::predict.XBART(fit0,test.sample)[,(burnin+1):num_sweeps]
+  xmat_test <- cbind(c,ws)[test,]
+  pred1 <- predict(tbart.fit.1,xmat_test)$y_hat
+  pred0 <- predict(tbart.fit.0,xmat_test)$y_hat
   pred1-pred0
 }
 ##
