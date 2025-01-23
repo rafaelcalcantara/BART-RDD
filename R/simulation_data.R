@@ -58,7 +58,7 @@ gen.data <- function(ind)
   sig <- row[3]
   ## Demeaning tau and adjusting parameters
   x0 <- rnorm(n)
-  w0 <- matrix(rnorm(n*p,0,sqrt(1-rho^2)),n,p)
+  w0 <- matrix(rnorm(n*p,x0,sqrt(1-rho^2)),n,p)
   K2 <- K2*sd(tau0(w0,ate))/sd(mu(c,w0,K1,1,c))
   tau.bar <- mean(tau0(w0,ate))
   sig <- sig*max(abs(mean(tau(w0,ate,tau.bar))),2*sd(tau(w0,ate,tau.bar)))

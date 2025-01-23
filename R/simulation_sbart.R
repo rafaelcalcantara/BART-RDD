@@ -9,6 +9,8 @@ fit <- function(i)
   xs <- data$x[,i]
   zs <- data$z[,i]
   Owidth <- rdrobust::rdbwselect(ys,xs,c)$bws[2]
+  global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
+  mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2, max_depth=20, sample_sigma2_leaf=FALSE)
   sbart.fit = stochtree::bart(X_train= as.matrix(cbind(xs,ws,zs)), y_train=ys,
                                 mean_forest_params=mean.parmlist,
                                 general_params=global.parmlist,num_mcmc=1000,num_gfr=30)

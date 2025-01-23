@@ -9,12 +9,17 @@ fit <- function(i)
   xs <- data$x[,i]
   zs <- data$z[,i]
   Owidth <- rdrobust::rdbwselect(ys,xs,c)$bws[2]
-  B <- cbind(zs*xs, xs, zs,rep(1,n))
+  
+  B <- cbind(zs*xs,(1-zs)*xs, zs,rep(1,n))
+  test <- -Owidth+c<=xs & xs<=Owidth+c
+  B1 <- cbind(rep(c,n), rep(0,n), rep(1,n), rep(1,n))
+  B0 <- cbind(rep(0,n), rep(c,n), rep(0,n), rep(1,n))
+  global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
+  mean.parmlist <- list(num_trees=50, min_samples_leaf=20, alpha=0.95, beta=2,
+                        max_depth=20, sample_sigma2_leaf=FALSE)
+  var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
   s <- 1/sqrt(sum(apply(B,2,var)))
   B <- s*B
-  test <- -Owidth+c<=xs & xs<=Owidth+c
-  B1 <- s*cbind(rep(c,n), rep(c,n), rep(1,n), rep(1,n))
-  B0 <- s*cbind(rep(0,n), rep(c,n), rep(0,n), rep(1,n))
   barddt.fit = stochtree::bart(X_train= as.matrix(cbind(xs,ws)), y_train=ys,
                                W_train = B, mean_forest_params=mean.parmlist,
                                general_params=global.parmlist,

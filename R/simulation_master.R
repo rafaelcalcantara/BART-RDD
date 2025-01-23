@@ -21,9 +21,6 @@ if (length(args) > 0)
   files <- 1:length(list.files("Data"))
   s1 <- 10
 }
-## Stochtree paramlist
-global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
-mean.parmlist <- list(num_trees=50, min_samples_leaf=20, alpha=0.95, beta=10, max_depth=10, sample_sigma2_leaf=FALSE)
 ## Run estimation scripts
 for (j in scripts)
 {
