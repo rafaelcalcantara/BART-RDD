@@ -2,8 +2,8 @@
 library(stochtree)
 ## DGP parameters
 n <- 5000
-ate <- 0.25
-k1 <- 8 ## variability in mu0.x
+ate <- 0.2
+k1 <- 1 ## variability in mu0.x
 k2 <- 1 ## amplitude of tau0.w relative to ATE (set from 0 to 1)
 # k3 <- 1 ## sd of mu0.w relative to sd of tau
 sig_error <- 0.5 ## relative to sd of tau
@@ -36,11 +36,11 @@ c <- c/sd(x)
 x <- x/sd(x)
 prog <- mu(c,w,k1,k2,c)
 cate <- tau(w,ate,tau.bar)
-# if (print.params)
-# {
-#   print(paste(c("K1: ","K2: ","sigma: ","ATE: ","sd(mu): ","sd(tau): "),
-#               c(k1,k2,sig_error,mean(cate),sd(prog),sd(cate))))
-# }
+if (print.params)
+{
+  print(paste(c("K1: ","K2: ","sigma: ","ATE: ","sd(mu): ","sd(tau): "),
+              c(k1,k2,sig_error,mean(cate),sd(prog),sd(cate))))
+}
 ## Plotting the data
 Owidth <- rdrobust::rdbwselect(y,x,c,covs=w)$bws[2]
 test <- -Owidth+c<=x & x<=Owidth+c
