@@ -6,7 +6,7 @@ no_cores <- 10
 if (!dir.exists("Results")) dir.create("Results")
 ## Get simulation script names
 scripts <- list.files("R")[grep("simulation",list.files("R"))]
-scripts <- scripts[grep("barddt_v2|tbart|sbart|polynomial",scripts)]
+scripts <- scripts[grep("tbart|sbart|polynomial",scripts)]
 scripts <- paste0("R/",scripts)
 ## Samples to estimate
 s0 <- 1
