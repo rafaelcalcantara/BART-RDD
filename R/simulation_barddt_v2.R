@@ -4,11 +4,11 @@ set.seed(0)
 fit <- function(i)
 {
   print(paste0("Sample: ",i))
-  Owidth <- data$h[i]
   ys <- data$y[,i]
   ws <- as.matrix(data$w[[i]])
   xs <- data$x[,i]
   zs <- data$z[,i]
+  Owidth <- rdrobust::rdbwselect(ys,xs,c)$bws[2]
   B <- cbind(zs*xs, xs, zs,rep(1,n))
   s <- 1/sqrt(sum(apply(B,2,var)))
   B <- s*B
