@@ -4,11 +4,11 @@ set.seed(0)
 fit <- function(i)
 {
   print(paste0("Sample: ",i))
-  Owidth <- data$h[i]
   ys <- data$y[,i]
   ws <- as.matrix(data$w[[i]])
   xs <- data$x[,i]
   zs <- data$z[,i]
+  Owidth <- rdrobust::rdbwselect(ys,xs,c)$bws[2]
   sbart.fit = stochtree::bart(X_train= as.matrix(cbind(xs,ws,zs)), y_train=ys,
                                 mean_forest_params=mean.parmlist,
                                 general_params=global.parmlist,num_mcmc=1000,num_gfr=30)

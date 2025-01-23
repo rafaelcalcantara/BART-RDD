@@ -8,7 +8,7 @@ fit <- function(i)
   w <- data$w[[i]]
   y <- data$y[,i]
   x <- data$x[,i]
-  Owidth <- data$h[i]
+  Owidth <- rdrobust::rdbwselect(y,x,c)$bws[2]
   poly.data <- data.frame(y=y,x=x,w1=w[,1],w2=w[,2],z=z)
   poly.data <- subset(poly.data, c-Owidth <= x & x <= c+Owidth)
   deg.x <- 3

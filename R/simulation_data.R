@@ -68,9 +68,9 @@ gen.data <- function(ind)
   w <- apply(x, 2, function(i) matrix(rnorm(n*p,rep(i,p)*rho,sqrt(1-rho^2)),n,p),simplify=F)
   cate <- sapply(1:s, function(i) tau(w[[i]],ate,tau.bar))
   y <- sapply(1:s, function(i) mu(x[,i],w[[i]],K1,K2,c) + tau(w[[i]],ate,tau.bar)*z[,i] + rnorm(n,0,sig))
-  h <- sapply(1:s, function(i) rdrobust::rdbwselect(y[,i],x[,i],c,covs=w[[i]])$bws[2])
+  # h <- sapply(1:s, function(i) rdrobust::rdbwselect(y[,i],x[,i],c)$bws[2])
   ## Save data
-  out <- list(y=y,x=x,z=z,w=w,c=c,h=h,tau.x=cate,tau=ate,n=n,rho=rho,k1=K1,k2=K2,sig_error=sig_error)
+  out <- list(y=y,x=x,z=z,w=w,c=c,tau.x=cate,tau=ate,n=n,rho=rho,k1=K1,k2=K2,sig_error=sig_error)
   saveRDS(out,paste0("Data/dgp_",ind,".rds"))
 }
 ##
