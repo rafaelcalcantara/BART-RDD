@@ -28,9 +28,9 @@ for (i in files)
   print(paste0("DGP: ",i))
   data <- readRDS(paste0("Data/dgp_",i,".rds"))
   s <- ncol(data$y)
-  if (paste0("polynomial_full_",i,".rds") %in% list.files("Results/") == T)
+  if (paste0("polynomial_",i,".rds") %in% list.files("Results/") == T)
   {
-    res <- readRDS(paste0("Results/polynomial_full_",i,".rds"))
+    res <- readRDS(paste0("Results/polynomial_",i,".rds"))
   } else
   {
     res <- list(results=vector("list",s))
@@ -47,7 +47,7 @@ for (i in files)
   stopCluster(cl)
   print(time)
   res$results[s0:s1] <- out
-  saveRDS(list(results=res$results,time=time),paste0("Results/polynomial_full_",i,".rds"))
+  saveRDS(list(results=res$results,time=time),paste0("Results/polynomial_",i,".rds"))
   rm(out)
   gc()
 }
