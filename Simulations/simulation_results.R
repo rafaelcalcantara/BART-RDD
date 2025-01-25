@@ -24,4 +24,8 @@ for (i in dgp)
                      `S-BART` = sapply(1:s, function(sample) rmse.fun(rowMeans(results$sbart[[sample]]),cate[[sample]])),
                      Polynomial = sapply(1:s, function(sample) rmse.fun(results$polynomial[[sample]],cate[[sample]])),
                      ATE = sapply(1:s, function(sample) rmse.fun(ate,cate[[sample]])))
+  ## Visualize results
+  plot(rmse$BARDDT/rmse$ATE,rmse$T.BART/rmse$ATE, col="navy", pch=19, bty="n",
+       xlab="BARDDT", ylab="T-BART", ylim=c(min()))
+  abline(a=0,b=1,col="red")
 }
