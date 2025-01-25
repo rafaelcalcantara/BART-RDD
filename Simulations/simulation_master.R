@@ -49,6 +49,8 @@ if (!results)
   source("simulation_data.R")
   ## Estimation
   source("simulation_estimation.R")
+} else
+{
+  ## Process results
+  source("simulation_results.R")
 }
-## Process results
-source("simulation_results.R")
