@@ -19,4 +19,4 @@ Application/pollution.rds
 Application/search.rds
 *.RData
 *.Rout
-*.sh
+run_*
