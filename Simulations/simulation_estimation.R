@@ -194,7 +194,7 @@ if (isTRUE(cmd.line))
   }
   if ("sbart" %in% models)
   {
-    print("T-BART fit")
+    print("S-BART fit")
     print(paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep=": "))
     cl <- makeCluster(no_cores,type="SOCK")
     registerDoParallel(cl)
@@ -203,7 +203,7 @@ if (isTRUE(cmd.line))
       out <- parLapply(cl,1:s,fit_cluster_sbart)
     })
     stopCluster(cl)
-    print("T-BART fit done!")
+    print("S-BART fit done!")
     print(time)
     saveRDS(out,paste0("Results/sbart_",dgp,".rds"))
   }
