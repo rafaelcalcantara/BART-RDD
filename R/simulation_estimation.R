@@ -1,119 +1,253 @@
-library(doParallel)
-no_cores <- 10
-## Common parameters
-p_categorical <- 0
-burnin <- 50
-num_sweeps <- 150
-# BARDDT parameters
-Omin <- 1
-Opct <- 0.25
-ntrees_con <- 30
-ntrees_mod <- 30
-# T-BART parameters
-ntrees <- 30
-## Set Owidth and test set
-h <- apply(x,2,function(i) h.grid(i,c,pts_in_window))
-test <- sapply(1:s, function(i) c-h[i] <= x[,i] & x[,i] <= c+h[i])
-cate <- sapply(1:s, function(i) cate[test[,i],i])
-## BARDDT fit------------------------------------------------------------------
-fit.barddt <- function(i)
+# Functions that run the models
+## BARDDT
+fit.barddt <- function(y,x,w,z)
 {
-  print(paste0("Sample: ",i))
-  ys <- y[,i]
-  ws <- as.matrix(w[[i]])
-  xs <- x[,i]
-  Owidth <- h[i]
-  sample <- 5*Owidth
-  train <- c-sample < xs & xs < c+sample
-  fit <- XBART::XBCF.rd(ys[train], ws[train,], xs[train], c,
-                        Owidth = Owidth, Omin = Omin, Opct = Opct,
-                        num_cutpoints = n,
-                        num_trees_con = ntrees_con, num_trees_mod = ntrees_mod,
-                        num_sweeps = num_sweeps,
-                        burnin = burnin,
-                        Nmin = 1,
-                        p_categorical_con = p_categorical,
-                        p_categorical_mod = p_categorical,
-                        tau_con = var(ys[train])/ntrees_con, tau_mod = var(ys[train])/ntrees_mod,
-                        alpha_mod = 0.95, beta_mod = 1.25, update_tau = TRUE,
-                        parallel=F)
-  test <- -Owidth+c<=xs & xs<=Owidth+c
-  pred <- XBART::predict.XBCFrd(fit,ws[test,],rep(c,sum(test)))
-  list(pred=pred$tau.adj[,(burnin+1):num_sweeps],
-       count1=fit$count_fail_1[(burnin+1):num_sweeps],
-       count2=fit$count_fail_2[(burnin+1):num_sweeps],
-       cutoff_nodes_con=fit$cutoff_nodes_con[(burnin+1):num_sweeps,],
-       invalid_nodes_1_con=fit$invalid_nodes_1_con[(burnin+1):num_sweeps,],
-       invalid_nodes_2_con=fit$invalid_nodes_2_con[(burnin+1):num_sweeps,],
-       cutoff_nodes_mod=fit$cutoff_nodes_mod[(burnin+1):num_sweeps,],
-       invalid_nodes_1_mod=fit$invalid_nodes_1_mod[(burnin+1):num_sweeps,],
-       invalid_nodes_2_mod=fit$invalid_nodes_2_mod[(burnin+1):num_sweeps,])
+  barddt.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
+  barddt.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
+                               max_depth=20, sample_sigma2_leaf=FALSE)
+  barddt.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
+  B <- cbind(z*x,(1-z)*x, z,rep(1,n))
+  test <- -Owidth+c<=x & x<=Owidth+c
+  B1 <- cbind(rep(c,n), rep(0,n), rep(1,n), rep(1,n))
+  B0 <- cbind(rep(0,n), rep(c,n), rep(0,n), rep(1,n))
+  s <- 1/sqrt(sum(apply(B,2,var)))
+  B <- s*B
+  barddt.fit = stochtree::bart(X_train= as.matrix(cbind(x,w)), y_train=y,
+                               W_train = B, mean_forest_params=barddt.mean.parmlist,
+                               general_params=barddt.global.parmlist,
+                               variance_forest_params=barddt.var.parmlist,
+                               num_mcmc=1000,num_gfr=30)
+  B1 <- B1[test,]
+  B0 <- B0[test,]
+  xmat_test <- cbind(rep(0,n),w)[test,]
+  pred1 <- predict(barddt.fit,xmat_test,B1)$y_hat
+  pred0 <- predict(barddt.fit,xmat_test,B0)$y_hat
+  return(list(pred1=pred1,pred0=pred0))
 }
-cl <- makeCluster(no_cores,type="SOCK",outfile="")
-registerDoParallel(cl)
-clusterExport(cl,varlist=ls())
-time.barddt <- system.time({
-  barddt <- parLapply(cl,1:s,fit.barddt)
-})
-stopCluster(cl)
-### Save count of splits rejected per constraint
-constraint.fails.1 <- lapply(barddt, function(i) i$count1)
-constraint.fails.2 <- lapply(barddt, function(i) i$count2)
-cutoff.nodes.con <- lapply(barddt, function(i) i$cutoff_nodes_con)
-invalid.nodes.1.con <- lapply(barddt, function(i) i$invalid_nodes_1_con)
-invalid.nodes.2.con <- lapply(barddt, function(i) i$invalid_nodes_2_con)
-cutoff.nodes.mod <- lapply(barddt, function(i) i$cutoff_nodes_mod)
-invalid.nodes.1.mod <- lapply(barddt, function(i) i$invalid_nodes_1_mod)
-invalid.nodes.2.mod <- lapply(barddt, function(i) i$invalid_nodes_2_mod)
-## T-BART fit------------------------------------------------------------------
-fit.tbart <- function(i)
+## T-BART
+fit.tbart <- function(y,x,w,z)
 {
-  print(paste0("Sample: ",i))
-  ys <- y[,i]
-  ws <- as.matrix(w[[i]])
-  xs <- x[,i]
-  zs <- z[,i]
-  Owidth <- h[i]
-  sample <- 5*Owidth
-  train <- c-sample < xs & xs < c+sample
-  ys <- ys[train]
-  xs <- xs[train]
-  ws <- ws[train,]
-  zs <- zs[train]
-  fit1 <- XBART::XBART(ys[zs==1], cbind(xs,ws)[zs==1,], num_trees = ntrees,
-                       num_cutpoints = sum(zs==1), num_sweeps = num_sweeps,
-                       burnin = burnin, p_categorical = p_categorical,
-                       tau = var(ys[zs==1])/ntrees, parallel=F)
-  fit0 <- XBART::XBART(ys[zs==0], cbind(xs,ws)[zs==0,], num_trees = ntrees,
-                       num_cutpoints = sum(zs==0), num_sweeps = num_sweeps,
-                       burnin = burnin, p_categorical = p_categorical,
-                       tau = var(ys[zs==0])/ntrees, parallel=F)
-  test <- -Owidth+c<=xs & xs<=Owidth+c
-  test.sample <- cbind(c,ws)[test,]
-  pred1 <- XBART::predict.XBART(fit1,test.sample)[,(burnin+1):num_sweeps]
-  pred0 <- XBART::predict.XBART(fit0,test.sample)[,(burnin+1):num_sweeps]
-  pred1-pred0
+  tbart.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
+  tbart.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
+                              max_depth=20, sample_sigma2_leaf=FALSE)
+  tbart.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
+  test <- -Owidth+c<=x & x<=Owidth+c
+  tbart.fit.0 = stochtree::bart(X_train= as.matrix(cbind(x,w)[z==0,]), y_train=y[z==0],
+                                mean_forest_params=tbart.mean.parmlist,
+                                general_params=tbart.global.parmlist,
+                                variance_forest_params=tbart.var.parmlist,
+                                num_mcmc=1000,num_gfr=30)
+  tbart.fit.1 = stochtree::bart(X_train= as.matrix(cbind(x,w)[z==1,]), y_train=y[z==1],
+                                mean_forest_params=tbart.mean.parmlist,
+                                general_params=tbart.global.parmlist,
+                                variance_forest_params=tbart.var.parmlist,
+                                num_mcmc=1000,num_gfr=30)
+  xmat_test <- cbind(c,w)[test,]
+  pred1 <- predict(tbart.fit.1,xmat_test)$y_hat
+  pred0 <- predict(tbart.fit.0,xmat_test)$y_hat
+  return(list(pred1=pred1,pred0=pred0))
 }
-cl <- makeCluster(no_cores,type="SOCK",outfile="")
-registerDoParallel(cl)
-clusterExport(cl,varlist=ls())
-time.tbart <- system.time({
-  tbart <- parLapply(cl,1:s,fit.tbart)
-})
-stopCluster(cl)
-## Calculate RMSE--------------------------------------------------------------
-barddt <- sapply(barddt,function(i) rowMeans(i$pred))
-tbart <- sapply(tbart,rowMeans)
-rmse.barddt <- mapply(function(fit,tau) sqrt(mean((fit-tau)^2)),barddt,cate)
-rmse.tbart <- mapply(function(fit,tau) sqrt(mean((fit-tau)^2)),tbart,cate)
-rmse.ate <- sapply(cate, function(tau) sqrt(mean((tau-ate)^2)))
-print(c("RMSE for BARDDT: ",mean(rmse.barddt/rmse.ate)))
-print(c("RMSE for T-BART: ",mean(rmse.tbart/rmse.ate)))
-plot(rmse.barddt/rmse.ate,rmse.tbart/rmse.ate,bty="n",pch=19,col="darkblue")
-abline(a=0,b=1,col="red")
-##
-plot(cate[[sample]],barddt[[sample]],bty="n",pch=19,col="darkblue")
-abline(a=0,b=1,col="red")
-plot(cate[[sample]],tbart[[sample]],bty="n",pch=19,col="darkblue")
-abline(a=0,b=1,col="red")
-matplot(sapply(w,rowMeans)[test[,sample],sample],cbind(cate[[sample]],tbart[[sample]],barddt[[sample]]),pch=20,col=c("black","maroon","orange"))
+## S-BART
+fit.sbart <- function(y,x,w,z)
+{
+  sbart.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
+  sbart.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
+                              max_depth=20, sample_sigma2_leaf=FALSE)
+  sbart.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
+  test <- -Owidth+c<=x & x<=Owidth+c
+  sbart.fit = stochtree::bart(X_train= as.matrix(cbind(x,z,w)), y_train=y,
+                              mean_forest_params=sbart.mean.parmlist,
+                              general_params=sbart.global.parmlist,
+                              variance_forest_params=sbart.var.parmlist,,
+                              num_mcmc=1000,num_gfr=30)
+  xmat_test.1 <- cbind(c,1,w)[test,]
+  xmat_test.0 <- cbind(c,0,w)[test,]
+  pred1 <- predict(sbart.fit,xmat_test.1)$y_hat
+  pred0 <- predict(sbart.fit,xmat_test.0)$y_hat
+  return(list(pred1=pred1,pred0=pred0))
+}
+## Polynomial
+fit.polynomial <- function(y,x,w,z)
+{
+  test <- -Owidth+c<=x & x<=Owidth+c
+  dfw <- data.frame(w=w)
+  fmla <- as.formula(paste('y~(',paste(paste('poly(', names(dfw), ', 4)', sep=''),collapse="+"),')*poly(x,1)*z + poly(x,3)'))
+  df <- data.frame(x=x,w=w,y=y,z=z)
+  df$z <- as.factor(df$z)
+  h <- rdrobust::rdbwselect(y,x,c)$bws[1]
+  df.train <- subset(df,c-h<=x & x<c+h)
+  poly.fit <- lm(fmla,data = df.train)
+  df.test <- df[test,]
+  xmat_test.1 <- xmat_test.0 <- df.test
+  xmat_test.1$x <- c
+  xmat_test.1$z <- "1"
+  xmat_test.0$x <- c
+  xmat_test.0$z <- "0"
+  pred1 <- predict(poly.fit,xmat_test.1)
+  pred0 <- predict(poly.fit,xmat_test.0)
+  return(list(pred1=pred1,pred0=pred0))
+}
+# Parallelized functions
+## Run regressions from R
+fit_r <- function(model)
+{
+  if (model=="leaf.rdd")
+  {
+    xs <- x[,1]
+    ys <- y[,1]
+    zs <- z[,1]
+    out <- fit.barddt(ys,xs,w,zs)
+  } else if (model=="tbart")
+  {
+    xs <- x[,1]
+    ys <- y[,1]
+    zs <- z[,1]
+    out <- fit.tbart(ys,xs,w,zs)
+  } else if (model=="sbart")
+  {
+    xs <- x[,1]
+    ys <- y[,1]
+    zs <- z[,1]
+    out <- fit.sbart(ys,xs,w,zs)
+  } else if (model=="polynomial")
+  {
+    xs <- x[,1]
+    ys <- y[,1]
+    zs <- z[,1]
+    out <- fit.polynomial(ys,xs,w,zs)
+  }
+  out$pred1 - out$pred0
+}
+## Run regressions from cluster
+fit_cluster_barddt <- function(sample)
+{
+  xs <- x[,sample]
+  ys <- y[,sample]
+  zs <- z[,sample]
+  out <- fit.barddt(ys,xs,w,zs)
+  out$pred1 - out$pred0
+}
+fit_cluster_tbart <- function(sample)
+{
+  xs <- x[,sample]
+  ys <- y[,sample]
+  zs <- z[,sample]
+  out <- fit.tbart(ys,xs,w,zs)
+  out$pred1 - out$pred0
+}
+fit_cluster_sbart <- function(sample)
+{
+  xs <- x[,sample]
+  ys <- y[,sample]
+  zs <- z[,sample]
+  out <- fit.sbart(ys,xs,w,zs)
+  out$pred1 - out$pred0
+}
+fit_cluster_polynomial <- function(sample)
+{
+  xs <- x[,sample]
+  ys <- y[,sample]
+  zs <- z[,sample]
+  out <- fit.polynomial(ys,xs,w,zs)
+  out$pred1 - out$pred0
+}
+## Run the models
+if (isTRUE(cmd.line))
+{
+  ## Fit from cluster
+  if ("leaf.rdd" %in% models)
+  {
+    print("BARDDT fit")
+    print(paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep=": "))
+    cl <- makeCluster(no_cores,type="SOCK")
+    registerDoParallel(cl)
+    clusterExport(cl,varlist=ls())
+    time <- system.time({
+      out <- parLapply(cl,1:s,fit_cluster_barddt)
+    })
+    stopCluster(cl)
+    print("BARDDT fit done!")
+    print(time)
+    saveRDS(out,paste0("Results/barddt_",dgp,".rds"))
+  }
+  if ("tbart" %in% models)
+  {
+    print("T-BART fit")
+    print(paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep=": "))
+    cl <- makeCluster(no_cores,type="SOCK")
+    registerDoParallel(cl)
+    clusterExport(cl,varlist=ls())
+    time <- system.time({
+      out <- parLapply(cl,1:s,fit_cluster_tbart)
+    })
+    stopCluster(cl)
+    print("T-BART fit done!")
+    print(time)
+    saveRDS(out,paste0("Results/tbart_",dgp,".rds"))
+  }
+  if ("sbart" %in% models)
+  {
+    print("T-BART fit")
+    print(paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep=": "))
+    cl <- makeCluster(no_cores,type="SOCK")
+    registerDoParallel(cl)
+    clusterExport(cl,varlist=ls())
+    time <- system.time({
+      out <- parLapply(cl,1:s,fit_cluster_sbart)
+    })
+    stopCluster(cl)
+    print("T-BART fit done!")
+    print(time)
+    saveRDS(out,paste0("Results/sbart_",dgp,".rds"))
+  }
+  if ("polynomial" %in% models)
+  {
+    print("Polynomial fit")
+    print(paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep=": "))
+    cl <- makeCluster(no_cores,type="SOCK")
+    registerDoParallel(cl)
+    clusterExport(cl,varlist=ls())
+    time <- system.time({
+      out <- parLapply(cl,1:s,fit_cluster_polynomial)
+    })
+    stopCluster(cl)
+    print("Polynomial fit done!")
+    print(time)
+    saveRDS(out,paste0("Results/polynomial_",dgp,".rds"))
+  }
+} else
+{
+  ## Fit from R
+  cl <- makeCluster(no_cores,type="SOCK")
+  registerDoParallel(cl)
+  clusterExport(cl,varlist=ls())
+  time <- system.time({
+    out <- parLapply(cl,models,fit_r)
+  })
+  stopCluster(cl)
+  print(time)
+  names(out) <- models
+  ### Visualizing
+  test <- c-Owidth <= x[,1] & x[,1] <= c+Owidth
+  cate <- cate[test,]
+  matplot(w[test,1],cbind(cate,rowMeans(out$leaf.rdd),rowMeans(out$tbart)),
+          col=c("black","orange","maroon"),pch=19,cex=0.8)
+  matplot(w[test,1],cbind(cate,rowMeans(out$leaf.rdd),rowMeans(out$sbart)),
+          col=c("black","orange","red"),pch=19,cex=0.8)
+  matplot(w[test,1],cbind(cate,rowMeans(out$leaf.rdd),out$polynomial),
+          col=c("black","orange","pink"),pch=19,cex=0.8)
+  
+  rmse.ate <- sqrt(mean((ate-cate)^2))
+  rmse.barddt <- sqrt(mean((rowMeans(out$leaf.rdd)-cate)^2))
+  rmse.tbart <- sqrt(mean((rowMeans(out$tbart)-cate)^2))
+  rmse.sbart <- sqrt(mean((rowMeans(out$sbart)-cate)^2))
+  rmse.polynomial <- sqrt(mean((out$polynomial-cate)^2))
+  print("RMSE BARDDT:")
+  print(rmse.barddt/rmse.ate)
+  print("RMSE TBART:")
+  print(rmse.tbart/rmse.ate)
+  print("RMSE SBART:")
+  print(rmse.sbart/rmse.ate)
+  print("RMSE Polynomial:")
+  print(rmse.polynomial/rmse.ate)
+}

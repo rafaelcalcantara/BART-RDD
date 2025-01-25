@@ -1,32 +1,51 @@
-setwd("~/Git/BART-RDD")
+# setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+# setwd("../")
 library(doParallel)
-### Parallelization
-no_cores <- 10
-## Create results folder
-if (!dir.exists("Results")) dir.create("Results")
-## Get simulation script names
-scripts <- list.files("R")[grep("simulation",list.files("R"))]
-scripts <- scripts[grep("barddt_v2|tbart|sbart|polynomial",scripts)]
-scripts <- paste0("R/",scripts)
-## Samples to estimate
-s0 <- 1
-## Take command line arguments
-args <- commandArgs(trailingOnly = T)
+no_cores <- 6
+args <- commandArgs(trailingOnly = TRUE)
 if (length(args) > 0)
 {
-  files <- args[1]
-  s1 <- args[2]
+  ## Running from command line
+  cmd.line <- TRUE
+  ## DGP parameters
+  k1 <- args[1] # larger gives more weight to x relative to w in mu(x,w)
+  k2 <- args[2] # relative size of sd(tau(w, x = c)) to sd(mu(w, x =c))
+  k3 <- args[3] # separable in x and w or not, 0 is separable
+  k4 <- args[4] # noise relative to sd(mu)
+  k5 <- args[5] # size of the ate as a multiple of the residual standard deviation
+  p <- args[6]
+  rho <- args[7]
+  ## Sample size
+  n <- args[8]
+  ## Simulation reps
+  s <- args[9]
+  ## Which models to run
+  models <- which(args %in% c("leaf.rdd","tbart","sbart","polynomial"))
+  models <- args[models]
 } else
 {
-  files <- 1:length(list.files("Data"))
-  s1 <- 10
+  ## Running from R
+  cmd.line <- FALSE
+  ## DGP parameters
+  k1 <- 2 # larger gives more weight to x relative to w in mu(x,w)
+  k2 <- 0.25 # relative size of sd(tau(w, x = c)) to sd(mu(w, x =c))
+  k3 <- 1 # separable in x and w or not, 0 is separable
+  k4 <- 0.25 # noise relative to sd(mu)
+  k5 <- 1 # size of the ate as a multiple of the residual standard deviation
+  p <- 2
+  rho <- 0.25
+  ## Sample size
+  n <- 4000
+  ## Simulation reps
+  s <- 1
+  ## Which models to run
+  models <- c("leaf.rdd","tbart","sbart","polynomial")
+  #models <- c("polynomial")
 }
-## Run estimation scripts
-for (j in scripts)
-{
-  print(paste0("Script: ",j))
-  time <- system.time({
-    source(j)
-  })
-  print(paste0("Elapsed time: ",time))
-}
+### Identifier of DGP configuration for names of data and results files
+dgp <- paste(c("k1","k2","k3","k4","k5","p","rho"),c(k1,k2,k3,k4,k5,p,rho),collapse="_",sep="_")
+## Generate data
+source("R/simulation_data.R")
+## Estimation
+Owidth <- 0.1
+source("R/simulation_estimation.R")
