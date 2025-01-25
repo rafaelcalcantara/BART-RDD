@@ -2,8 +2,19 @@ library(doParallel)
 no_cores <- 10
 c <- 0
 Owidth <- 0.1
-results <- FALSE ## toggle on if just processing results from cluster (don't run data and estimation scripts)
 args <- commandArgs(trailingOnly = TRUE)
+## Choose to run simulations or process results
+### Toggle on if just processing results from cluster (don't run data and estimation scripts)
+if (length(args) > 0)
+{
+  ## If run from cmd line, only run simulations
+  results <- FALSE
+} else
+{
+  ## Choose whether to run simulations or process results when sourcing script from R
+  results <- TRUE
+}
+## Run simulations/process results
 if (isFALSE(results))
 {
   if (length(args) > 0)
@@ -25,6 +36,8 @@ if (isFALSE(results))
     ## Which models to run
     models <- which(args %in% c("leaf.rdd","tbart","sbart","polynomial"))
     models <- args[models]
+    # Identifier of DGP configuration for names of data and results files
+    dgp <- paste(c("k1","k2","k3","k4","k5","p","rho"),c(k1,k2,k3,k4,k5,p,rho),collapse="_",sep="_")
   } else
   {
     ## Running from R
