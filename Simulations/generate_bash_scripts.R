@@ -1,10 +1,10 @@
 file.remove(dir(".")[grep("run",dir("."))]) ## Remove existing bash scripts for running sims
 n <- 4000
-s <- 10
+s <- 500
 k1 <- 2
 k2 <- c(2,0.5)
 k3 <- c(0,1)
-k4 <- c(0.1,2)
+k4 <- c(0.1,1)
 k5 <- c(0.25,2)
 p <- c(2,5)
 rho <- c(0,0.7)
