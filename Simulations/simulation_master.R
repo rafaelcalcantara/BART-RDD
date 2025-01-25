@@ -4,7 +4,7 @@ c <- 0
 Owidth <- 0.1
 results <- FALSE ## toggle on if just processing results from cluster (don't run data and estimation scripts)
 args <- commandArgs(trailingOnly = TRUE)
-if (!results)
+if (isFALSE(results))
 {
   if (length(args) > 0)
   {
