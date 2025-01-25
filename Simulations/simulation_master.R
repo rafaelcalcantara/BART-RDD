@@ -42,6 +42,7 @@ if (length(args) > 0)
 }
 ### Identifier of DGP configuration for names of data and results files
 dgp <- paste(c("k1","k2","k3","k4","k5","p","rho"),c(k1,k2,k3,k4,k5,p,rho),collapse="_",sep="_")
+print(dgp)
 ## Generate data
 source("simulation_data.R")
 ## Estimation
