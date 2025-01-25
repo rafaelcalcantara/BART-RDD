@@ -1,7 +1,6 @@
 set.seed(007)
 library(pracma)
 library(MASS)
-c <- 0
 m <- -1 # marginal mean of x
 beta <- rep(1,p)/sqrt(p)
 K <- 2*toeplitz(seq(1,0,length.out = p))
@@ -50,7 +49,7 @@ cate <- sapply(1:s, function(i) tau(w,ate,k2.new,tau.bar))
 
 ## Saving data
 if (!dir.exists("Data")) dir.create("Data") ## Create data folder, if non-existent
-saveRDS(list(y=y,x=x,z=z,w=w,cate=cate),paste0("Data/dgp_",dgp,".rds"))
+saveRDS(list(y=y,x=x,z=z,w=w,cate=cate,ate=ate),paste0("Data/dgp_",dgp,".rds"))
 
 
 # print("sd(tau)")
