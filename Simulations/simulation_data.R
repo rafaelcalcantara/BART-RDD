@@ -50,11 +50,6 @@ cate <- sapply(1:s, function(i) tau(w,ate,k2.new,tau.bar))
 
 ## Saving data
 if (!dir.exists("Data")) dir.create("Data") ## Create data folder, if non-existent
-if (length(list.files("Data"))!=0) ## Clean up folder
-{
-  files <- paste0("Data/",list.files("Data"))
-  for (i in files) file.remove(i)
-}
 saveRDS(list(y=y,x=x,z=z,w=w,cate=cate),paste0("Data/dgp_",dgp,".rds"))
 
 
