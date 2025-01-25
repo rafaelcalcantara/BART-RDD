@@ -6,8 +6,8 @@ k2 <- c(2,0.5)
 k3 <- c(0,1)
 k4 <- c(0.1,2)
 k5 <- c(0.25,2)
-rho <- c(0,0.7)
 p <- c(2,5)
+rho <- c(0,0.7)
 dgp <- matrix(0,14,7)
 dgp <- matrix(1,7,7)+diag(1,7)
 dgp <- rbind(dgp,matrix(2,7,7)+diag(-1,7))
@@ -16,7 +16,7 @@ for (i in 1:nrow(dgp))
 {
   config <- dgp[i,]
   dgp[i,] <- c(k1[config[1]],k2[config[2]],k3[config[3]],k4[config[4]],
-               k5[config[5]],rho[config[6]],p[config[7]])
+               k5[config[5]],p[config[7]],rho[config[6]])
 }
 models <- c("leaf.rdd","tbart","sbart","polynomial")
 ##
