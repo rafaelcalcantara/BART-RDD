@@ -1,8 +1,6 @@
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-setwd("../")
 file.remove(paste0("R/",dir("R")[grep("run",dir("R"))])) ## Remove existing bash scripts for running sims
 n <- 4000
-s <- 1000
+s <- 10
 k1 <- 2
 k2 <- c(2,0.5)
 k3 <- c(0,1)

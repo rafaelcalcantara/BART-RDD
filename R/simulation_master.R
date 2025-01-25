@@ -1,7 +1,5 @@
-# setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-# setwd("../")
 library(doParallel)
-no_cores <- 6
+no_cores <- 10
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) > 0)
 {
@@ -45,7 +43,7 @@ if (length(args) > 0)
 ### Identifier of DGP configuration for names of data and results files
 dgp <- paste(c("k1","k2","k3","k4","k5","p","rho"),c(k1,k2,k3,k4,k5,p,rho),collapse="_",sep="_")
 ## Generate data
-source("R/simulation_data.R")
+source("simulation_data.R")
 ## Estimation
 Owidth <- 0.1
-source("R/simulation_estimation.R")
+source("simulation_estimation.R")

@@ -47,6 +47,14 @@ x <- matrix(rnorm(n*s, m + w%*%beta,1-rho^2),n,s)
 z <- apply(x,2,function(xs) as.numeric(xs>=c))
 y <- sapply(1:s, function(i) mu(x[,i],w,k1,k3) + tau(w,ate,k2.new,tau.bar)*z[,i] + rnorm(n,0,sigma_y))
 cate <- sapply(1:s, function(i) tau(w,ate,k2.new,tau.bar))
+
+## Saving data
+if (!dir.exists("Data")) dir.create("Data") ## Create data folder, if non-existent
+if (length(list.files("Data"))!=0) ## Clean up folder
+{
+  files <- paste0("Data/",list.files("Data"))
+  for (i in files) file.remove(i)
+}
 saveRDS(list(y=y,x=x,z=z,w=w,cate=cate),paste0("Data/dgp_",dgp,".rds"))
 
 

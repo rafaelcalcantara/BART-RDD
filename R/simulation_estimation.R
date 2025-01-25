@@ -154,6 +154,13 @@ fit_cluster_polynomial <- function(sample)
 ## Run the models
 if (isTRUE(cmd.line))
 {
+  ## Create/clean results folder
+  if (!dir.exists("Results")) dir.create("Results") ## Create results folder, if non-existent
+  if (length(list.files("Results"))!=0) ## Clean up folder
+  {
+    files <- paste0("Results/",list.files("Results"))
+    for (i in files) file.remove(i)
+  }
   ## Fit from cluster
   if ("leaf.rdd" %in% models)
   {
