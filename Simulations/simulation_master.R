@@ -12,7 +12,7 @@ if (length(args) > 0)
 } else
 {
   ## Choose whether to run simulations or process results when sourcing script from R
-  results <- TRUE
+  results <- FALSE
 }
 ## Run simulations/process results
 if (isFALSE(results))
@@ -36,8 +36,6 @@ if (isFALSE(results))
     ## Which models to run
     models <- which(args %in% c("leaf.rdd","tbart","sbart","polynomial"))
     models <- args[models]
-    # Identifier of DGP configuration for names of data and results files
-    dgp <- paste(c("k1","k2","k3","k4","k5","p","rho"),c(k1,k2,k3,k4,k5,p,rho),collapse="_",sep="_")
   } else
   {
     ## Running from R
@@ -56,9 +54,10 @@ if (isFALSE(results))
     s <- 1
     ## Which models to run
     models <- c("leaf.rdd","tbart","sbart","polynomial")
-    #models <- c("polynomial")
   }
   ## Generate data
+  ### Identifier of DGP configuration for names of data and results files
+  dgp <- paste(c("k1","k2","k3","k4","k5","p","rho"),c(k1,k2,k3,k4,k5,p,rho),collapse="_",sep="_")
   source("simulation_data.R")
   ## Estimation
   source("simulation_estimation.R")
