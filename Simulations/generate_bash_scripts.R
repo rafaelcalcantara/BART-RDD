@@ -30,7 +30,7 @@ txt[6] <- "#SBATCH --mem=10G # Total memory limit"
 txt[7] <- "#SBATCH --time=04:00:00 # Time limit hrs:min:sec"
 txt[8] <- "#SBATCH --nice"
 for (i in 1:nrow(dgp)) {
-  txt[9] <- paste0("Rscript -- verbose simulation_master.R ", paste(dgp[i,],collapse=" ")," ",
+  txt[9] <- paste0("Rscript --verbose simulation_master.R ", paste(dgp[i,],collapse=" ")," ",
                    n," ",s," ",paste(models, collapse = " ")," > outputFile.Rout 2> errorFile.Rout", " &")
   writeLines(txt,paste0("run_sims",i,".sh"))
 }
