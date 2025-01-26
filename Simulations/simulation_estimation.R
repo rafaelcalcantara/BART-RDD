@@ -175,7 +175,7 @@ if (isTRUE(cmd.line))
     stopCluster(cl)
     print("BARDDT fit done!")
     print(time)
-    saveRDS(out,paste0("Results/barddt_",dgp,".rds"))
+    # saveRDS(out,paste0("Results/barddt_",dgp,".rds"))
   }
   if ("tbart" %in% models)
   {
@@ -194,7 +194,7 @@ if (isTRUE(cmd.line))
     stopCluster(cl)
     print("T-BART fit done!")
     print(time)
-    saveRDS(out,paste0("Results/tbart_",dgp,".rds"))
+    # saveRDS(out,paste0("Results/tbart_",dgp,".rds"))
   }
   if ("sbart" %in% models)
   {
@@ -213,7 +213,7 @@ if (isTRUE(cmd.line))
     stopCluster(cl)
     print("S-BART fit done!")
     print(time)
-    saveRDS(out,paste0("Results/sbart_",dgp,".rds"))
+    # saveRDS(out,paste0("Results/sbart_",dgp,".rds"))
   }
   if ("polynomial" %in% models)
   {
@@ -228,7 +228,7 @@ if (isTRUE(cmd.line))
     stopCluster(cl)
     print("Polynomial fit done!")
     print(time)
-    saveRDS(out,paste0("Results/polynomial_",dgp,".rds"))
+    # saveRDS(out,paste0("Results/polynomial_",dgp,".rds"))
   }
 } else
 {
