@@ -125,7 +125,8 @@ fit_cluster_barddt <- function(sample)
   ys <- y[,sample]
   zs <- z[,sample]
   out <- fit.barddt(ys,xs,w,zs)
-  out$pred1 - out$pred0
+  out <- out$pred1 - out$pred0
+  write.table(out, paste0("barddt_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
 }
 fit_cluster_tbart <- function(sample)
 {
@@ -133,7 +134,8 @@ fit_cluster_tbart <- function(sample)
   ys <- y[,sample]
   zs <- z[,sample]
   out <- fit.tbart(ys,xs,w,zs)
-  out$pred1 - out$pred0
+  out <- out$pred1 - out$pred0
+  write.table(out, paste0("tbart_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
 }
 fit_cluster_sbart <- function(sample)
 {
@@ -141,7 +143,8 @@ fit_cluster_sbart <- function(sample)
   ys <- y[,sample]
   zs <- z[,sample]
   out <- fit.sbart(ys,xs,w,zs)
-  out$pred1 - out$pred0
+  out <- out$pred1 - out$pred0
+  write.table(out, paste0("sbart_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
 }
 fit_cluster_polynomial <- function(sample)
 {
@@ -149,7 +152,8 @@ fit_cluster_polynomial <- function(sample)
   ys <- y[,sample]
   zs <- z[,sample]
   out <- fit.polynomial(ys,xs,w,zs)
-  out$pred1 - out$pred0
+  out <- out$pred1 - out$pred0
+  write.table(out, paste0("polynomial_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
 }
 ## Run the models
 if (isTRUE(cmd.line))
