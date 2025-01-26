@@ -12,7 +12,7 @@ if (length(args) > 0)
 } else
 {
   ## Choose whether to run simulations or process results when sourcing script from R
-  results <- FALSE
+  results <- TRUE
 }
 ## Run simulations/process results
 if (isFALSE(results))
