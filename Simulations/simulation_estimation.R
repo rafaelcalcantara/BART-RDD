@@ -2,6 +2,10 @@
 ## BARDDT
 fit.barddt <- function(y,x,w,z)
 {
+  barddt.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
+  barddt.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
+                               max_depth=20, sample_sigma2_leaf=FALSE)
+  barddt.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
   B <- cbind(z*x,(1-z)*x, z,rep(1,n))
   test <- -Owidth+c<=x & x<=Owidth+c
   B1 <- cbind(rep(c,n), rep(0,n), rep(1,n), rep(1,n))
@@ -23,6 +27,10 @@ fit.barddt <- function(y,x,w,z)
 ## T-BART
 fit.tbart <- function(y,x,w,z)
 {
+  tbart.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
+  tbart.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
+                              max_depth=20, sample_sigma2_leaf=FALSE)
+  tbart.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
   test <- -Owidth+c<=x & x<=Owidth+c
   tbart.fit.0 = stochtree::bart(X_train= as.matrix(cbind(x,w)[z==0,]), y_train=y[z==0],
                                 mean_forest_params=tbart.mean.parmlist,
@@ -42,6 +50,10 @@ fit.tbart <- function(y,x,w,z)
 ## S-BART
 fit.sbart <- function(y,x,w,z)
 {
+  sbart.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
+  sbart.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
+                              max_depth=20, sample_sigma2_leaf=FALSE)
+  sbart.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
   test <- -Owidth+c<=x & x<=Owidth+c
   sbart.fit = stochtree::bart(X_train= as.matrix(cbind(x,z,w)), y_train=y,
                               mean_forest_params=sbart.mean.parmlist,
