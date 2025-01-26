@@ -1,5 +1,5 @@
 library(doParallel)
-no_cores <- 1
+no_cores <- 4
 c <- 0
 Owidth <- 0.1
 args <- commandArgs(trailingOnly = TRUE)
@@ -12,7 +12,7 @@ if (length(args) > 0)
 } else
 {
   ## Choose whether to run simulations or process results when sourcing script from R
-  results <- TRUE
+  results <- FALSE
 }
 ## Run simulations/process results
 if (isFALSE(results))
