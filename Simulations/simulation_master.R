@@ -1,5 +1,5 @@
 library(doParallel)
-no_cores <- 4
+no_cores <- 10
 c <- 0
 Owidth <- 0.1
 args <- commandArgs(trailingOnly = TRUE)

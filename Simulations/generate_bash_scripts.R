@@ -1,6 +1,6 @@
 file.remove(dir(".")[grep("run",dir("."))]) ## Remove existing bash scripts for running sims
 n <- 4000
-s <- 1
+s <- 10
 k1 <- 2
 k2 <- c(2,0.5)
 k3 <- c(0,1)
@@ -29,8 +29,14 @@ txt[5] <- "#SBATCH --mail-user=rafael.campellodealcantara@mccombs.utexas.edu # W
 txt[6] <- "#SBATCH --mem=10G # Total memory limit"
 txt[7] <- "#SBATCH --time=04:00:00 # Time limit hrs:min:sec"
 txt[8] <- "#SBATCH --nice"
-for (i in 1:nrow(dgp)) {
-  txt[9] <- paste0("Rscript --verbose simulation_master.R ", paste(dgp[i,],collapse=" ")," ",
-                   n," ",s," ",paste(models, collapse = " ")," > outputFile.Rout 2> errorFile.Rout", " &")
-  writeLines(txt,paste0("run_sims",i,".sh"))
+ind <- 0
+for (i in 1:nrow(dgp))
+{
+  for (j in models)
+  {
+    ind <- ind + 1
+    txt[9] <- paste0("Rscript --verbose simulation_master.R ", paste(dgp[i,],collapse=" ")," ",
+                     n," ",s," ",j," > outputFile.Rout 2> errorFile.Rout", " &")
+    writeLines(txt,paste0("run_sims",ind,".sh"))
+  }
 }
