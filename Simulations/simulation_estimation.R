@@ -2,10 +2,6 @@
 ## BARDDT
 fit.barddt <- function(y,x,w,z)
 {
-  barddt.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
-  barddt.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
-                               max_depth=20, sample_sigma2_leaf=FALSE)
-  barddt.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
   B <- cbind(z*x,(1-z)*x, z,rep(1,n))
   test <- -Owidth+c<=x & x<=Owidth+c
   B1 <- cbind(rep(c,n), rep(0,n), rep(1,n), rep(1,n))
@@ -27,10 +23,6 @@ fit.barddt <- function(y,x,w,z)
 ## T-BART
 fit.tbart <- function(y,x,w,z)
 {
-  tbart.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
-  tbart.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
-                              max_depth=20, sample_sigma2_leaf=FALSE)
-  tbart.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
   test <- -Owidth+c<=x & x<=Owidth+c
   tbart.fit.0 = stochtree::bart(X_train= as.matrix(cbind(x,w)[z==0,]), y_train=y[z==0],
                                 mean_forest_params=tbart.mean.parmlist,
@@ -50,10 +42,6 @@ fit.tbart <- function(y,x,w,z)
 ## S-BART
 fit.sbart <- function(y,x,w,z)
 {
-  sbart.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
-  sbart.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
-                              max_depth=20, sample_sigma2_leaf=FALSE)
-  sbart.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
   test <- -Owidth+c<=x & x<=Owidth+c
   sbart.fit = stochtree::bart(X_train= as.matrix(cbind(x,z,w)), y_train=y,
                               mean_forest_params=sbart.mean.parmlist,
@@ -126,7 +114,8 @@ fit_cluster_barddt <- function(sample)
   zs <- z[,sample]
   out <- fit.barddt(ys,xs,w,zs)
   out <- out$pred1 - out$pred0
-  write.table(out, paste0("barddt_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
+  write.table(out, paste0("Results/barddt_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
+  rm(out)
 }
 fit_cluster_tbart <- function(sample)
 {
@@ -135,7 +124,8 @@ fit_cluster_tbart <- function(sample)
   zs <- z[,sample]
   out <- fit.tbart(ys,xs,w,zs)
   out <- out$pred1 - out$pred0
-  write.table(out, paste0("tbart_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
+  write.table(out, paste0("Results/tbart_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
+  rm(out)
 }
 fit_cluster_sbart <- function(sample)
 {
@@ -144,7 +134,8 @@ fit_cluster_sbart <- function(sample)
   zs <- z[,sample]
   out <- fit.sbart(ys,xs,w,zs)
   out <- out$pred1 - out$pred0
-  write.table(out, paste0("sbart_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
+  write.table(out, paste0("Results/sbart_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
+  rm(out)
 }
 fit_cluster_polynomial <- function(sample)
 {
@@ -153,7 +144,8 @@ fit_cluster_polynomial <- function(sample)
   zs <- z[,sample]
   out <- fit.polynomial(ys,xs,w,zs)
   out <- out$pred1 - out$pred0
-  write.table(out, paste0("polynomial_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
+  write.table(out, paste0("Results/polynomial_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
+  rm(out)
 }
 ## Run the models
 if (isTRUE(cmd.line))
@@ -168,6 +160,10 @@ if (isTRUE(cmd.line))
   ## Fit from cluster
   if ("leaf.rdd" %in% models)
   {
+    barddt.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
+    barddt.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
+                                 max_depth=20, sample_sigma2_leaf=FALSE)
+    barddt.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
     print("BARDDT fit")
     print(paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep=": "))
     cl <- makeCluster(no_cores,type="SOCK")
@@ -183,6 +179,10 @@ if (isTRUE(cmd.line))
   }
   if ("tbart" %in% models)
   {
+    tbart.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
+    tbart.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
+                                max_depth=20, sample_sigma2_leaf=FALSE)
+    tbart.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
     print("T-BART fit")
     print(paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep=": "))
     cl <- makeCluster(no_cores,type="SOCK")
@@ -198,6 +198,10 @@ if (isTRUE(cmd.line))
   }
   if ("sbart" %in% models)
   {
+    sbart.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
+    sbart.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
+                                max_depth=20, sample_sigma2_leaf=FALSE)
+    sbart.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
     print("S-BART fit")
     print(paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep=": "))
     cl <- makeCluster(no_cores,type="SOCK")
