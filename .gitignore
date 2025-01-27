@@ -2,7 +2,7 @@ Data/
 Results/
 Tables/
 Figures/
-*.sh
+Old/
 .Rhistory
 nohup.out
 *~
@@ -19,3 +19,4 @@ Application/pollution.rds
 Application/search.rds
 *.RData
 *.Rout
+run_*
