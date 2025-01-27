@@ -37,6 +37,12 @@ if (isFALSE(results))
     ## Which models to run
     models <- which(args %in% c("leaf.rdd","tbart","sbart","polynomial"))
     models <- args[models]
+    ## Generate data
+    ### Identifier of DGP configuration for names of data and results files
+    dgp <- paste(c("k1","k2","k3","k4","k5","p","rho"),c(k1,k2,k3,k4,k5,p,rho),collapse="_",sep="_")
+    source("simulation_data.R")
+    ## Estimation
+    source("simulation_estimation_cluster.R")
   } else
   {
     ## Running from R
@@ -55,13 +61,13 @@ if (isFALSE(results))
     s <- 1
     ## Which models to run
     models <- c("leaf.rdd","tbart","sbart","polynomial")
+    ## Generate data
+    ### Identifier of DGP configuration for names of data and results files
+    dgp <- paste(c("k1","k2","k3","k4","k5","p","rho"),c(k1,k2,k3,k4,k5,p,rho),collapse="_",sep="_")
+    source("simulation_data.R")
+    ## Estimation
+    source("simulation_estimation_local.R")
   }
-  ## Generate data
-  ### Identifier of DGP configuration for names of data and results files
-  dgp <- paste(c("k1","k2","k3","k4","k5","p","rho"),c(k1,k2,k3,k4,k5,p,rho),collapse="_",sep="_")
-  source("simulation_data.R")
-  ## Estimation
-  source("simulation_estimation.R")
 } else
 {
   ## Process results
