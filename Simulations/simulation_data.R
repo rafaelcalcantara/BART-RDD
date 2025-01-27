@@ -49,7 +49,6 @@ y <- sapply(1:s, function(i) mu(x[,i],w,k1,k3) + tau(w,ate,k2.new,tau.bar)*z[,i]
 cate <- sapply(1:s, function(i) tau(w,ate,k2.new,tau.bar))
 
 ## Saving data
-if (!dir.exists("Data")) dir.create("Data") ## Create data folder, if non-existent
 saveRDS(list(y=y,x=x,z=z,w=w,cate=cate,ate=ate),paste0("Data/dgp_",dgp,".rds"))
 
 
