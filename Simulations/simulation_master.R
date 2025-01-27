@@ -65,7 +65,7 @@ if (isFALSE(results))
     dgp <- paste(c("k1","k2","k3","k4","k5","p","rho"),c(k1,k2,k3,k4,k5,p,rho),collapse="_",sep="_")
     source("simulation_data.R")
     ## Estimation
-    source("simulation_estimation_local.R")
+    # source("simulation_estimation_local.R")
   }
 } else
 {
