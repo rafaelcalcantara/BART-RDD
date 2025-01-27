@@ -36,7 +36,7 @@ for (i in 1:nrow(dgp))
   {
     ind <- ind + 1
     txt[9] <- paste0("Rscript --verbose simulation_master.R ", paste(dgp[i,],collapse=" ")," ",
-                     n," ",s," ",j," > outputFile.Rout 2> errorFile.Rout", " &")
+                     n," ",s," ",j," > outputFile_", j, "_", i, ".Rout 2> errorFile_", j, "_", i, ".Rout", " &")
     writeLines(txt,paste0("run_sims",ind,".sh"))
   }
 }
