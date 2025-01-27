@@ -1,5 +1,4 @@
 library(doParallel)
-no_cores <- 2
 c <- 0
 Owidth <- 0.1
 args <- commandArgs(trailingOnly = TRUE)
@@ -21,6 +20,7 @@ if (isFALSE(results))
   {
     ## Running from command line
     cmd.line <- TRUE
+    no_cores <- 5
     ## DGP parameters
     k1 <- as.numeric(args[1]) # larger gives more weight to x relative to w in mu(x,w)
     k2 <- as.numeric(args[2]) # relative size of sd(tau(w, x = c)) to sd(mu(w, x =c))
@@ -36,10 +36,16 @@ if (isFALSE(results))
     ## Which models to run
     models <- which(args %in% c("leaf.rdd","tbart","sbart","polynomial"))
     models <- args[models]
+    ### Identifier of DGP configuration for names of data and results files
+    dgp <- paste(c("k1","k2","k3","k4","k5","p","rho"),c(k1,k2,k3,k4,k5,p,rho),collapse="_",sep="_")
+    list2env(readRDS(paste0("Data/dgp_",dgp,".rds")),envir=.GlobalEnv)
+    ## Estimation
+    source("simulation_estimation_local.R")
   } else
   {
     ## Running from R
     cmd.line <- FALSE
+    no_cores <- 4
     ## DGP parameters
     k1 <- 2 # larger gives more weight to x relative to w in mu(x,w)
     k2 <- 0.25 # relative size of sd(tau(w, x = c)) to sd(mu(w, x =c))
@@ -51,16 +57,16 @@ if (isFALSE(results))
     ## Sample size
     n <- 4000
     ## Simulation reps
-    s <- 1
+    s <- 500
     ## Which models to run
     models <- c("leaf.rdd","tbart","sbart","polynomial")
+    ## Generate data
+    ### Identifier of DGP configuration for names of data and results files
+    dgp <- paste(c("k1","k2","k3","k4","k5","p","rho"),c(k1,k2,k3,k4,k5,p,rho),collapse="_",sep="_")
+    source("simulation_data.R")
+    ## Estimation
+    source("simulation_estimation_local.R")
   }
-  ## Generate data
-  ### Identifier of DGP configuration for names of data and results files
-  dgp <- paste(c("k1","k2","k3","k4","k5","p","rho"),c(k1,k2,k3,k4,k5,p,rho),collapse="_",sep="_")
-  source("simulation_data.R")
-  ## Estimation
-  source("simulation_estimation.R")
 } else
 {
   ## Process results
