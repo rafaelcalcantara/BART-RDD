@@ -22,8 +22,8 @@ models <- c("leaf.rdd","tbart","sbart","polynomial")
 ##
 txt <- rep(NA,9)
 txt[1] <- "#! /bin/bash"
-txt[2] <- "#SBATCH --nodes=16                    # Run all processes on a single node"
-txt[3] <- "#SBATCH --cpus-per-task=100            # Number of CPU cores per task"
+txt[2] <- "#SBATCH --nodes=1                    # Run all processes on a single node"
+txt[3] <- "#SBATCH --cpus-per-task=16            # Number of CPU cores per task"
 txt[4] <- "#SBATCH --mail-type=END,FAIL # Mail events (NONE, BEGIN, END, FAIL, ALL)"
 txt[5] <- "#SBATCH --mail-user=rafael.campellodealcantara@mccombs.utexas.edu # Where to send mail"
 txt[6] <- "#SBATCH --mem=10G # Total memory limit"
