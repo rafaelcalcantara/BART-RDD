@@ -21,7 +21,7 @@ if (isFALSE(results))
   {
     ## Running from command line
     cmd.line <- TRUE
-    no_cores <- 15
+    no_cores <- 100
     ## DGP parameters
     k1 <- as.numeric(args[1]) # larger gives more weight to x relative to w in mu(x,w)
     k2 <- as.numeric(args[2]) # relative size of sd(tau(w, x = c)) to sd(mu(w, x =c))
