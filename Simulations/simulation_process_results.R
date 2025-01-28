@@ -29,14 +29,14 @@ s0 <- 1
 s1 <- 200
 c <- 0
 Owidth <- 0.1
-# for (dgp in list.files("Results")[list.files("Results") %in% c("RMSE","Screenshots")==F])
-# {
-#   if (dgp %in% list.files("Results/RMSE") == FALSE) dir.create(paste0("Results/RMSE/",dgp))
-#   for (i in s0:s1)
-#   {
-#     calc.rmse(i)
-#   }
-# }
+for (dgp in list.files("Results")[list.files("Results") %in% c("RMSE","Screenshots")==F])
+{
+  if (dgp %in% list.files("Results/RMSE") == FALSE) dir.create(paste0("Results/RMSE/",dgp))
+  for (i in s0:s1)
+  {
+    calc.rmse(i)
+  }
+}
 # Function to generate screenshots (important to keep track while running on cluster)
 screenshot <- function(s0,s1)
 {
