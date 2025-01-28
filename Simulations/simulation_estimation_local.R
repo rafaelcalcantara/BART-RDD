@@ -1,34 +1,17 @@
+rm(list=ls()[ls() %in% c("dgp","s","no_cores","n","c","Owidth") == FALSE])
 source("simulation_estimator_functions.R")
-## Fit from R
+## Create Results and Time folders to store outputs and runtimes
+if ("Results" %in% list.files() == FALSE) dir.create("Results")
+if ("Time" %in% list.files() == FALSE) dir.create("Time")
+## Create Results and Time subfolders for current DGP
+if (dgp %in% list.files("Results") == FALSE) dir.create(paste0("Results/",dgp))
+if (dgp %in% list.files("Time") == FALSE) dir.create(paste0("Time/",dgp))
+## Run simulations
 cl <- makeCluster(no_cores,type="SOCK")
 registerDoParallel(cl)
 clusterExport(cl,varlist=ls())
 time <- system.time({
-  out <- parLapply(cl,models,fit_r)
+  out <- parLapply(cl,1:s,fit_general)
 })
 stopCluster(cl)
-print(time)
-names(out) <- models
-### Visualizing
-test <- c-Owidth <= x[,1] & x[,1] <= c+Owidth
-cate <- cate[test,]
-matplot(w[test,1],cbind(cate,rowMeans(out$leaf.rdd),rowMeans(out$tbart)),
-        col=c("black","orange","maroon"),pch=19,cex=0.8)
-matplot(w[test,1],cbind(cate,rowMeans(out$leaf.rdd),rowMeans(out$sbart)),
-        col=c("black","orange","red"),pch=19,cex=0.8)
-matplot(w[test,1],cbind(cate,rowMeans(out$leaf.rdd),out$polynomial),
-        col=c("black","orange","pink"),pch=19,cex=0.8)
-
-rmse.ate <- sqrt(mean((ate-cate)^2))
-rmse.barddt <- sqrt(mean((rowMeans(out$leaf.rdd)-cate)^2))
-rmse.tbart <- sqrt(mean((rowMeans(out$tbart)-cate)^2))
-rmse.sbart <- sqrt(mean((rowMeans(out$sbart)-cate)^2))
-rmse.polynomial <- sqrt(mean((out$polynomial-cate)^2))
-print("RMSE BARDDT:")
-print(rmse.barddt/rmse.ate)
-print("RMSE TBART:")
-print(rmse.tbart/rmse.ate)
-print("RMSE SBART:")
-print(rmse.sbart/rmse.ate)
-print("RMSE Polynomial:")
-print(rmse.polynomial/rmse.ate)
+write.table(time[3],paste0("Time/",dgp,"/total_parallel.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")

@@ -22,7 +22,7 @@ fit.barddt <- function(y,x,w,z)
   xmat_test <- cbind(rep(0,n),w)[test,]
   pred1 <- predict(barddt.fit,xmat_test,B1)$y_hat
   pred0 <- predict(barddt.fit,xmat_test,B0)$y_hat
-  return(list(pred1=pred1,pred0=pred0))
+  return(pred1-pred0)
 }
 ## T-BART
 fit.tbart <- function(y,x,w,z)
@@ -45,7 +45,7 @@ fit.tbart <- function(y,x,w,z)
   xmat_test <- cbind(c,w)[test,]
   pred1 <- predict(tbart.fit.1,xmat_test)$y_hat
   pred0 <- predict(tbart.fit.0,xmat_test)$y_hat
-  return(list(pred1=pred1,pred0=pred0))
+  return(pred1-pred0)
 }
 ## S-BART
 fit.sbart <- function(y,x,w,z)
@@ -64,7 +64,7 @@ fit.sbart <- function(y,x,w,z)
   xmat_test.0 <- cbind(c,0,w)[test,]
   pred1 <- predict(sbart.fit,xmat_test.1)$y_hat
   pred0 <- predict(sbart.fit,xmat_test.0)$y_hat
-  return(list(pred1=pred1,pred0=pred0))
+  return(pred1-pred0)
 }
 ## Polynomial
 fit.polynomial <- function(y,x,w,z)
@@ -85,77 +85,27 @@ fit.polynomial <- function(y,x,w,z)
   xmat_test.0$z <- "0"
   pred1 <- predict(poly.fit,xmat_test.1)
   pred0 <- predict(poly.fit,xmat_test.0)
-  return(list(pred1=pred1,pred0=pred0))
+  return(pred1-pred0)
 }
-# Parallelized functions
-## Run regressions from R
-fit_r <- function(model)
+# Function to run all models for 1 sample
+fit_general <- function(sample)
 {
-  if (model=="leaf.rdd")
-  {
-    xs <- x[,1]
-    ys <- y[,1]
-    zs <- z[,1]
-    out <- fit.barddt(ys,xs,w,zs)
-  } else if (model=="tbart")
-  {
-    xs <- x[,1]
-    ys <- y[,1]
-    zs <- z[,1]
-    out <- fit.tbart(ys,xs,w,zs)
-  } else if (model=="sbart")
-  {
-    xs <- x[,1]
-    ys <- y[,1]
-    zs <- z[,1]
-    out <- fit.sbart(ys,xs,w,zs)
-  } else if (model=="polynomial")
-  {
-    xs <- x[,1]
-    ys <- y[,1]
-    zs <- z[,1]
-    out <- fit.polynomial(ys,xs,w,zs)
-  }
-  out$pred1 - out$pred0
-}
-## Run regressions from cluster
-fit_cluster_barddt <- function(sample)
-{
-  xs <- x[,sample]
-  ys <- y[,sample]
-  zs <- z[,sample]
-  out <- fit.barddt(ys,xs,w,zs)
-  out <- out$pred1 - out$pred0
-  write.table(out, paste0("Results/barddt_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
-  rm(out)
-}
-fit_cluster_tbart <- function(sample)
-{
-  xs <- x[,sample]
-  ys <- y[,sample]
-  zs <- z[,sample]
-  out <- fit.tbart(ys,xs,w,zs)
-  out <- out$pred1 - out$pred0
-  write.table(out, paste0("Results/tbart_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
-  rm(out)
-}
-fit_cluster_sbart <- function(sample)
-{
-  xs <- x[,sample]
-  ys <- y[,sample]
-  zs <- z[,sample]
-  out <- fit.sbart(ys,xs,w,zs)
-  out <- out$pred1 - out$pred0
-  write.table(out, paste0("Results/sbart_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
-  rm(out)
-}
-fit_cluster_polynomial <- function(sample)
-{
-  xs <- x[,sample]
-  ys <- y[,sample]
-  zs <- z[,sample]
-  out <- fit.polynomial(ys,xs,w,zs)
-  out <- out$pred1 - out$pred0
-  write.table(out, paste0("Results/polynomial_",paste(c("k1","k2","k3","k4","k5","p","rho"),args[1:7],sep="_",collapse="_"),"_sample_",sample,".txt"), row.names = FALSE)
-  rm(out)
+  data <- readRDS(paste0("Data/",dgp,"/sample_",sample,".rds"))
+  time.barddt <- system.time({
+    write.table(fit.barddt(data$y,data$x,data$w,data$z),paste0("Results/",dgp,"/barddt_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+  })
+  time.tbart <- system.time({
+    write.table(fit.tbart(data$y,data$x,data$w,data$z),paste0("Results/",dgp,"/tbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+  })
+  time.sbart <- system.time({
+    write.table(fit.sbart(data$y,data$x,data$w,data$z),paste0("Results/",dgp,"/sbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+  })
+  time.polynomial <- system.time({
+    write.table(fit.polynomial(data$y,data$x,data$w,data$z),paste0("Results/",dgp,"/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+  })
+  write.table(cbind(time.barddt[3],sample),paste0("Time/",dgp,"/barddt.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  write.table(cbind(time.tbart[3],sample),paste0("Time/",dgp,"/tbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  write.table(cbind(time.sbart[3],sample),paste0("Time/",dgp,"/sbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  write.table(cbind(time.polynomial[3],sample),paste0("Time/",dgp,"/polynomial.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  write.table(cbind(time.barddt[3]+time.tbart[3]+time.sbart[3]+time.polynomial[3],sample),paste0("Time/",dgp,"/total_per_sample.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
 }

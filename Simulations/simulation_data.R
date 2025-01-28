@@ -49,7 +49,15 @@ y <- sapply(1:s, function(i) mu(x[,i],w,k1,k3) + tau(w,ate,k2.new,tau.bar)*z[,i]
 cate <- sapply(1:s, function(i) tau(w,ate,k2.new,tau.bar))
 
 ## Saving data
-saveRDS(list(y=y,x=x,z=z,w=w,cate=cate,ate=ate),paste0("Data/dgp_",dgp,".rds"))
+### Create data folder if it doesn't exist
+if ("Data" %in% list.files() == FALSE) dir.create("Data")
+for (i in 1:s)
+{
+  ### Create folder for current DGP if it doesn't exist
+  if (dgp %in% list.files("Data") == FALSE) dir.create(paste0("Data/",dgp))
+  filename <- paste0("Data/",dgp,"/sample_",i,".rds")
+  saveRDS(list(y=y[,i],x=x[,i],z=z[,i],w=w,cate=cate[,i],ate=ate),filename)
+}
 
 
 # print("sd(tau)")
