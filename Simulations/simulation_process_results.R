@@ -51,7 +51,7 @@ screenshot <- function(s0,s1)
 }
 # Create screenshots subfolder for current DGP if it doesn't exist
 if ("Screenshots" %in% list.files("Results") == FALSE) dir.create("Results/Screenshots")
-for (dgp in list.files("Results"))
+for (dgp in list.files("Results")[list.files("Results") %in% c("RMSE","Screenshots")==F])
 {
   if (dgp %in% list.files("Results/Screenshots") == FALSE) dir.create(paste0("Results/Screenshots/",dgp))
   screenshot(s0,s1)
