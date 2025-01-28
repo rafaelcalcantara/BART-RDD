@@ -38,18 +38,18 @@ for (dgp in list.files("Results"))
   }
 }
 # Function to generate screenshots (important to keep track while running on cluster)
-# screenshot <- function(s0,s1)
-# {
-#   out <- matrix(0,length(s0:s1),5)
-#   for (i in s0:s1)
-#   {
-#     out[i,] <- as.matrix(read.table(paste0("Results/RMSE/",dgp,"/sample_",i,".csv")))
-#   }
-#   out <- sweep(out,1,out[,5],"/")
-#   txt <- paste(c(rep("Mean",5),rep("SD",5)),rep(c("BARDDT","T-BART","S-BART","Polynomial","ATE")),c(round(colMeans(out),2),round(apply(out,2,sd),2)))
-#   writeLines(txt,paste0("Results/Screenshots/",dgp,"/sample_",s0,"_",s1,".txt"))
-# }
-# # Create screenshots subfolder for current DGP if it doesn't exist
-# if ("Screenshots" %in% list.files("Results") == FALSE) dir.create("Results/Screenshots")
-# if (dgp %in% list.files("Results/Screenshots") == FALSE) dir.create(paste0("Results/Screenshots/",dgp))
-# screenshot(1,s)
+screenshot <- function(s0,s1)
+{
+  out <- matrix(0,length(s0:s1),5)
+  for (i in s0:s1)
+  {
+    out[i,] <- as.matrix(read.table(paste0("Results/RMSE/",dgp,"/sample_",i,".csv")))
+  }
+  out <- sweep(out,1,out[,5],"/")
+  txt <- paste(c(rep("Mean",5),rep("SD",5)),rep(c("BARDDT","T-BART","S-BART","Polynomial","ATE")),c(round(colMeans(out),2),round(apply(out,2,sd),2)))
+  writeLines(txt,paste0("Results/Screenshots/",dgp,"/sample_",s0,"_",s1,".txt"))
+}
+# Create screenshots subfolder for current DGP if it doesn't exist
+if ("Screenshots" %in% list.files("Results") == FALSE) dir.create("Results/Screenshots")
+if (dgp %in% list.files("Results/Screenshots") == FALSE) dir.create(paste0("Results/Screenshots/",dgp))
+screenshot(s0,s1)
