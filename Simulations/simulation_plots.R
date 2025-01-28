@@ -21,11 +21,14 @@ for (i in 1:length(list.files("Results/RMSE")))
 }
 dev.off()
 ## Average fits per W
-pdf("Results/Figures/fits.pdf")
+pdf("Results/Figures/fits.pdf",width = 9, height = 5)
 for (i in 1:length(list.files("Results/Fits")))
 {
   dgp <- list.files("Results/Fits")[i]
   file.name <- paste0("Results/Fits/",dgp,"/sample_1.csv")
   mat <- read.table(file.name)
+  colnames(mat) <- c("W","BARDDT","T-BART","S-BART","Polynomial")
+  par(mfrow=c(1,3))
+  matplot(mat[,1],mat[,2:3],pch=19,col=c("orange","maroon"),ylab="CATE",xlab=bquote(W[1]))
 }
 dev.off()

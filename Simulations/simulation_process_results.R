@@ -36,7 +36,7 @@ point.est <- function(sample)
   tbart <- read.table(paste0("Results/",dgp,"/tbart_sample_",sample,".csv"),sep=",")
   sbart <- read.table(paste0("Results/",dgp,"/sbart_sample_",sample,".csv"),sep=",")
   polynomial <- read.table(paste0("Results/",dgp,"/polynomial_sample_",sample,".csv"),sep=",")
-  out <- cbind(W=w,BARDDT=rowMeans(barddt),`T-BART`=rowMeans(tbart),`S-BART`=rowMeans(sbart),Polynomial=polynomial)
+  out <- cbind(W=w,CATE=cate,BARDDT=rowMeans(barddt),`T-BART`=rowMeans(tbart),`S-BART`=rowMeans(sbart),Polynomial=polynomial)
   write.table(out,paste0("Results/Fits/",dgp,"/sample_",sample,".csv"), row.names = FALSE, col.names = FALSE)
 }
 # Create RMSE subfolder for current DGP if it doesn't exist
