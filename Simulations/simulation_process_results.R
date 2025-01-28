@@ -25,8 +25,8 @@ if ("RMSE" %in% list.files("Results") == FALSE) dir.create("Results/RMSE")
 # stopCluster(cl)
 ## Running from cluster
 ### Change values to whatever batch of samples to run
-s0 <- 1
-s1 <- 100
+s0 <- 101
+s1 <- 200
 c <- 0
 Owidth <- 0.1
 for (dgp in list.files("Results")[list.files("Results") %in% c("RMSE","Screenshots")==F])
