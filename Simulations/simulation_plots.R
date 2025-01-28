@@ -22,23 +22,10 @@ for (i in 1:length(list.files("Results/RMSE")))
 dev.off()
 ## Average fits per W
 pdf("Results/Figures/fits.pdf")
-for (i in 1:length(list.files("Results/RMSE")))
+for (i in 1:length(list.files("Results/Fits")))
 {
-  dgp <- list.files("Results/RMSE")[i]
-  out <- matrix(0,length(list.files(paste0("Results/RMSE/",dgp))),5)
-  for (sample in 1:length(list.files(paste0("Results/RMSE/",dgp))))
-  {
-    data <- readRDS(paste0("Data/",dgp,"/sample_",i,".rds"))
-    cate <- data$cate
-    cate <- cate[c-Owidth <= data$x & data$x <= c+Owidth]
-    file.name <- list.files(paste0("Results/RMSE/",dgp))[sample]
-    file.name <- paste0("Results/RMSE/",dgp,"/",file.name)
-    out[sample,] <- as.matrix(read.table(file.name))
-    out[sample,] <- out[sample,]/out[sample,5]
-  }
-  out <- out[,1:4]
-  colnames(out) <- c("BARDDT","T-BART","S-BART","Polynomial")
-  boxplot(out, main = paste(strsplit(dgp,"_")[[1]],collapse=" "),frame=FALSE)
-  abline(h=1,col="red")
+  dgp <- list.files("Results/Fits")[i]
+  file.name <- paste0("Results/Fits/",dgp,"/sample_1.csv")
+  mat <- read.table(file.name)
 }
 dev.off()

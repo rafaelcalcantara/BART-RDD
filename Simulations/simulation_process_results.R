@@ -37,7 +37,7 @@ point.est <- function(sample)
   sbart <- read.table(paste0("Results/",dgp,"/sbart_sample_",sample,".csv"),sep=",")
   polynomial <- read.table(paste0("Results/",dgp,"/polynomial_sample_",sample,".csv"),sep=",")
   out <- cbind(W=w,BARDDT=rowMeans(barddt),`T-BART`=rowMeans(tbart),`S-BART`=rowMeans(sbart),Polynomial=polynomial)
-  write.table(out,paste0("Results/Fits/",dgp,"/sample_",sample,".csv"), row.names = FALSE, col.names = TRUE)
+  write.table(out,paste0("Results/Fits/",dgp,"/sample_",sample,".csv"), row.names = FALSE, col.names = FALSE)
 }
 # Create RMSE subfolder for current DGP if it doesn't exist
 if ("RMSE" %in% list.files("Results") == FALSE) dir.create("Results/RMSE")
