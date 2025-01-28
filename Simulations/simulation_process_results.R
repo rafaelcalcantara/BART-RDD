@@ -30,8 +30,9 @@ s1 <- 100
 c <- 0
 Owidth <- 0.1
 if (dgp %in% list.files("Results/RMSE") == FALSE) dir.create(paste0("Results/RMSE/",dgp))
-for (dgp in list.files("Results"))
+for (j in list.files("Results"))
 {
+  dgp <- j
   for (i in s0:s1)
   {
     calc.rmse(i)
