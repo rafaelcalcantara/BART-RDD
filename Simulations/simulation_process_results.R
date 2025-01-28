@@ -29,14 +29,14 @@ s0 <- 1
 s1 <- 100
 c <- 0
 Owidth <- 0.1
-for (dgp in list.files("Results"))
-{
-  if (dgp %in% list.files("Results/RMSE") == FALSE) dir.create(paste0("Results/RMSE/",dgp))
-  for (i in s0:s1)
-  {
-    calc.rmse(i)
-  }
-}
+# for (dgp in list.files("Results"))
+# {
+#   if (dgp %in% list.files("Results/RMSE") == FALSE) dir.create(paste0("Results/RMSE/",dgp))
+#   for (i in s0:s1)
+#   {
+#     calc.rmse(i)
+#   }
+# }
 # Function to generate screenshots (important to keep track while running on cluster)
 screenshot <- function(s0,s1)
 {
@@ -52,4 +52,7 @@ screenshot <- function(s0,s1)
 # Create screenshots subfolder for current DGP if it doesn't exist
 if ("Screenshots" %in% list.files("Results") == FALSE) dir.create("Results/Screenshots")
 if (dgp %in% list.files("Results/Screenshots") == FALSE) dir.create(paste0("Results/Screenshots/",dgp))
-screenshot(s0,s1)
+for (dgp in list.files("Results"))
+{
+  screenshot(s0,s1)
+}
