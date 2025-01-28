@@ -51,7 +51,7 @@ for (i in 1:nrow(dgp))
   {
     txt[24] <- 'if ("Logs" %in% list.files() == FALSE) dir.create("Logs") ## For storing redirected output and error msgs from bash'
     txt[25] <- 'if (dgp %in% list.files("Logs") == FALSE) dir.create(paste0("Logs/",dgp))'
-    txt[26] <- 'batch <- c(1,10)'
+    txt[26] <- 'batch <- c(101,200)'
     txt[27] <- 'for (i in 0:9) { # Running simulations in batches of 10' 
     txt[28] <- 's0 <- batch[1]+i*10'
     txt[29] <- 's1 <- batch[2]+i*10'
