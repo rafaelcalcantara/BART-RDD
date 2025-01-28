@@ -13,7 +13,7 @@ rho <- 0.7
 ## Sample size
 n <- 4000
 ## Simulation reps
-s <- 10
+s <- 200
 ## Which models to run
 models <- c('leaf.rdd','tbart','sbart','polynomial')
 ## Generate data
@@ -21,4 +21,13 @@ models <- c('leaf.rdd','tbart','sbart','polynomial')
 dgp <- 'k1_2_k2_2_k3_1_k4_1_k5_2_p_5_rho_0.7'
 source("simulation_data.R")
 ## Estimation
-source("simulation_estimation_local.R")
+if ("Logs" %in% list.files() == FALSE) dir.create("Logs") ## For storing redirected output and error msgs from bash
+if (dgp %in% list.files("Logs") == FALSE) dir.create(paste0("Logs/",dgp))
+batch <- c(1,10)
+for (i in 0:19) { # Running simulations in batches of 10
+s0 <- batch[1]+i*10
+s1 <- batch[2]+i*10
+batch.args <- paste(s0,s1,dgp,n,c,Owidth,collapse=" ")
+batch.script <- paste0("nice Rscript --verbose simulation_estimation_cluster.R ",batch.args, " > Logs/", dgp, "/outputFile_batch", i+1, "_", dgp, ".Rout 2> Logs/", dgp, "/errorFile_batch", i+1, "_", dgp, ".Rout"," &")
+system(batch.script)
+}
