@@ -1,5 +1,5 @@
 cluster <- TRUE
-n <- 4000
+n <- 500
 s <- 20
 # Create necessary folders if non-existent
 ## Data

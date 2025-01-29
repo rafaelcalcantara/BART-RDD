@@ -2,16 +2,14 @@
 ## BARDDT
 fit.barddt <- function(y,x,w,z)
 {
-  barddt.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
+  barddt.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.1)
   barddt.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
-                               max_depth=20, sample_sigma2_leaf=FALSE)
+                               max_depth=20, sample_sigma2_leaf=FALSE, sigma2_leaf_init = diag(rep(0.1/150,4)))
   barddt.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
   B <- cbind(z*x,(1-z)*x, z,rep(1,n))
   test <- -Owidth+c<=x & x<=Owidth+c
   B1 <- cbind(rep(c,n), rep(0,n), rep(1,n), rep(1,n))
   B0 <- cbind(rep(0,n), rep(c,n), rep(0,n), rep(1,n))
-  s <- 1/sqrt(sum(apply(B,2,var)))
-  B <- s*B
   barddt.fit = stochtree::bart(X_train= as.matrix(cbind(x,w)), y_train=y,
                                W_train = B, mean_forest_params=barddt.mean.parmlist,
                                general_params=barddt.global.parmlist,
