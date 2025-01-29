@@ -45,7 +45,7 @@ for (i in 1:nrow(dgp))
   txt[21] <- paste0("dgp <- '", dgp.id,"'")
   txt[22] <- '## Generate the fixed w used in all settings with p features'
   txt[23] <- 'set.seed(007)'
-  txt[24] <- 'K <- 2*pracma::toeplitz(seq(1,0,length.out = p))'
+  txt[24] <- 'K <- 2*toeplitz(seq(1,0,length.out = p))'
   txt[25] <- 'w <- MASS::mvrnorm(n,rep(0,p),K)'
   txt[26] <- 'write.csv(w, paste0("Data/w_",p,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")'
   txt[27] <- "## Estimation"
