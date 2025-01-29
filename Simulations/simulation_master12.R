@@ -11,23 +11,20 @@ k5 <- 0.25 # size of the ate as a multiple of the residual standard deviation
 p <- 5
 rho <- 0.7
 ## Sample size
-n <- 4000
+n <- 500
 ## Simulation reps
-s <- 200
+s <- 10
 ## Which models to run
 models <- c('leaf.rdd','tbart','sbart','polynomial')
 ## Generate data
 ### Identifier of DGP configuration for names of data and results files
 dgp <- 'k1_2_k2_0.5_k3_1_k4_1_k5_0.25_p_5_rho_0.7'
-source("simulation_data.R")
-## Estimation
-if ("Logs" %in% list.files() == FALSE) dir.create("Logs") ## For storing redirected output and error msgs from bash
+## Generate the fixed w used in all settings with p features
+set.seed(007)
+K <- 2*toeplitz(seq(1,0,length.out = p))
+w <- MASS::mvrnorm(n,rep(0,p),K)
+write.table(w, paste0("Data/w_",p,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+## Create log folders for current DGP
 if (dgp %in% list.files("Logs") == FALSE) dir.create(paste0("Logs/",dgp))
-batch <- c(1,10)
-for (i in 0:19) { # Running simulations in batches of 10
-s0 <- batch[1]+i*10
-s1 <- batch[2]+i*10
-batch.args <- paste(s0,s1,dgp,n,c,Owidth,collapse=" ")
-batch.script <- paste0("nice Rscript --verbose simulation_estimation_cluster.R ",batch.args, " > Logs/", dgp, "/outputFile_batch", i+1, "_", dgp, ".Rout 2> Logs/", dgp, "/errorFile_batch", i+1, "_", dgp, ".Rout"," &")
-system(batch.script)
-}
+## Estimation
+source("simulation_estimation_local.R")

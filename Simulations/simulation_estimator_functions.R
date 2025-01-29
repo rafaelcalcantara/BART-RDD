@@ -19,7 +19,7 @@ fit.barddt <- function(y,x,w,z)
                                num_mcmc=1000,num_gfr=30)
   B1 <- B1[test,]
   B0 <- B0[test,]
-  xmat_test <- cbind(rep(0,n),w)[test,]
+  xmat_test <- as.matrix(cbind(rep(0,n),w)[test,])
   pred1 <- predict(barddt.fit,xmat_test,B1)$y_hat
   pred0 <- predict(barddt.fit,xmat_test,B0)$y_hat
   return(pred1-pred0)
@@ -42,7 +42,7 @@ fit.tbart <- function(y,x,w,z)
                                 general_params=tbart.global.parmlist,
                                 variance_forest_params=tbart.var.parmlist,
                                 num_mcmc=1000,num_gfr=30)
-  xmat_test <- cbind(c,w)[test,]
+  xmat_test <- as.matrix(cbind(c,w)[test,])
   pred1 <- predict(tbart.fit.1,xmat_test)$y_hat
   pred0 <- predict(tbart.fit.0,xmat_test)$y_hat
   return(pred1-pred0)
@@ -60,8 +60,8 @@ fit.sbart <- function(y,x,w,z)
                               general_params=sbart.global.parmlist,
                               variance_forest_params=sbart.var.parmlist,,
                               num_mcmc=1000,num_gfr=30)
-  xmat_test.1 <- cbind(c,1,w)[test,]
-  xmat_test.0 <- cbind(c,0,w)[test,]
+  xmat_test.1 <- as.matrix(cbind(c,1,w)[test,])
+  xmat_test.0 <- as.matrix(cbind(c,0,w)[test,])
   pred1 <- predict(sbart.fit,xmat_test.1)$y_hat
   pred0 <- predict(sbart.fit,xmat_test.0)$y_hat
   return(pred1-pred0)
@@ -95,7 +95,10 @@ fit_general <- function(sample)
 {
   set.seed(sample)
   source("simulation_data.R")
-  w <- read.csv(paste0("Data/w_",p,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+  ## Saving data
+  saveRDS(list(y=y,x=x,z=z,w=w,cate=cate),paste0("Data/dgp_",dgp,"_sample_",sample,".rds"))
+  ###
+  w <- read.table(paste0("Data/w_",p,".csv"), sep = ",")
   ate <- fit.ate(y,x)
   h <- ate$bws[2,2]
   ate <- ate$coef[3]
@@ -118,6 +121,6 @@ fit_general <- function(sample)
   write.table(cbind(time.polynomial[3],sample),paste0("Time/",dgp,"/polynomial.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   write.table(cbind(time.barddt[3]+time.tbart[3]+time.sbart[3]+time.polynomial[3],sample),paste0("Time/",dgp,"/total_per_sample.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   # Processing results
-  calc.rmse(sample)
+  calc.rmse(sample,ate)
   point.est(sample)
 }

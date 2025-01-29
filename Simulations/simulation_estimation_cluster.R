@@ -6,12 +6,13 @@ n <- as.numeric(args[4])
 c <- as.numeric(args[5])
 Owidth <- as.numeric(args[6])
 source("simulation_estimator_functions.R")
-source("simulation_process_results")
+source("simulation_process_results.R")
 ## Create relevant folders for current DGP
 if (dgp %in% list.files("Results") == FALSE) dir.create(paste0("Results/",dgp))
 if (dgp %in% list.files("Time") == FALSE) dir.create(paste0("Time/",dgp))
 if (dgp %in% list.files("Results/RMSE") == FALSE) dir.create(paste0("Results/RMSE/",dgp))
 if (dgp %in% list.files("Results/Screenshots") == FALSE) dir.create(paste0("Results/Screenshots/",dgp))
+if (dgp %in% list.files("Results/Fits") == FALSE) dir.create(paste0("Results/Fits/",dgp))
 ## Run simulations
 time <- system.time({
   for (i in s0:s1)

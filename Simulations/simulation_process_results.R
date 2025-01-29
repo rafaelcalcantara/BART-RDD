@@ -1,5 +1,5 @@
 # Function to read data, results, calculate and store RMSE
-calc.rmse <- function(sample)
+calc.rmse <- function(sample,ate)
 {
   test <- c-Owidth <= x & x <= c+Owidth
   cate <- cate[test]

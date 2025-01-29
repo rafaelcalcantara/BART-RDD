@@ -1,5 +1,6 @@
 m <- 1 # marginal mean of x
 beta <- rep(1,p)/sqrt(p)
+K <- 2*toeplitz(seq(1,0,length.out = p))
 
 beta <- rho*beta/sqrt(as.numeric(beta%*%K%*%beta))
 
@@ -43,20 +44,11 @@ mintau <- -k2.new*min(tau0(wcond) - tau.bar) + k5
 
 
 ## Sampling
-# w <- mvrnorm(n,rep(0,p),K)
+w <- MASS::mvrnorm(n,rep(0,p),K)
 x <- rnorm(n, m + w%*%beta,sqrt(1-rho^2))
 z <- as.numeric(x>=c)
 y <- mu(x,w,k1,k3,sf) + tau(w,mintau,k2.new,tau.bar)*z + rnorm(n,0,sigma_y)
-cate <- sapply(1:s, function(i) tau(w,ate,k2.new,tau.bar))
-
-# ## Saving data
-# if (!dir.exists("Data")) dir.create("Data") ## Create data folder, if non-existent
-# if (length(list.files("Data"))!=0) ## Clean up folder
-# {
-#   files <- paste0("Data/",list.files("Data"))
-#   for (i in files) file.remove(i)
-# }
-saveRDS(list(y=y,x=x,z=z,cate=cate),paste0("Data/dgp_",dgp,"_sample_",sample,".rds"))
+cate <- tau(w,mintau,k2.new,tau.bar)
 
 
 # print("sd(tau)")

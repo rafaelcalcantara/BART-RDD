@@ -47,7 +47,7 @@ for (i in 1:nrow(dgp))
   txt[23] <- 'set.seed(007)'
   txt[24] <- 'K <- 2*toeplitz(seq(1,0,length.out = p))'
   txt[25] <- 'w <- MASS::mvrnorm(n,rep(0,p),K)'
-  txt[26] <- 'write.csv(w, paste0("Data/w_",p,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")'
+  txt[26] <- 'write.table(w, paste0("Data/w_",p,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")'
   txt[27] <- '## Create log folders for current DGP'
   txt[28] <- 'if (dgp %in% list.files("Logs") == FALSE) dir.create(paste0("Logs/",dgp))'
   txt[29] <- "## Estimation"
