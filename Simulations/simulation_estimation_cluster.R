@@ -5,6 +5,7 @@ dgp <- args[3]
 n <- as.numeric(args[4])
 c <- as.numeric(args[5])
 Owidth <- as.numeric(args[6])
+p <- as.numeric(args[7])
 source("simulation_estimator_functions.R")
 source("simulation_process_results.R")
 ## Create relevant folders for current DGP
