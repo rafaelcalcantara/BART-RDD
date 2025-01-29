@@ -8,7 +8,6 @@ Owidth <- as.numeric(args[6])
 source("simulation_estimator_functions.R")
 source("simulation_process_results")
 ## Create relevant folders for current DGP
-if (dgp %in% list.files("Logs") == FALSE) dir.create(paste0("Logs/",dgp))
 if (dgp %in% list.files("Results") == FALSE) dir.create(paste0("Results/",dgp))
 if (dgp %in% list.files("Time") == FALSE) dir.create(paste0("Time/",dgp))
 if (dgp %in% list.files("Results/RMSE") == FALSE) dir.create(paste0("Results/RMSE/",dgp))

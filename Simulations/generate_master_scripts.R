@@ -48,19 +48,21 @@ for (i in 1:nrow(dgp))
   txt[24] <- 'K <- 2*toeplitz(seq(1,0,length.out = p))'
   txt[25] <- 'w <- MASS::mvrnorm(n,rep(0,p),K)'
   txt[26] <- 'write.csv(w, paste0("Data/w_",p,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")'
-  txt[27] <- "## Estimation"
+  txt[27] <- '## Create log folders for current DGP'
+  txt[28] <- 'if (dgp %in% list.files("Logs") == FALSE) dir.create(paste0("Logs/",dgp))'
+  txt[29] <- "## Estimation"
   if (isFALSE(cluster)){
-    txt[28] <- 'source("simulation_estimation_local.R")'
+    txt[30] <- 'source("simulation_estimation_local.R")'
   } else
   {
-    txt[29] <- 'batch <- c(1,10)'
-    txt[30] <- 'for (i in 0:1) { # Running simulations in batches of 10' 
-    txt[31] <- 's0 <- batch[1]+i*10'
-    txt[32] <- 's1 <- batch[2]+i*10'
-    txt[33] <- 'batch.args <- paste(s0,s1,dgp,n,c,Owidth,collapse=" ")'
-    txt[34] <- 'batch.script <- paste0("nice Rscript --verbose simulation_estimation_cluster.R ",batch.args, " > Logs/", dgp, "/outputFile_batch", i+1, "_", dgp, ".Rout 2> Logs/", dgp, "/errorFile_batch", i+1, "_", dgp, ".Rout"," &")'
-    txt[35] <- 'system(batch.script)'
-    txt[36] <- '}'
+    txt[30] <- 'batch <- c(1,10)'
+    txt[31] <- 'for (i in 0:1) { # Running simulations in batches of 10' 
+    txt[32] <- 's0 <- batch[1]+i*10'
+    txt[33] <- 's1 <- batch[2]+i*10'
+    txt[34] <- 'batch.args <- paste(s0,s1,dgp,n,c,Owidth,collapse=" ")'
+    txt[35] <- 'batch.script <- paste0("nice Rscript --verbose simulation_estimation_cluster.R ",batch.args, " > Logs/", dgp, "/outputFile_batch", i+1, "_", dgp, ".Rout 2> Logs/", dgp, "/errorFile_batch", i+1, "_", dgp, ".Rout"," &")'
+    txt[36] <- 'system(batch.script)'
+    txt[37] <- '}'
   }
   writeLines(txt,paste0("simulation_master",i,".R"))
 }
