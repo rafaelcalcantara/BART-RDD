@@ -95,7 +95,7 @@ fit_general <- function(sample)
 {
   set.seed(sample)
   source("simulation_data.R")
-  w <- read.csv("Data/w.csv", row.names = FALSE, col.names = FALSE, sep = ",")
+  w <- read.csv(paste0("Data/w_",p,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   ate <- fit.ate(y,x)
   h <- ate$bws[2,2]
   ate <- ate$coef[3]

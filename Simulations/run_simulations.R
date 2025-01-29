@@ -18,9 +18,6 @@ if ("Fits" %in% list.files("Results") == FALSE) dir.create("Results/Fits")
 if ("Screenshots" %in% list.files("Results") == FALSE) dir.create("Results/Screenshots")
 ## Times
 if ("Time" %in% list.files() == FALSE) dir.create("Time")
-# Generate the fixed w used in all settings
-w <- MASS::mvrnorm(n,rep(0,p),K)
-write.csv(w, "Data/w.csv", row.names = FALSE, col.names = FALSE, sep = ",")
 # Generate scripts for each DGP
 source("generate_master_scripts.R")
 # Run all regressions
