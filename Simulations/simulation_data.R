@@ -1,6 +1,5 @@
 m <- 1 # marginal mean of x
 beta <- rep(1,p)/sqrt(p)
-K <- 2*pracma::toeplitz(seq(1,0,length.out = p))
 
 beta <- rho*beta/sqrt(as.numeric(beta%*%K%*%beta))
 

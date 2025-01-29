@@ -45,21 +45,22 @@ for (i in 1:nrow(dgp))
   txt[21] <- paste0("dgp <- '", dgp.id,"'")
   txt[22] <- '## Generate the fixed w used in all settings with p features'
   txt[23] <- 'set.seed(007)'
-  txt[24] <- 'w <- MASS::mvrnorm(n,rep(0,p),K)'
-  txt[25] <- 'write.csv(w, paste0("Data/w_",p,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")'
-  txt[26] <- "## Estimation"
+  txt[24] <- 'K <- 2*pracma::toeplitz(seq(1,0,length.out = p))'
+  txt[25] <- 'w <- MASS::mvrnorm(n,rep(0,p),K)'
+  txt[26] <- 'write.csv(w, paste0("Data/w_",p,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")'
+  txt[27] <- "## Estimation"
   if (isFALSE(cluster)){
-    txt[27] <- 'source("simulation_estimation_local.R")'
+    txt[28] <- 'source("simulation_estimation_local.R")'
   } else
   {
-    txt[28] <- 'batch <- c(1,10)'
-    txt[29] <- 'for (i in 0:1) { # Running simulations in batches of 10' 
-    txt[30] <- 's0 <- batch[1]+i*10'
-    txt[31] <- 's1 <- batch[2]+i*10'
-    txt[32] <- 'batch.args <- paste(s0,s1,dgp,n,c,Owidth,collapse=" ")'
-    txt[33] <- 'batch.script <- paste0("nice Rscript --verbose simulation_estimation_cluster.R ",batch.args, " > Logs/", dgp, "/outputFile_batch", i+1, "_", dgp, ".Rout 2> Logs/", dgp, "/errorFile_batch", i+1, "_", dgp, ".Rout"," &")'
-    txt[34] <- 'system(batch.script)'
-    txt[35] <- '}'
+    txt[29] <- 'batch <- c(1,10)'
+    txt[30] <- 'for (i in 0:1) { # Running simulations in batches of 10' 
+    txt[31] <- 's0 <- batch[1]+i*10'
+    txt[32] <- 's1 <- batch[2]+i*10'
+    txt[33] <- 'batch.args <- paste(s0,s1,dgp,n,c,Owidth,collapse=" ")'
+    txt[34] <- 'batch.script <- paste0("nice Rscript --verbose simulation_estimation_cluster.R ",batch.args, " > Logs/", dgp, "/outputFile_batch", i+1, "_", dgp, ".Rout 2> Logs/", dgp, "/errorFile_batch", i+1, "_", dgp, ".Rout"," &")'
+    txt[35] <- 'system(batch.script)'
+    txt[36] <- '}'
   }
   writeLines(txt,paste0("simulation_master",i,".R"))
 }
