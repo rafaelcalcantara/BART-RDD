@@ -43,22 +43,19 @@ for (i in 1:nrow(dgp))
   txt[19] <- "## Generate data"
   txt[20] <- "### Identifier of DGP configuration for names of data and results files"
   txt[21] <- paste0("dgp <- '", dgp.id,"'")
-  txt[22] <- 'source("simulation_data.R")'
-  txt[23] <- "## Estimation"
+  txt[22] <- "## Estimation"
   if (isFALSE(cluster)){
-    txt[24] <- 'source("simulation_estimation_local.R")'
+    txt[23] <- 'source("simulation_estimation_local.R")'
   } else
   {
-    txt[24] <- 'if ("Logs" %in% list.files() == FALSE) dir.create("Logs") ## For storing redirected output and error msgs from bash'
-    txt[25] <- 'if (dgp %in% list.files("Logs") == FALSE) dir.create(paste0("Logs/",dgp))'
-    txt[26] <- 'batch <- c(1,10)'
-    txt[27] <- 'for (i in 0:19) { # Running simulations in batches of 10' 
-    txt[28] <- 's0 <- batch[1]+i*10'
-    txt[29] <- 's1 <- batch[2]+i*10'
-    txt[30] <- 'batch.args <- paste(s0,s1,dgp,n,c,Owidth,collapse=" ")'
-    txt[31] <- 'batch.script <- paste0("nice Rscript --verbose simulation_estimation_cluster.R ",batch.args, " > Logs/", dgp, "/outputFile_batch", i+1, "_", dgp, ".Rout 2> Logs/", dgp, "/errorFile_batch", i+1, "_", dgp, ".Rout"," &")'
-    txt[32] <- 'system(batch.script)'
-    txt[33] <- '}'
+    txt[23] <- 'batch <- c(1,10)'
+    txt[24] <- 'for (i in 0:1) { # Running simulations in batches of 10' 
+    txt[25] <- 's0 <- batch[1]+i*10'
+    txt[26] <- 's1 <- batch[2]+i*10'
+    txt[27] <- 'batch.args <- paste(s0,s1,dgp,n,c,Owidth,collapse=" ")'
+    txt[28] <- 'batch.script <- paste0("nice Rscript --verbose simulation_estimation_cluster.R ",batch.args, " > Logs/", dgp, "/outputFile_batch", i+1, "_", dgp, ".Rout 2> Logs/", dgp, "/errorFile_batch", i+1, "_", dgp, ".Rout"," &")'
+    txt[29] <- 'system(batch.script)'
+    txt[30] <- '}'
   }
   writeLines(txt,paste0("simulation_master",i,".R"))
 }

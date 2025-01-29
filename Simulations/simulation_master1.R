@@ -21,8 +21,6 @@ models <- c('leaf.rdd','tbart','sbart','polynomial')
 dgp <- 'k1_2_k2_2_k3_0_k4_0.1_k5_0.25_p_2_rho_0'
 source("simulation_data.R")
 ## Estimation
-if ("Logs" %in% list.files() == FALSE) dir.create("Logs") ## For storing redirected output and error msgs from bash
-if (dgp %in% list.files("Logs") == FALSE) dir.create(paste0("Logs/",dgp))
 batch <- c(1,10)
 for (i in 0:19) { # Running simulations in batches of 10
 s0 <- batch[1]+i*10

@@ -1,5 +1,27 @@
 cluster <- TRUE
 n <- 4000
-s <- 200
+s <- 20
+# Create necessary folders if non-existent
+## Data
+if (!dir.exists("Data")) dir.create("Data") ## Create data folder, if non-existent
+if (length(list.files("Data"))!=0) ## Clean up folder
+{
+  files <- paste0("Data/",list.files("Data"))
+  for (i in files) file.remove(i)
+}
+## Logs
+if ("Logs" %in% list.files() == FALSE) dir.create("Logs")
+## Results and subfolders
+if ("Results" %in% list.files() == FALSE) dir.create("Results")
+if ("RMSE" %in% list.files("Results") == FALSE) dir.create("Results/RMSE")
+if ("Fits" %in% list.files("Results") == FALSE) dir.create("Results/Fits")
+if ("Screenshots" %in% list.files("Results") == FALSE) dir.create("Results/Screenshots")
+## Times
+if ("Time" %in% list.files() == FALSE) dir.create("Time")
+# Generate the fixed w used in all settings
+w <- MASS::mvrnorm(n,rep(0,p),K)
+write.csv(w, "Data/w.csv", row.names = FALSE, col.names = FALSE, sep = ",")
+# Generate scripts for each DGP
 source("generate_master_scripts.R")
+# Run all regressions
 for (i in 1:14) source(paste0("simulation_master",i,".R"))

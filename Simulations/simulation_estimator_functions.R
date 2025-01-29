@@ -67,14 +67,13 @@ fit.sbart <- function(y,x,w,z)
   return(pred1-pred0)
 }
 ## Polynomial
-fit.polynomial <- function(y,x,w,z)
+fit.polynomial <- function(y,x,w,z,h)
 {
   test <- -Owidth+c<=x & x<=Owidth+c
   dfw <- data.frame(w=w)
   fmla <- as.formula(paste('y~(',paste(paste('poly(', names(dfw), ', 4)', sep=''),collapse="+"),')*poly(x,1)*z + poly(x,3)'))
   df <- data.frame(x=x,w=w,y=y,z=z)
   df$z <- as.factor(df$z)
-  h <- rdrobust::rdbwselect(y,x,c)$bws[1]
   df.train <- subset(df,c-h<=x & x<c+h)
   poly.fit <- lm(fmla,data = df.train)
   df.test <- df[test,]
@@ -87,25 +86,38 @@ fit.polynomial <- function(y,x,w,z)
   pred0 <- predict(poly.fit,xmat_test.0)
   return(pred1-pred0)
 }
+fit.ate <- function(y,x)
+{
+  return(rdrobust::rdrobust(y,x,c))
+}
 # Function to run all models for 1 sample
 fit_general <- function(sample)
 {
-  data <- readRDS(paste0("Data/",dgp,"/sample_",sample,".rds"))
+  set.seed(sample)
+  source("simulation_data.R")
+  w <- read.csv("Data/w.csv", row.names = FALSE, col.names = FALSE, sep = ",")
+  ate <- fit.ate(y,x)
+  h <- ate$bws[2,2]
+  ate <- ate$coef[3]
+  write.table(ate,paste0("Results/",dgp,"/ate_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   time.barddt <- system.time({
-    write.table(fit.barddt(data$y,data$x,data$w,data$z),paste0("Results/",dgp,"/barddt_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(fit.barddt(y,x,w,z),paste0("Results/",dgp,"/barddt_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   time.tbart <- system.time({
-    write.table(fit.tbart(data$y,data$x,data$w,data$z),paste0("Results/",dgp,"/tbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(fit.tbart(y,x,w,z),paste0("Results/",dgp,"/tbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   time.sbart <- system.time({
-    write.table(fit.sbart(data$y,data$x,data$w,data$z),paste0("Results/",dgp,"/sbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(fit.sbart(y,x,w,z),paste0("Results/",dgp,"/sbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   time.polynomial <- system.time({
-    write.table(fit.polynomial(data$y,data$x,data$w,data$z),paste0("Results/",dgp,"/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(fit.polynomial(y,x,w,z,h),paste0("Results/",dgp,"/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   write.table(cbind(time.barddt[3],sample),paste0("Time/",dgp,"/barddt.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   write.table(cbind(time.tbart[3],sample),paste0("Time/",dgp,"/tbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   write.table(cbind(time.sbart[3],sample),paste0("Time/",dgp,"/sbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   write.table(cbind(time.polynomial[3],sample),paste0("Time/",dgp,"/polynomial.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   write.table(cbind(time.barddt[3]+time.tbart[3]+time.sbart[3]+time.polynomial[3],sample),paste0("Time/",dgp,"/total_per_sample.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  # Processing results
+  calc.rmse(sample)
+  point.est(sample)
 }
