@@ -1,10 +1,10 @@
-k1 <- 2
-k2 <- c(2,0.5)
+k1 <- c(1,5)
+k2 <- c(1,0.25)
 k3 <- c(0,1)
-k4 <- c(0.1,1)
-k5 <- c(0.25,2)
-p <- c(2,5)
-rho <- c(0,0.7)
+k4 <- c(0.1,0.5)
+k5 <- c(0,1)
+p <- c(2,4)
+rho <- c(0,0.5)
 dgp <- matrix(0,14,7)
 dgp <- matrix(1,7,7)+diag(1,7)
 dgp <- rbind(dgp,matrix(2,7,7)+diag(-1,7))
@@ -55,10 +55,10 @@ for (i in 1:nrow(dgp))
     txt[30] <- 'source("simulation_estimation_local.R")'
   } else
   {
-    txt[30] <- 'batch <- c(1,10)'
+    txt[30] <- 'batch <- c(1,5)'
     txt[31] <- 'for (i in 0:1) { # Running simulations in batches of 10' 
-    txt[32] <- 's0 <- batch[1]+i*10'
-    txt[33] <- 's1 <- batch[2]+i*10'
+    txt[32] <- 's0 <- batch[1]+i*5'
+    txt[33] <- 's1 <- batch[2]+i*5'
     txt[34] <- 'batch.args <- paste(s0,s1,dgp,n,c,Owidth,paste(k1,k2,k3,k4,k5,p,rho, colapse=" "),collapse=" ")'
     txt[35] <- 'batch.script <- paste0("nice Rscript --verbose simulation_estimation_cluster.R ",batch.args, " > Logs/", dgp, "/outputFile_batch", i+1, "_", dgp, ".Rout 2> Logs/", dgp, "/errorFile_batch", i+1, "_", dgp, ".Rout"," &")'
     txt[36] <- 'system(batch.script)'
