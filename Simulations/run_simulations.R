@@ -24,5 +24,5 @@ source("generate_master_scripts.R")
 for (i in 1:7)
 {
   source(paste0("simulation_master",i,".R"))
-  Sys.sleep(5)
+  Sys.sleep(2)
 }
