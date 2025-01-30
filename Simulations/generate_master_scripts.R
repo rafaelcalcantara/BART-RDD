@@ -8,7 +8,6 @@ rho <- c(0,0.5)
 dgp <- matrix(0,14,7)
 dgp <- matrix(1,7,7)+diag(1,7)
 dgp <- rbind(dgp,matrix(2,7,7)+diag(-1,7))
-dgp[,1] <- 1
 for (i in 1:nrow(dgp))
 {
   config <- dgp[i,]
