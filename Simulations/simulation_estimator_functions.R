@@ -100,24 +100,21 @@ fit_general <- function(sample)
   write.table(ate,paste0("Results/",dgp,"/ate_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   time.barddt <- system.time({
     pred.barddt <- fit.barddt(y,x,w,z,test,c)
-    print(dim(pred.barddt))
     write.table(pred.barddt,paste0("Results/",dgp,"/barddt_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   time.tbart <- system.time({
     pred.tbart <- fit.tbart(y,x,w,z,test,c)
-    print(dim(pred.tbart))
     write.table(pred.tbart,paste0("Results/",dgp,"/tbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   time.sbart <- system.time({
     pred.sbart <- fit.sbart(y,x,w,z,test,c)
-    print(dim(pred.sbart))
     write.table(pred.sbart,paste0("Results/",dgp,"/sbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   time.polynomial <- system.time({
     pred.polynomial <- fit.polynomial(y,x,w,z,h,test,c)
-    print(dim(pred.polynomial))
     write.table(pred.polynomial,paste0("Results/",dgp,"/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
+  writeLines(c(dim(pred.barddt),dim(pred.tbart),dim(pred.sbardt),dim(pred.polynomial)),paste0("Logs/",dgp,"/sizes_",sample,".txt"))
   if (nrow(pred.barddt)!=nrow(pred.tbart) | nrow(pred.barddt)!=nrow(pred.sbart) | nrow(pred.barddt)!=length(pred.polynomial)
       | nrow(pred.tbart)!=nrow(pred.sbart) | nrow(pred.tbart)!=length(pred.polynomial) | nrow(pred.sbart)!=length(pred.polynomial))
   {
