@@ -101,12 +101,12 @@ fit_general <- function(sample)
   # time.barddt <- system.time({
   #   write.table(fit.barddt(y,x,w,z,test,c),paste0("Results/",dgp,"/barddt_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   # })
-  time.tbart <- system.time({
-    write.table(fit.tbart(y,x,w,z,test,c),paste0("Results/",dgp,"/tbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
-  })
-  # time.sbart <- system.time({
-  #   write.table(fit.sbart(y,x,w,z,test,c),paste0("Results/",dgp,"/sbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+  # time.tbart <- system.time({
+  #   write.table(fit.tbart(y,x,w,z,test,c),paste0("Results/",dgp,"/tbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   # })
+  time.sbart <- system.time({
+    write.table(fit.sbart(y,x,w,z,test,c),paste0("Results/",dgp,"/sbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+  })
   # time.polynomial <- system.time({
   #   write.table(fit.polynomial(y,x,w,z,h,test,c),paste0("Results/",dgp,"/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   # })
