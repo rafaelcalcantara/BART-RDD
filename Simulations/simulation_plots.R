@@ -1,7 +1,8 @@
-Owidth <- 0.1
-c <- 0
+# Owidth <- 0.1
+# c <- 0
 ## Boxplots per DGP
 if ("Figures" %in% list.files("Results") == FALSE) dir.create("Results/Figures")
+pdf(paste0("Results/Figures/boxplots_.pdf"))
 for (i in 1:length(list.files("Results/RMSE")))
 {
   dgp <- list.files("Results/RMSE")[i]
@@ -16,12 +17,14 @@ for (i in 1:length(list.files("Results/RMSE")))
   out <- out[,1:4]
   colnames(out) <- c("BARDDT","T-BART","S-BART","Polynomial")
   ####
-  pdf(paste0("Results/Figures/boxplots_",dgp,".pdf"))
-  boxplot(out, main = "",frame=FALSE)
+  # pdf(paste0("Results/Figures/boxplots_",dgp,".pdf"))
+  boxplot(out, main = dgp,frame=FALSE)
   abline(h=1,col="red")
-  dev.off()
+  # dev.off()
 }
+dev.off()
 ## Average fits per W
+pdf(paste0("Results/Figures/fits_.pdf"))
 for (i in 1:length(list.files("Results/Fits")))
 {
   dgp <- list.files("Results/Fits")[i]
@@ -29,7 +32,7 @@ for (i in 1:length(list.files("Results/Fits")))
   mat <- read.table(file.name)
   colnames(mat) <- c("W","BARDDT","T-BART","S-BART","Polynomial")
   ###
-  pdf(paste0("Results/Figures/fits_",dgp,".pdf"))
+  # pdf(paste0("Results/Figures/fits_",dgp,".pdf"))
   par(mfrow=c(2,2))
   matplot(mat[,1],mat[,c(2,3,4)],pch=19,cex=0.6,col=c("black","orange","maroon"),
           ylab="CATE",xlab=bquote(W[1]),bty="n")
@@ -41,8 +44,9 @@ for (i in 1:length(list.files("Results/Fits")))
   legend("center",legend=c("BARDDT","T-BART","S-BART","Polynomial"),
          col=c("orange","maroon","red","pink"),pch=19,cex=0.75,title="Estimator",title.font = 2)
   mtext(paste(strsplit(dgp,"_")[[1]],collapse=" "), side = 3, line = - 2, outer = TRUE, font = 2)
-  dev.off()
+  # dev.off()
 }
+dev.off()
 ## Average for each DGP
 rmse.mean <- matrix(0,14,11)
 colnames(rmse.mean) <- c("k1","k2","k3","k4","k5","p","rho",
