@@ -21,4 +21,4 @@ if ("Time" %in% list.files() == FALSE) dir.create("Time")
 # Generate scripts for each DGP
 source("generate_master_scripts.R")
 # Run all regressions
-for (i in 6:7) source(paste0("simulation_master",i,".R"))
+for (i in 6) source(paste0("simulation_master",i,".R"))
