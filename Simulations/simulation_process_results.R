@@ -1,15 +1,14 @@
 # Function to read data, results, calculate and store RMSE
-calc.rmse <- function(sample,ate)
+calc.rmse <- function(sample,ate,test)
 {
-  test <- c-Owidth <= x & x <= c+Owidth
   cate <- cate[test]
   barddt <- read.table(paste0("Results/",dgp,"/barddt_sample_",sample,".csv"),sep=",")
   tbart <- read.table(paste0("Results/",dgp,"/tbart_sample_",sample,".csv"),sep=",")
   sbart <- read.table(paste0("Results/",dgp,"/sbart_sample_",sample,".csv"),sep=",")
   polynomial <- read.table(paste0("Results/",dgp,"/polynomial_sample_",sample,".csv"),sep=",")
   rmse <- function(fit,true) sqrt(mean((true-fit)^2))
-  out <- cbind(rmse(rowMeans(barddt),cate),rmse(rowMeans(tbart),cate),
-               rmse(rowMeans(sbart),cate),rmse(polynomial[,1],cate),rmse(ate,cate))
+  out <- c(rmse(rowMeans(barddt),cate),rmse(rowMeans(tbart),cate),
+           rmse(rowMeans(sbart),cate),rmse(polynomial[,1],cate),rmse(ate,cate))
   write.table(out,paste0("Results/RMSE/",dgp,"/sample_",sample,".csv"), row.names = FALSE, col.names = FALSE)
 }
 # Function to generate screenshots (important to keep track while running on cluster)
@@ -25,9 +24,8 @@ screenshot <- function(s0,s1)
   writeLines("Done",paste0("Results/Screenshots/",dgp,"/sample_",s0,"_",s1,".txt"))
 }
 # Function to collect point estimates (posterior means and polynomial fit)
-point.est <- function(sample)
+point.est <- function(sample,test)
 {
-  test <- c-Owidth <= x & x <= c+Owidth
   cate <- cate[test]
   w <- w[test,1]
   barddt <- read.table(paste0("Results/",dgp,"/barddt_sample_",sample,".csv"),sep=",")
