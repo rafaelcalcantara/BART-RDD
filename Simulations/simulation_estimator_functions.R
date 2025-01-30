@@ -87,7 +87,6 @@ fit.ate <- function(y,x)
 # Function to run all models for 1 sample
 fit_general <- function(sample)
 {
-  w <- readRDS(paste0("Data/w_",p,".rds"))
   set.seed(sample)
   source("simulation_data.R")
   ## Saving data

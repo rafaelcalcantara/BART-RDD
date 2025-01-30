@@ -45,6 +45,7 @@ mintau <- -k2.new*min(tau0(wcond) - tau.bar) + k5
 
 ## Sampling
 # w <- MASS::mvrnorm(n,rep(0,p),K)
+w <- readRDS(paste0("Data/w_",p,".rds"))
 x <- rnorm(n, m + w%*%beta,sqrt(1-rho^2))
 z <- as.numeric(x>=c)
 y <- mu(x,w,k1,k3,sf) + tau(w,mintau,k2.new,tau.bar)*z + rnorm(n,0,sigma_y)
