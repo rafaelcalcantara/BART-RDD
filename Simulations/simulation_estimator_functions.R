@@ -118,6 +118,11 @@ fit_general <- function(sample)
     print(dim(pred.polynomial))
     write.table(pred.polynomial,paste0("Results/",dgp,"/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
+  if (nrow(pred.barddt)!=nrow(pred.tbart) | nrow(pred.barddt)!=nrow(pred.sbart) | nrow(pred.barddt)!=length(pred.polynomial)
+      | nrow(pred.tbart)!=nrow(pred.sbart) | nrow(pred.tbart)!=length(pred.polynomial) | nrow(pred.sbart)!=length(pred.polynomial))
+  {
+    break
+  }
   # write.table(c(time.barddt[3],sample),paste0("Time/",dgp,"/barddt.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   # write.table(c(time.tbart[3],sample),paste0("Time/",dgp,"/tbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   # write.table(c(time.sbart[3],sample),paste0("Time/",dgp,"/sbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
