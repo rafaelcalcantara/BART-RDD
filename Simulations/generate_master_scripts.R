@@ -55,13 +55,13 @@ for (i in 1:nrow(dgp))
   } else
   {
     txt[30] <- 'batch <- c(1,1)'
-    txt[31] <- 'for (i in 0:(s-1)) { # Running simulations in batches of 10' 
-    txt[32] <- 's0 <- batch[1]+i*1'
-    txt[33] <- 's1 <- batch[2]+i*1'
-    txt[34] <- 'batch.args <- paste(s0,s1,dgp,n,c,Owidth,paste(k1,k2,k3,k4,k5,p,rho, colapse=" "),collapse=" ")'
+    txt[31] <- '#for (i in 0:(s-1)) { # Running simulations in batches of 10' 
+    txt[32] <- '#s0 <- batch[1]+i*1'
+    txt[33] <- '#s1 <- batch[2]+i*1'
+    txt[34] <- 'batch.args <- paste(95,95,dgp,n,c,Owidth,paste(k1,k2,k3,k4,k5,p,rho, colapse=" "),collapse=" ")'
     txt[35] <- 'batch.script <- paste0("nice Rscript --verbose simulation_estimation_cluster.R ",batch.args, " 2>&1 Logs/", dgp, "/outputFile_", dgp,"_batch_", i+1, ".txt &")'
     txt[36] <- 'system(batch.script)'
-    txt[37] <- '}'
+    txt[37] <- '#}'
   }
   writeLines(txt,paste0("simulation_master",i,".R"))
 }
