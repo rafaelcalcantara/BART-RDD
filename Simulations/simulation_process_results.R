@@ -16,9 +16,9 @@ calc.rmse <- function(sample,ate)
 screenshot <- function(s0,s1)
 {
   out <- matrix(0,length(s0:s1),5)
-  for (i in s0:s1)
+  for (i in 1:length(s0:s1))
   {
-    out[i,] <- as.matrix(read.table(paste0("Results/RMSE/",dgp,"/sample_",i,".csv")))
+    out[i,] <- as.matrix(read.table(paste0("Results/RMSE/",dgp,"/sample_",s0+(i-1),".csv")))
   }
   out <- sweep(out,1,out[,5],"/")
   txt <- paste(c(rep("Mean",5),rep("SD",5)),rep(c("BARDDT","T-BART","S-BART","Polynomial","ATE")),c(round(colMeans(out),2),round(apply(out,2,sd),2)))
