@@ -1,6 +1,6 @@
 cluster <- TRUE
-n <- 1000
-s <- 7
+n <- 500
+s <- 13
 # Create necessary folders if non-existent
 ## Data
 if (!dir.exists("Data")) dir.create("Data") ## Create data folder, if non-existent

@@ -1,13 +1,12 @@
 # Functions that run the models
 ## BARDDT
-fit.barddt <- function(y,x,w,z)
+fit.barddt <- function(y,x,w,z,test,c)
 {
   barddt.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.1)
   barddt.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
                                max_depth=20, sample_sigma2_leaf=FALSE, sigma2_leaf_init = diag(rep(0.1/150,4)))
   # barddt.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
   B <- cbind(z*x,(1-z)*x, z,rep(1,n))
-  test <- -Owidth+c<=x & x<=Owidth+c
   B1 <- cbind(rep(c,n), rep(0,n), rep(1,n), rep(1,n))
   B0 <- cbind(rep(0,n), rep(c,n), rep(0,n), rep(1,n))
   barddt.fit = stochtree::bart(X_train= as.matrix(cbind(x,w)), y_train=y,
@@ -23,13 +22,12 @@ fit.barddt <- function(y,x,w,z)
   return(pred1-pred0)
 }
 ## T-BART
-fit.tbart <- function(y,x,w,z)
+fit.tbart <- function(y,x,w,z,test,c)
 {
   tbart.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
   tbart.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
                               max_depth=20, sample_sigma2_leaf=TRUE)
   # tbart.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
-  test <- -Owidth+c<=x & x<=Owidth+c
   tbart.fit.0 = stochtree::bart(X_train= as.matrix(cbind(x,w)[z==0,]), y_train=y[z==0],
                                 mean_forest_params=tbart.mean.parmlist,
                                 general_params=tbart.global.parmlist,
@@ -46,13 +44,12 @@ fit.tbart <- function(y,x,w,z)
   return(pred1-pred0)
 }
 ## S-BART
-fit.sbart <- function(y,x,w,z)
+fit.sbart <- function(y,x,w,z,test,c)
 {
   sbart.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
   sbart.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
                               max_depth=20, sample_sigma2_leaf=TRUE)
   # sbart.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
-  test <- -Owidth+c<=x & x<=Owidth+c
   sbart.fit = stochtree::bart(X_train= as.matrix(cbind(x,z,w)), y_train=y,
                               mean_forest_params=sbart.mean.parmlist,
                               general_params=sbart.global.parmlist,
@@ -65,9 +62,8 @@ fit.sbart <- function(y,x,w,z)
   return(pred1-pred0)
 }
 ## Polynomial
-fit.polynomial <- function(y,x,w,z,h)
+fit.polynomial <- function(y,x,w,z,h,test,c)
 {
-  test <- -Owidth+c<=x & x<=Owidth+c
   dfw <- data.frame(w=w)
   fmla <- as.formula(paste('y~(',paste(paste('poly(', names(dfw), ', 4)', sep=''),collapse="+"),')*poly(x,1)*z + poly(x,3)'))
   df <- data.frame(x=x,w=w,y=y,z=z)
@@ -100,18 +96,19 @@ fit_general <- function(sample)
   ate <- fit.ate(y,x)
   h <- ate$bws[2,2]
   ate <- ate$coef[3]
+  test <- -Owidth+c<=x & x<=Owidth+c
   write.table(ate,paste0("Results/",dgp,"/ate_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   time.barddt <- system.time({
-    write.table(fit.barddt(y,x,w,z),paste0("Results/",dgp,"/barddt_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(fit.barddt(y,x,w,z,test,c),paste0("Results/",dgp,"/barddt_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   time.tbart <- system.time({
-    write.table(fit.tbart(y,x,w,z),paste0("Results/",dgp,"/tbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(fit.tbart(y,x,w,z,test,c),paste0("Results/",dgp,"/tbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   time.sbart <- system.time({
-    write.table(fit.sbart(y,x,w,z),paste0("Results/",dgp,"/sbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(fit.sbart(y,x,w,z,test,c),paste0("Results/",dgp,"/sbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   time.polynomial <- system.time({
-    write.table(fit.polynomial(y,x,w,z,h),paste0("Results/",dgp,"/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(fit.polynomial(y,x,w,z,h,test,c),paste0("Results/",dgp,"/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   write.table(cbind(time.barddt[3],sample),paste0("Time/",dgp,"/barddt.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   write.table(cbind(time.tbart[3],sample),paste0("Time/",dgp,"/tbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
