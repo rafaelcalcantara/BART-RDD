@@ -114,7 +114,7 @@ fit_general <- function(sample)
     pred.polynomial <- fit.polynomial(y,x,w,z,h,test,c)
     write.table(pred.polynomial,paste0("Results/",dgp,"/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
-  writeLines(c(dim(pred.barddt),dim(pred.tbart),dim(pred.sbardt),length(pred.polynomial)),paste0("Logs/",dgp,"/sizes_",sample,".txt"))
+  writeLines(c(dim(pred.barddt),dim(pred.tbart),dim(pred.sbart),length(pred.polynomial)),paste0("Logs/",dgp,"/sizes_",sample,".txt"))
   if (nrow(pred.barddt)!=nrow(pred.tbart) | nrow(pred.barddt)!=nrow(pred.sbart) | nrow(pred.barddt)!=length(pred.polynomial)
       | nrow(pred.tbart)!=nrow(pred.sbart) | nrow(pred.tbart)!=length(pred.polynomial) | nrow(pred.sbart)!=length(pred.polynomial))
   {
