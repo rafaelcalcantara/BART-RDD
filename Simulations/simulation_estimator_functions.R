@@ -116,6 +116,6 @@ fit_general <- function(sample)
   write.table(c(time.polynomial[3],sample),paste0("Time/",dgp,"/polynomial.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   write.table(c(time.barddt[3]+time.tbart[3]+time.sbart[3]+time.polynomial[3],sample),paste0("Time/",dgp,"/total_per_sample.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   # Processing results
-  calc.rmse(sample,ate,test)
-  point.est(sample,test)
+  # calc.rmse(sample,ate,test)
+  # point.est(sample,test)
 }
