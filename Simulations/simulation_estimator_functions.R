@@ -87,12 +87,12 @@ fit.ate <- function(y,x)
 # Function to run all models for 1 sample
 fit_general <- function(sample)
 {
+  w <- read.table(paste0("Data/w_",p,".csv"), sep = ",")
   set.seed(sample)
   source("simulation_data.R")
   ## Saving data
   saveRDS(list(y=y,x=x,z=z,w=w,cate=cate),paste0("Data/dgp_",dgp,"_sample_",sample,".rds"))
   ###
-  w <- read.table(paste0("Data/w_",p,".csv"), sep = ",")
   writeLines(as.character(dim(w)),paste0("Logs/",dgp,"/dim_w_",sample,".csv"))
   ate <- fit.ate(y,x)
   h <- ate$bws[2,2]

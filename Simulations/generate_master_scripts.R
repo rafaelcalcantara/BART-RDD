@@ -61,7 +61,8 @@ for (i in 1:nrow(dgp))
     txt[34] <- 'batch.args <- paste(s0,s1,dgp,n,c,Owidth,paste(k1,k2,k3,k4,k5,p,rho, colapse=" "),collapse=" ")'
     txt[35] <- 'batch.script <- paste0("nice Rscript --verbose simulation_estimation_cluster.R ",batch.args, " 2>&1 Logs/", dgp, "/outputFile_", dgp,"_batch_", i+1, ".txt &")'
     txt[36] <- 'system(batch.script)'
-    txt[37] <- '}'
+    txt[37] <- 'Sys.sleep(5)'
+    txt[38] <- '}'
   }
   writeLines(txt,paste0("simulation_master",i,".R"))
 }
