@@ -14,7 +14,7 @@ fit.barddt <- function(y,x,w,z)
                                W_train = B, mean_forest_params=barddt.mean.parmlist,
                                general_params=barddt.global.parmlist,
                                # variance_forest_params=barddt.var.parmlist,
-                               num_mcmc=1000,num_gfr=30)
+                               num_mcmc=100,num_gfr=30)
   B1 <- B1[test,]
   B0 <- B0[test,]
   xmat_test <- as.matrix(cbind(rep(0,n),w)[test,])
@@ -39,7 +39,7 @@ fit.tbart <- function(y,x,w,z)
                                 mean_forest_params=tbart.mean.parmlist,
                                 general_params=tbart.global.parmlist,
                                 # variance_forest_params=tbart.var.parmlist,
-                                num_mcmc=1000,num_gfr=30)
+                                num_mcmc=100,num_gfr=30)
   xmat_test <- as.matrix(cbind(c,w)[test,])
   pred1 <- predict(tbart.fit.1,xmat_test)$y_hat
   pred0 <- predict(tbart.fit.0,xmat_test)$y_hat
@@ -57,7 +57,7 @@ fit.sbart <- function(y,x,w,z)
                               mean_forest_params=sbart.mean.parmlist,
                               general_params=sbart.global.parmlist,
                               # variance_forest_params=sbart.var.parmlist,,
-                              num_mcmc=1000,num_gfr=30)
+                              num_mcmc=100,num_gfr=30)
   xmat_test.1 <- as.matrix(cbind(c,1,w)[test,])
   xmat_test.0 <- as.matrix(cbind(c,0,w)[test,])
   pred1 <- predict(sbart.fit,xmat_test.1)$y_hat
