@@ -55,8 +55,8 @@ for (i in 1:nrow(dgp))
     txt[30] <- 'source("simulation_estimation_local.R")'
   } else
   {
-    txt[30] <- 'batch <- c(1,2)'
-    txt[31] <- 'for (i in 0:4) { # Running simulations in batches of 10' 
+    txt[30] <- 'batch <- c(1,1)'
+    txt[31] <- 'for (i in 0:9) { # Running simulations in batches of 10' 
     txt[32] <- 's0 <- batch[1]+i*2'
     txt[33] <- 's1 <- batch[2]+i*2'
     txt[34] <- 'batch.args <- paste(s0,s1,dgp,n,c,Owidth,paste(k1,k2,k3,k4,k5,p,rho, colapse=" "),collapse=" ")'
