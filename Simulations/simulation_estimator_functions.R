@@ -34,7 +34,7 @@ fit.tbart <- function(y,x,w,z)
                                 mean_forest_params=tbart.mean.parmlist,
                                 general_params=tbart.global.parmlist,
                                 # variance_forest_params=tbart.var.parmlist,
-                                num_mcmc=1000,num_gfr=30)
+                                num_mcmc=100,num_gfr=30)
   tbart.fit.1 = stochtree::bart(X_train= as.matrix(cbind(x,w)[z==1,]), y_train=y[z==1],
                                 mean_forest_params=tbart.mean.parmlist,
                                 general_params=tbart.global.parmlist,
