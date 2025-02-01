@@ -19,7 +19,10 @@ fit.barddt <- function(y,x,w,z,test,c)
   xmat_test <- as.matrix(cbind(rep(0,n),w)[test,])
   pred1 <- predict(barddt.fit,xmat_test,B1)$y_hat
   pred0 <- predict(barddt.fit,xmat_test,B0)$y_hat
-  return(pred1-pred0)
+  post <- pred1-pred0
+  yhat <- barddt.fit$y_hat_train
+  out <- list(yhat=yhat,post=post)
+  return(out)
 }
 ## T-BART
 fit.tbart <- function(y,x,w,z,test,c)
@@ -41,7 +44,11 @@ fit.tbart <- function(y,x,w,z,test,c)
   xmat_test <- as.matrix(cbind(c,w)[test,])
   pred1 <- predict(tbart.fit.1,xmat_test)$y_hat
   pred0 <- predict(tbart.fit.0,xmat_test)$y_hat
-  return(pred1-pred0)
+  post <- pred1-pred0
+  yhat0 <- tbart.fit.0$y_hat_train
+  yhat1 <- tbart.fit.1$y_hat_train
+  out <- list(yhat1=yhat1,yhat0=yhat0,post=post)
+  return(out)
 }
 ## S-BART
 fit.sbart <- function(y,x,w,z,test,c)
@@ -59,7 +66,10 @@ fit.sbart <- function(y,x,w,z,test,c)
   xmat_test.0 <- as.matrix(cbind(c,0,w)[test,])
   pred1 <- predict(sbart.fit,xmat_test.1)$y_hat
   pred0 <- predict(sbart.fit,xmat_test.0)$y_hat
-  return(pred1-pred0)
+  post <- pred1-pred0
+  yhat <- sbart.fit$y_hat_train
+  out <- list(yhat=yhat,post=post)
+  return(out)
 }
 ## Polynomial
 fit.polynomial <- function(y,x,w,z,h,test,c)
@@ -78,7 +88,10 @@ fit.polynomial <- function(y,x,w,z,h,test,c)
   xmat_test.0$z <- "0"
   pred1 <- predict(poly.fit,newdata=xmat_test.1)
   pred0 <- predict(poly.fit,newdata=xmat_test.0)
-  return(pred1-pred0)
+  cate <- pred1-pred0
+  yhat <- predict(poly.fit)
+  out <- list(yhat=yhat,cate=cate)
+  return(out)
 }
 fit.ate <- function(y,x)
 {
@@ -100,19 +113,24 @@ fit_general <- function(sample)
   write.table(ate,paste0("Results/",dgp,"/ate_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   time.barddt <- system.time({
     pred.barddt <- fit.barddt(y,x,w,z,test,c)
-    write.table(pred.barddt,paste0("Results/",dgp,"/barddt_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(pred.barddt$post,paste0("Results/",dgp,"/cate/barddt_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(pred.barddt$yhat,paste0("Results/",dgp,"/yhat/barddt_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    rm(pred.barddt)
   })
   time.tbart <- system.time({
     pred.tbart <- fit.tbart(y,x,w,z,test,c)
-    write.table(pred.tbart,paste0("Results/",dgp,"/tbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(pred.tbart$post,paste0("Results/",dgp,"/cate/tbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(pred.tbart$yhat,paste0("Results/",dgp,"/yhat/tbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   time.sbart <- system.time({
     pred.sbart <- fit.sbart(y,x,w,z,test,c)
-    write.table(pred.sbart,paste0("Results/",dgp,"/sbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(pred.sbart$post,paste0("Results/",dgp,"/cate/sbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(pred.sbart$yhat,paste0("Results/",dgp,"/yhat/sbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   time.polynomial <- system.time({
     pred.polynomial <- fit.polynomial(y,x,w,z,h,test,c)
-    write.table(pred.polynomial,paste0("Results/",dgp,"/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(pred.polynomial$cate,paste0("Results/",dgp,"/cate/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(pred.polynomial$yhat,paste0("Results/",dgp,"/yhat/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   writeLines(as.character(c(dim(pred.barddt),dim(pred.tbart),dim(pred.sbart),length(pred.polynomial))),paste0("Logs/",dgp,"/sizes_",sample,".txt"))
   if (nrow(pred.barddt)!=nrow(pred.tbart) | nrow(pred.barddt)!=nrow(pred.sbart) | nrow(pred.barddt)!=length(pred.polynomial)

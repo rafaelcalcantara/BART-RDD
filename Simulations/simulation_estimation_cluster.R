@@ -20,6 +20,10 @@ if (dgp %in% list.files("Time") == FALSE) dir.create(paste0("Time/",dgp))
 if (dgp %in% list.files("Results/RMSE") == FALSE) dir.create(paste0("Results/RMSE/",dgp))
 if (dgp %in% list.files("Results/Screenshots") == FALSE) dir.create(paste0("Results/Screenshots/",dgp))
 if (dgp %in% list.files("Results/Fits") == FALSE) dir.create(paste0("Results/Fits/",dgp))
+if ("cate" %in% list.files(paste0("Results/",dgp)) == FALSE) dir.create(paste0("Results/",dgp,"/cate"))
+if ("cate" %in% list.files(paste0("Results/Fits/",dgp)) == FALSE) dir.create(paste0("Results/Fits/",dgp,"/cate"))
+if ("yhat" %in% list.files(paste0("Results/",dgp)) == FALSE) dir.create(paste0("Results/",dgp,"/yhat"))
+if ("yhat" %in% list.files(paste0("Results/Fits/",dgp)) == FALSE) dir.create(paste0("Results/Fits/",dgp,"/yhat"))
 ## Run simulations
 time <- system.time({
   for (i in s0:s1)
