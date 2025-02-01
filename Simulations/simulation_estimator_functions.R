@@ -78,7 +78,7 @@ fit.polynomial <- function(y,x,w,z,h,test,c)
   fmla <- as.formula(paste('y~(',paste(paste('poly(', names(dfw), ', 4)', sep=''),collapse="+"),')*poly(x,1)*z + poly(x,3)'))
   df <- data.frame(x=x,w=w,y=y,z=z)
   df$z <- as.factor(df$z)
-  df.train <- subset(df,c-h<=x & x<c+h)
+  df.train <- subset(df,c-h<=x & x<=c+h)
   poly.fit <- lm(fmla,data = df.train)
   df.test <- df[test,]
   xmat_test.1 <- xmat_test.0 <- df.test

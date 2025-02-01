@@ -5,16 +5,17 @@ k4 <- c(0.1,0.5)
 k5 <- c(0,1)
 p <- c(2,4)
 rho <- c(0,0.5)
-dgp <- matrix(0,14,7)
-dgp <- matrix(1,7,7)+diag(1,7)
-dgp <- rbind(dgp,matrix(2,7,7)+diag(-1,7))
-for (i in 1:nrow(dgp))
-{
-  config <- dgp[i,]
-  dgp[i,] <- c(k1[config[1]],k2[config[2]],k3[config[3]],k4[config[4]],
-               k5[config[5]],p[config[7]],rho[config[6]])
-}
-colnames(dgp) <- c("k1","k2","k3","k4","k5","p","rho")
+# dgp <- matrix(0,14,7)
+# dgp <- matrix(1,7,7)+diag(1,7)
+# dgp <- rbind(dgp,matrix(2,7,7)+diag(-1,7))
+# for (i in 1:nrow(dgp))
+# {
+#   config <- dgp[i,]
+#   dgp[i,] <- c(k1[config[1]],k2[config[2]],k3[config[3]],k4[config[4]],
+#                k5[config[5]],p[config[7]],rho[config[6]])
+# }
+# colnames(dgp) <- c("k1","k2","k3","k4","k5","p","rho")
+dgp <- expand.grid(k1,k2,k3,k4,k5,p,rho)
 models <- c("leaf.rdd","tbart","sbart","polynomial")
 ##
 txt <- NA
@@ -54,7 +55,7 @@ for (i in 1:nrow(dgp))
     txt[30] <- 'source("simulation_estimation_local.R")'
   } else
   {
-    txt[30] <- 'batch <- c(1,5)'
+    txt[30] <- 'batch <- c(1,10)'
     txt[31] <- 'for (i in 0:floor((s-1)/batch[2])) { # Running simulations in batches of 10' 
     txt[32] <- 's0 <- batch[1]+i*batch[2]'
     txt[33] <- 's1 <- batch[2]+i*batch[2]'

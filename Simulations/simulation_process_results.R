@@ -42,12 +42,12 @@ point.est <- function(sample,test,h,c)
   sbart <- read.table(paste0("Results/",dgp,"/yhat/sbart_sample_",sample,".csv"),sep=",")
   polynomial <- read.table(paste0("Results/",dgp,"/yhat/polynomial_sample_",sample,".csv"),sep=",")
   ### Make polynomial match dimensions
-  poly.sample <- c-h<=x & x<c+h
+  poly.sample <- c-h<=x & x<=c+h
   ind <- 1
   poly <- rep(NA,length(poly.sample))
   for (i in 1:length(poly.sample))
   {
-    if (isTRUE(poly.sample))
+    if (isTRUE(poly.sample[i]))
     {
       poly[i] <- polynomial[ind]
       ind <- ind+1
@@ -60,7 +60,7 @@ point.est <- function(sample,test,h,c)
   tbart0 <- rowMeans(tbart0)
   for (i in 1:length(z))
   {
-    if (z[1]==1)
+    if (z[i]==1)
     {
       tbart[i] <- tbart1[ind1]
       ind1 <- ind1 + 1
@@ -71,6 +71,6 @@ point.est <- function(sample,test,h,c)
     }
   }
   ##
-  out <- cbind(Y=y,CATE=cate,BARDDT=rowMeans(barddt),`T-BART`=tbart,`S-BART`=rowMeans(sbart),Polynomial=poly)
+  out <- cbind(X=x,Y=y,BARDDT=rowMeans(barddt),`T-BART`=tbart,`S-BART`=rowMeans(sbart),Polynomial=poly)
   write.table(out,paste0("Results/Fits/",dgp,"/yhat/sample_",sample,".csv"), row.names = FALSE, col.names = FALSE)
 }
