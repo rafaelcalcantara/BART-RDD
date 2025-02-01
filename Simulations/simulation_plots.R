@@ -74,7 +74,7 @@ table(apply(rmse.mean[,8:11],1,function(i) which(i==min(i))))
 ## Boxplot grid
 ind <- 0
 pdf(paste0("Results/Figures/boxplots.pdf"))
-par(mfrow=c(2,3))
+par(mfrow=c(2,3),mai=c(0.7,0.4,0.4,0.1))
 for (i in 1:length(list.files("Results/RMSE")))
 {
   dgp <- list.files("Results/RMSE")[i]
@@ -95,27 +95,38 @@ for (i in 1:length(list.files("Results/RMSE")))
   if (ind==3)
   {
     boxplot(out[,-3], main = "",frame=FALSE,ylim=c(0,1.01),xaxt="n")
-    axis(1,1:3,FALSE)
-    text(x = c(0.75,1.75,2.55),
-         y = par("usr")[3] - 0.2,
-         labels = colnames(out)[c(1,2,4)],
-         xpd = NA,
-         ## Rotate the labels by 35 degrees.
-         srt = 35,
-         cex = 0.7)
-  } else 
+    axis(1,1:3,colnames(out)[-3],cex.axis=0.8)
+    # text(x = c(0.75,1.75,2.75),
+    #      y = -0.2,
+    #      labels = colnames(out)[c(1,2,4)],
+    #      xpd = NA,
+    #      ## Rotate the labels by 35 degrees.
+    #      srt = 35,
+    #      cex = 0.7)
+  } else if (ind==2)
   {
     boxplot(out[,-3], main = "",frame=FALSE,xaxt="n")
-    axis(1,1:3,FALSE)
-    text(x = c(0.75,1.75,2.55),
-         y = par("usr")[3]-0.2,
-         labels = colnames(out)[c(1,2,4)],
-         xpd = NA,
-         ## Rotate the labels by 35 degrees.
-         srt = 35,
-         cex = 0.7)
+    mtext(bquote("High signal, separable "~mu),line=1,font=2)
+    axis(1,1:3,colnames(out)[-3],cex.axis=0.8)
+    # text(x = c(0.75,1.75,2.75),
+    #      y = -0.2,
+    #      labels = colnames(out)[c(1,2,4)],
+    #      xpd = NA,
+    #      ## Rotate the labels by 35 degrees.
+    #      srt = 35,
+    #      cex = 0.7)
+  } else
+  {
+    boxplot(out[,-3], main = "",frame=FALSE,xaxt="n")
+    axis(1,1:3,colnames(out)[-3],cex.axis=0.8)
+    # text(x = c(0.75,1.75,2.75),
+    #      y = -0.2,
+    #      labels = colnames(out)[c(1,2,4)],
+    #      xpd = NA,
+    #      ## Rotate the labels by 35 degrees.
+    #      srt = 35,
+    #      cex = 0.7)
   }
-  if (ind==2) mtext(bquote("High signal, separable "~mu),line=1,font=2)
   abline(h=1,col="red")
   # dev.off()
 }
@@ -136,16 +147,30 @@ for (i in 1:length(list.files("Results/RMSE")))
   colnames(out) <- c("BARDDT","T-BART","S-BART","Polynomial")
   ####
   # pdf(paste0("Results/Figures/boxplots_",dgp,".pdf"))
-  boxplot(out[,-3], main = "",frame=FALSE,xaxt="n")
-  axis(1,1:3,FALSE)
-  text(x = c(0.75,1.75,2.55),
-       y = par("usr")[3] - 0.2,
-       labels = colnames(out)[c(1,2,4)],
-       xpd = NA,
-       ## Rotate the labels by 35 degrees.
-       srt = 35,
-       cex = 0.7)
-  if (ind==5) mtext(bquote("Low signal, non-separable "~mu),line=1,font=2)
+  if (ind==5)
+  {
+    boxplot(out[,-3], main = "",frame=FALSE,xaxt="n")
+    mtext(bquote("Low signal, non-separable "~mu),line=1,font=2)
+    axis(1,1:3,colnames(out)[-3],cex.axis=0.8)
+    # text(x = c(0.75,1.75,2.75),
+    #      y = -0.2,
+    #      labels = colnames(out)[c(1,2,4)],
+    #      xpd = NA,
+    #      ## Rotate the labels by 35 degrees.
+    #      srt = 35,
+    #      cex = 0.7)
+  } else
+  {
+    boxplot(out[,-3], main = "",frame=FALSE,xaxt="n")
+    axis(1,1:3,colnames(out)[-3],cex.axis=0.8)
+    # text(x = c(0.75,1.75,2.75),
+    #      y = -0.2,
+    #      labels = colnames(out)[c(1,2,4)],
+    #      xpd = NA,
+    #      ## Rotate the labels by 35 degrees.
+    #      srt = 35,
+    #      cex = 0.7)
+  }
   abline(h=1,col="red")
   # dev.off()
 }

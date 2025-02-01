@@ -59,7 +59,7 @@ for (i in 1:nrow(dgp))
     txt[32] <- 's0 <- batch[1]+i*batch[2]'
     txt[33] <- 's1 <- batch[2]+i*batch[2]'
     txt[34] <- 'batch.args <- paste(s0,s1,dgp,n,c,Owidth,paste(k1,k2,k3,k4,k5,p,rho, colapse=" "),collapse=" ")'
-    txt[35] <- 'batch.script <- paste0("nice Rscript --verbose simulation_estimation_cluster.R ",batch.args, " 2>&1 Logs/", dgp, "/outputFile_batch_", i+1, ".txt &")'
+    txt[35] <- 'batch.script <- paste0("nice Rscript --verbose simulation_estimation_cluster.R ",batch.args, " > Logs/", dgp, "/outputFile_batch_", s0, "_", s1, ".Rout 2>&1 &")'
     txt[36] <- 'system(batch.script)'
     txt[37] <- 'Sys.sleep(1)'
     txt[38] <- '}'
