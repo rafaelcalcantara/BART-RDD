@@ -14,8 +14,8 @@ rho <- c(0,0.5)
 #   dgp[i,] <- c(k1[config[1]],k2[config[2]],k3[config[3]],k4[config[4]],
 #                k5[config[5]],p[config[7]],rho[config[6]])
 # }
-# colnames(dgp) <- c("k1","k2","k3","k4","k5","p","rho")
 dgp <- expand.grid(k1,k2,k3,k4,k5,p,rho)
+colnames(dgp) <- c("k1","k2","k3","k4","k5","p","rho")
 models <- c("leaf.rdd","tbart","sbart","polynomial")
 ##
 txt <- NA
