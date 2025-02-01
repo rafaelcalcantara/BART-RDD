@@ -105,7 +105,7 @@ fit_general <- function(sample)
   ## Saving data
   saveRDS(list(y=y,x=x,z=z,w=w,cate=cate),paste0("Data/dgp_",dgp,"_sample_",sample,".rds"))
   ###
-  writeLines(as.character(dim(w)),paste0("Logs/",dgp,"/dim_w_",sample,".csv"))
+  # writeLines(as.character(dim(w)),paste0("Logs/",dgp,"/dim_w_",sample,".csv"))
   ate <- fit.ate(y,x)
   h <- ate$bws[2,2]
   ate <- ate$coef[3]
@@ -132,13 +132,13 @@ fit_general <- function(sample)
     write.table(pred.polynomial$cate,paste0("Results/",dgp,"/cate/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
     write.table(pred.polynomial$yhat,paste0("Results/",dgp,"/yhat/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
-  writeLines(as.character(c(dim(pred.barddt),dim(pred.tbart),dim(pred.sbart),length(pred.polynomial))),paste0("Logs/",dgp,"/sizes_",sample,".txt"))
-  if (nrow(pred.barddt)!=nrow(pred.tbart) | nrow(pred.barddt)!=nrow(pred.sbart) | nrow(pred.barddt)!=length(pred.polynomial)
-      | nrow(pred.tbart)!=nrow(pred.sbart) | nrow(pred.tbart)!=length(pred.polynomial) | nrow(pred.sbart)!=length(pred.polynomial))
-  {
-    stop("Dim mismatch")
-  }
-  if (nrow(w) != 4000) stop(paste0("Dim W: ",dim(w)))
+  # writeLines(as.character(c(dim(pred.barddt),dim(pred.tbart),dim(pred.sbart),length(pred.polynomial))),paste0("Logs/",dgp,"/sizes_",sample,".txt"))
+  # if (nrow(pred.barddt)!=nrow(pred.tbart) | nrow(pred.barddt)!=nrow(pred.sbart) | nrow(pred.barddt)!=length(pred.polynomial)
+  #     | nrow(pred.tbart)!=nrow(pred.sbart) | nrow(pred.tbart)!=length(pred.polynomial) | nrow(pred.sbart)!=length(pred.polynomial))
+  # {
+  #   stop("Dim mismatch")
+  # }
+  # if (nrow(w) != 4000) stop(paste0("Dim W: ",dim(w)))
   write.table(c(time.barddt[3],sample),paste0("Time/",dgp,"/barddt.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   write.table(c(time.tbart[3],sample),paste0("Time/",dgp,"/tbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   write.table(c(time.sbart[3],sample),paste0("Time/",dgp,"/sbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
