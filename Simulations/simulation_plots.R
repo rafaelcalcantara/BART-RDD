@@ -71,6 +71,12 @@ subset(rmse.mean,k3==0)
 rmse.mean
 apply(rmse.mean[,8:11],1,function(i) which(i==min(i)))
 table(apply(rmse.mean[,8:11],1,function(i) which(i==min(i))))
+print(xtable::xtable(subset(rmse.mean,(k1==1 & k2==1 & k3==0 & k4==0.1) | (k1==5 & k2==0.25 & k3==1 & k4==0.5)),
+                     caption="Average RMSE per DGP, also divided here by the RMSE of the naive ATE estimator",
+                     label="tab:rmse.average",
+                     digits=2,
+                     align=rep("c",1+ncol(rmse.mean))),
+      include.rownames=FALSE)
 ## Boxplot grid
 ind <- 0
 pdf(paste0("Results/Figures/boxplots.pdf"))
@@ -176,28 +182,58 @@ for (i in 1:length(list.files("Results/RMSE")))
 }
 dev.off()
 ##
-pdf(paste0("Results/Figures/fits_.pdf"))
-par(mfrow=c(3,2))
 for (i in 1:length(list.files("Results/Fits")))
 {
   dgp <- list.files("Results/Fits")[i]
-  if (strsplit(dgp,"_")[[1]][2]!="1" |strsplit(dgp,"_")[[1]][4]!="1" | strsplit(dgp,"_")[[1]][6]!="0" | strsplit(dgp,"_")[[1]][8]!="0.1") next
+  if (strsplit(dgp,"_")[[1]][2]!="5" |strsplit(dgp,"_")[[1]][4]!="0.25" |
+      strsplit(dgp,"_")[[1]][6]!="1" | strsplit(dgp,"_")[[1]][8]!="0.5" |
+      strsplit(dgp,"_")[[1]][10]!="0" | strsplit(dgp,"_")[[1]][12]!="4" |
+      strsplit(dgp,"_")[[1]][14]!="0.5") next
+  file.name <- paste0("Results/Fits/",dgp,"/sample_8.csv")
+  mat <- read.table(file.name)
+  colnames(mat) <- c("W","BARDDT","T-BART","S-BART","Polynomial")
+  matplot(mat[,-1],type="n")
+  ylim <- par("usr")[3:4]
+  ###
+  pdf(paste0("Results/Figures/fits_hard.pdf"),width=7,height=12)
+  par(mfrow=c(2,2))
+  matplot(mat[,1],mat[,c(2,3,4)],pch=19,cex=0.6,col=c("black","orange","maroon"),
+          ylab="CATE",xlab=bquote(W[1]),bty="n",ylim=ylim)
+  matplot(mat[,1],mat[,c(2,3,5)],pch=19,cex=0.6,col=c("black","orange","red"),
+          ylab="CATE",xlab=bquote(W[1]),bty="n",ylim=ylim)
+  matplot(mat[,1],mat[,c(2,3,6)],pch=19,cex=0.6,col=c("black","orange","pink"),
+          ylab="CATE",xlab=bquote(W[1]),bty="n",ylim=ylim)
+  plot.new()
+  legend("center",legend=c("BARDDT","T-BART","S-BART","Polynomial"),
+         col=c("orange","maroon","red","pink"),pch=19,cex=1.25,title="Estimator",title.font = 2)
+  # mtext(paste(strsplit(dgp,"_")[[1]],collapse=" "), side = 3, line = - 2, outer = TRUE, font = 2)
+  dev.off()
+}
+#####
+for (i in 1:length(list.files("Results/Fits")))
+{
+  dgp <- list.files("Results/Fits")[i]
+  if (strsplit(dgp,"_")[[1]][2]!="1" |strsplit(dgp,"_")[[1]][4]!="1" |
+      strsplit(dgp,"_")[[1]][6]!="0" | strsplit(dgp,"_")[[1]][8]!="0.1" |
+      strsplit(dgp,"_")[[1]][10]!="0" | strsplit(dgp,"_")[[1]][12]!="2" |
+      strsplit(dgp,"_")[[1]][14]!="0.5") next
   file.name <- paste0("Results/Fits/",dgp,"/sample_1.csv")
   mat <- read.table(file.name)
   colnames(mat) <- c("W","BARDDT","T-BART","S-BART","Polynomial")
+  matplot(mat[,-1],type="n")
+  ylim <- par("usr")[3:4]
   ###
-  # pdf(paste0("Results/Figures/fits_",dgp,".pdf"))
+  pdf(paste0("Results/Figures/fits_easy.pdf"),width=7,height=12)
   par(mfrow=c(2,2))
   matplot(mat[,1],mat[,c(2,3,4)],pch=19,cex=0.6,col=c("black","orange","maroon"),
-          ylab="CATE",xlab=bquote(W[1]),bty="n")
+          ylab="CATE",xlab=bquote(W[1]),bty="n",ylim=ylim)
   matplot(mat[,1],mat[,c(2,3,5)],pch=19,cex=0.6,col=c("black","orange","red"),
-          ylab="CATE",xlab=bquote(W[1]),bty="n")
+          ylab="CATE",xlab=bquote(W[1]),bty="n",ylim=ylim)
   matplot(mat[,1],mat[,c(2,3,6)],pch=19,cex=0.6,col=c("black","orange","pink"),
-          ylab="CATE",xlab=bquote(W[1]),bty="n")
+          ylab="CATE",xlab=bquote(W[1]),bty="n",ylim=ylim)
   plot.new()
   legend("center",legend=c("BARDDT","T-BART","S-BART","Polynomial"),
-         col=c("orange","maroon","red","pink"),pch=19,cex=0.75,title="Estimator",title.font = 2)
-  mtext(paste(strsplit(dgp,"_")[[1]],collapse=" "), side = 3, line = - 2, outer = TRUE, font = 2)
-  # dev.off()
+         col=c("orange","maroon","red","pink"),pch=19,cex=1.25,title="Estimator",title.font = 2)
+  # mtext(paste(strsplit(dgp,"_")[[1]],collapse=" "), side = 3, line = - 2, outer = TRUE, font = 2)
+  dev.off()
 }
-dev.off()
