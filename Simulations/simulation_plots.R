@@ -96,22 +96,24 @@ for (i in 1:length(list.files("Results/RMSE")))
   {
     boxplot(out[,-3], main = "",frame=FALSE,ylim=c(0,1.01),xaxt="n")
     axis(1,1:3,FALSE)
-    text(x = 1:3,
-         y = par("usr")[3] - 0.45,
+    text(x = c(0.75,1.75,2.55),
+         y = par("usr")[3] - 0.2,
          labels = colnames(out)[c(1,2,4)],
          xpd = NA,
-         ## Rotate the labels by 45 degrees.
-         srt = 45)
+         ## Rotate the labels by 35 degrees.
+         srt = 35,
+         cex = 0.7)
   } else 
   {
     boxplot(out[,-3], main = "",frame=FALSE,xaxt="n")
     axis(1,1:3,FALSE)
-    text(x = 1:3,
-         y = par("usr")[3] - 0.45,
+    text(x = c(0.75,1.75,2.55),
+         y = par("usr")[3]-0.2,
          labels = colnames(out)[c(1,2,4)],
          xpd = NA,
-         ## Rotate the labels by 45 degrees.
-         srt = 45)
+         ## Rotate the labels by 35 degrees.
+         srt = 35,
+         cex = 0.7)
   }
   if (ind==2) mtext(bquote("High signal, separable "~mu),line=1,font=2)
   abline(h=1,col="red")
@@ -136,12 +138,13 @@ for (i in 1:length(list.files("Results/RMSE")))
   # pdf(paste0("Results/Figures/boxplots_",dgp,".pdf"))
   boxplot(out[,-3], main = "",frame=FALSE,xaxt="n")
   axis(1,1:3,FALSE)
-  text(x = 1:3,
-       y = par("usr")[3] - 0.45,
+  text(x = c(0.75,1.75,2.55),
+       y = par("usr")[3] - 0.2,
        labels = colnames(out)[c(1,2,4)],
        xpd = NA,
-       ## Rotate the labels by 45 degrees.
-       srt = 45)
+       ## Rotate the labels by 35 degrees.
+       srt = 35,
+       cex = 0.7)
   if (ind==5) mtext(bquote("Low signal, non-separable "~mu),line=1,font=2)
   abline(h=1,col="red")
   # dev.off()

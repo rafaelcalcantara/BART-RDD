@@ -24,7 +24,7 @@ screenshot <- function(s0,s1)
   writeLines(txt,paste0("Results/Screenshots/",dgp,"/sample_",s0,"_",s1,".txt"))
 }
 # Function to collect point estimates (posterior means and polynomial fit)
-point.est <- function(sample,test)
+point.est <- function(sample,test,h,c)
 {
   ## CATE
   cate <- cate[test]
