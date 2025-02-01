@@ -37,7 +37,8 @@ point.est <- function(sample,test)
   write.table(out,paste0("Results/Fits/",dgp,"/cate/sample_",sample,".csv"), row.names = FALSE, col.names = FALSE)
   ## Yhat
   barddt <- read.table(paste0("Results/",dgp,"/yhat/barddt_sample_",sample,".csv"),sep=",")
-  tbart <- read.table(paste0("Results/",dgp,"/yhat/tbart_sample_",sample,".csv"),sep=",")
+  tbart1 <- read.table(paste0("Results/",dgp,"/yhat/tbart1_sample_",sample,".csv"),sep=",")
+  tbart0 <- read.table(paste0("Results/",dgp,"/yhat/tbart0_sample_",sample,".csv"),sep=",")
   sbart <- read.table(paste0("Results/",dgp,"/yhat/sbart_sample_",sample,".csv"),sep=",")
   polynomial <- read.table(paste0("Results/",dgp,"/yhat/polynomial_sample_",sample,".csv"),sep=",")
   ### Make polynomial match dimensions
@@ -52,6 +53,24 @@ point.est <- function(sample,test)
       ind <- ind+1
     }
   }
-  out <- cbind(Y=y,CATE=cate,BARDDT=rowMeans(barddt),`T-BART`=rowMeans(tbart),`S-BART`=rowMeans(sbart),Polynomial=poly)
+  ## Make T-BART match dimensions
+  ind0 <- ind1 <- 1
+  tbart <- rep(NA,length(z))
+  tbart1 <- rowMeans(tbart1)
+  tbart0 <- rowMeans(tbart0)
+  for (i in 1:length(z))
+  {
+    if (z[1]==1)
+    {
+      tbart[i] <- tbart1[ind1]
+      ind1 <- ind1 + 1
+    } else
+    {
+      tbart[i] <- tbart0[ind0]
+      ind0 <- ind0 + 1
+    }
+  }
+  ##
+  out <- cbind(Y=y,CATE=cate,BARDDT=rowMeans(barddt),`T-BART`=tbart,`S-BART`=rowMeans(sbart),Polynomial=poly)
   write.table(out,paste0("Results/Fits/",dgp,"/yhat/sample_",sample,".csv"), row.names = FALSE, col.names = FALSE)
 }
