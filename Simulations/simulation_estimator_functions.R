@@ -120,7 +120,8 @@ fit_general <- function(sample)
   time.tbart <- system.time({
     pred.tbart <- fit.tbart(y,x,w,z,test,c)
     write.table(pred.tbart$post,paste0("Results/",dgp,"/cate/tbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
-    write.table(pred.tbart$yhat,paste0("Results/",dgp,"/yhat/tbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(pred.tbart$yhat1,paste0("Results/",dgp,"/yhat/tbart1_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+    write.table(pred.tbart$yhat0,paste0("Results/",dgp,"/yhat/tbart0_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   time.sbart <- system.time({
     pred.sbart <- fit.sbart(y,x,w,z,test,c)
