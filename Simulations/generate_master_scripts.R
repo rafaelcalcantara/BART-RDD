@@ -55,7 +55,7 @@ for (i in 1:nrow(dgp))
     txt[30] <- 'source("simulation_estimation_local.R")'
   } else
   {
-    txt[30] <- 'batch <- c(1,10)'
+    txt[30] <- 'batch <- c(1,5)'
     txt[31] <- 'for (i in 0:floor((s-1)/batch[2])) { # Running simulations in batches of 10' 
     txt[32] <- 's0 <- batch[1]+i*batch[2]'
     txt[33] <- 's1 <- batch[2]+i*batch[2]'

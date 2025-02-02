@@ -49,7 +49,7 @@ point.est <- function(sample,test,h,c)
   {
     if (isTRUE(poly.sample[i]))
     {
-      poly[i] <- polynomial[ind]
+      poly[i] <- polynomial[ind,]
       ind <- ind+1
     }
   }
