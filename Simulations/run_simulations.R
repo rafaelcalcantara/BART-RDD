@@ -1,6 +1,6 @@
 cluster <- TRUE
 n <- 4000
-s <- 10
+s <- 100
 # Create necessary folders if non-existent
 ## Data
 if (!dir.exists("Data")) dir.create("Data") ## Create data folder, if non-existent
@@ -21,7 +21,7 @@ if ("Time" %in% list.files() == FALSE) dir.create("Time")
 # Generate scripts for each DGP
 source("generate_master_scripts.R")
 # Run all regressions
-for (i in 1:1)
+for (i in 1:128)
 {
   source(paste0("simulation_master",i,".R"))
   Sys.sleep(1)
