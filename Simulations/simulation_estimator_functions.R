@@ -10,7 +10,7 @@ fit.barddt <- function(y,x,w,z,test,c)
   B1 <- cbind(rep(c,n), rep(0,n), rep(1,n), rep(1,n))
   B0 <- cbind(rep(0,n), rep(c,n), rep(0,n), rep(1,n))
   barddt.fit = stochtree::bart(X_train= as.matrix(cbind(x,w)), y_train=y,
-                               W_train = B, mean_forest_params=barddt.mean.parmlist,
+                               leaf_basis_train = B, mean_forest_params=barddt.mean.parmlist,
                                general_params=barddt.global.parmlist,
                                # variance_forest_params=barddt.var.parmlist,
                                num_mcmc=1000,num_gfr=30)
