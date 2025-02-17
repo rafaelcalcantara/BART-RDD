@@ -1,5 +1,5 @@
 # Function to read data, results, calculate and store RMSE
-calc.rmse <- function(sample,ate,test)
+calc.rmse <- function(sample,ate,test,pred.barddt,pred.tbart,pred.sbart,pred.polynomial)
 {
   cate <- cate[test]
   barddt <- pred.barddt$post
@@ -24,7 +24,7 @@ screenshot <- function(s0,s1)
   writeLines(txt,paste0("Results/Screenshots/",dgp,"/sample_",s0,"_",s1,".txt"))
 }
 # Function to collect point estimates (posterior means and polynomial fit)
-point.est <- function(sample,test,h,c)
+point.est <- function(sample,test,h,c,pred.barddt,pred.tbart,pred.sbart,pred.polynomial)
 {
   ## CATE
   cate <- cate[test]
