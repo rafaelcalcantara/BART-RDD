@@ -30,6 +30,6 @@ time <- system.time({
   {
     fit_general(i)
   }
-  screenshot(s0,s1)
+  # screenshot(s0,s1)
 })
 write.table(time[3],paste0("Time/",dgp,"/total_cluster.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")

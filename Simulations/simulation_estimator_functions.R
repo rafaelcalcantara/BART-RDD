@@ -113,33 +113,16 @@ fit_general <- function(sample)
   write.table(ate,paste0("Results/",dgp,"/ate_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   time.barddt <- system.time({
     pred.barddt <- fit.barddt(y,x,w,z,test,c)
-    write.table(pred.barddt$post,paste0("Results/",dgp,"/cate/barddt_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
-    write.table(pred.barddt$yhat,paste0("Results/",dgp,"/yhat/barddt_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
-    rm(pred.barddt)
   })
   time.tbart <- system.time({
     pred.tbart <- fit.tbart(y,x,w,z,test,c)
-    write.table(pred.tbart$post,paste0("Results/",dgp,"/cate/tbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
-    write.table(pred.tbart$yhat1,paste0("Results/",dgp,"/yhat/tbart1_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
-    write.table(pred.tbart$yhat0,paste0("Results/",dgp,"/yhat/tbart0_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   time.sbart <- system.time({
     pred.sbart <- fit.sbart(y,x,w,z,test,c)
-    write.table(pred.sbart$post,paste0("Results/",dgp,"/cate/sbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
-    write.table(pred.sbart$yhat,paste0("Results/",dgp,"/yhat/sbart_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
   time.polynomial <- system.time({
     pred.polynomial <- fit.polynomial(y,x,w,z,h,test,c)
-    write.table(pred.polynomial$cate,paste0("Results/",dgp,"/cate/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
-    write.table(pred.polynomial$yhat,paste0("Results/",dgp,"/yhat/polynomial_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
   })
-  # writeLines(as.character(c(dim(pred.barddt),dim(pred.tbart),dim(pred.sbart),length(pred.polynomial))),paste0("Logs/",dgp,"/sizes_",sample,".txt"))
-  # if (nrow(pred.barddt)!=nrow(pred.tbart) | nrow(pred.barddt)!=nrow(pred.sbart) | nrow(pred.barddt)!=length(pred.polynomial)
-  #     | nrow(pred.tbart)!=nrow(pred.sbart) | nrow(pred.tbart)!=length(pred.polynomial) | nrow(pred.sbart)!=length(pred.polynomial))
-  # {
-  #   stop("Dim mismatch")
-  # }
-  # if (nrow(w) != 4000) stop(paste0("Dim W: ",dim(w)))
   write.table(c(time.barddt[3],sample),paste0("Time/",dgp,"/barddt.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   write.table(c(time.tbart[3],sample),paste0("Time/",dgp,"/tbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   write.table(c(time.sbart[3],sample),paste0("Time/",dgp,"/sbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")

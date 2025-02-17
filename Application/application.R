@@ -129,7 +129,7 @@ cate <- rpart(y~.,data.frame(y=rowMeans(pred),w[test,]),control = rpart.control(
 nodes <- rep(NA,nrow(cate$frame))
 for (i in 1:length(nodes))
 {
-  if (cate$frame$yval[i]>0.25) nodes[i] <- "slateblue1"
+  if (cate$frame$yval[i]>0.25) nodes[i] <- "gold2"
   else if (cate$frame$yval[i]<0.15) nodes[i] <- "tomato3"
   else nodes[i] <- "lightblue3"
 }
