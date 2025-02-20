@@ -1,34 +1,24 @@
 source("simulation_estimator_functions.R")
-## Fit from R
-cl <- makeCluster(no_cores,type="SOCK")
-registerDoParallel(cl)
-clusterExport(cl,varlist=ls())
+source("simulation_process_results.R")
+## Create relevant folders for current DGP
+if (dgp %in% list.files("Results") == FALSE) dir.create(paste0("Results/",dgp))
+if (dgp %in% list.files("Time") == FALSE) dir.create(paste0("Time/",dgp))
+if (dgp %in% list.files("Results/RMSE") == FALSE) dir.create(paste0("Results/RMSE/",dgp))
+if (dgp %in% list.files("Results/Screenshots") == FALSE) dir.create(paste0("Results/Screenshots/",dgp))
+if (dgp %in% list.files("Results/Fits") == FALSE) dir.create(paste0("Results/Fits/",dgp))
+## Run simulations
+# cl <- makeCluster(no_cores,type="SOCK")
+# registerDoParallel(cl)
+# clusterExport(cl,varlist=ls())
+# time <- system.time({
+#   out <- parLapply(cl,1:s,fit_general)
+# })
+# stopCluster(cl)
 time <- system.time({
-  out <- parLapply(cl,models,fit_r)
+  for (i in 1:s)
+  {
+    fit_general(i)
+  }
+  # screenshot(s0,s1)
 })
-stopCluster(cl)
-print(time)
-names(out) <- models
-### Visualizing
-test <- c-Owidth <= x[,1] & x[,1] <= c+Owidth
-cate <- cate[test,]
-matplot(w[test,1],cbind(cate,rowMeans(out$leaf.rdd),rowMeans(out$tbart)),
-        col=c("black","orange","maroon"),pch=19,cex=0.8)
-matplot(w[test,1],cbind(cate,rowMeans(out$leaf.rdd),rowMeans(out$sbart)),
-        col=c("black","orange","red"),pch=19,cex=0.8)
-matplot(w[test,1],cbind(cate,rowMeans(out$leaf.rdd),out$polynomial),
-        col=c("black","orange","pink"),pch=19,cex=0.8)
-
-rmse.ate <- sqrt(mean((ate-cate)^2))
-rmse.barddt <- sqrt(mean((rowMeans(out$leaf.rdd)-cate)^2))
-rmse.tbart <- sqrt(mean((rowMeans(out$tbart)-cate)^2))
-rmse.sbart <- sqrt(mean((rowMeans(out$sbart)-cate)^2))
-rmse.polynomial <- sqrt(mean((out$polynomial-cate)^2))
-print("RMSE BARDDT:")
-print(rmse.barddt/rmse.ate)
-print("RMSE TBART:")
-print(rmse.tbart/rmse.ate)
-print("RMSE SBART:")
-print(rmse.sbart/rmse.ate)
-print("RMSE Polynomial:")
-print(rmse.polynomial/rmse.ate)
+write.table(time[3],paste0("Time/",dgp,"/total_parallel.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")

@@ -1,3 +1,5 @@
+Logs/
+Time/
 Data/
 Results/
 Tables/
@@ -19,4 +21,4 @@ Application/pollution.rds
 Application/search.rds
 *.RData
 *.Rout
-run_*
+*.sh
