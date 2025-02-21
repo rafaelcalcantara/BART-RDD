@@ -105,30 +105,29 @@ fit_general <- function(sample)
   ## Saving data
   saveRDS(list(y=y,x=x,z=z,w=w,cate=cate),paste0("Data/dgp_",dgp,"_sample_",sample,".rds"))
   ###
-  # writeLines(as.character(dim(w)),paste0("Logs/",dgp,"/dim_w_",sample,".csv"))
-  ate <- fit.ate(y,x)
-  h <- ate$bws[2,2]
-  ate <- ate$coef[3]
-  test <- -Owidth+c<=x & x<=Owidth+c
-  write.table(ate,paste0("Results/",dgp,"/ate_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
-  time.barddt <- system.time({
-    pred.barddt <- fit.barddt(y,x,w,z,test,c)
-  })
-  time.tbart <- system.time({
-    pred.tbart <- fit.tbart(y,x,w,z,test,c)
-  })
-  time.sbart <- system.time({
-    pred.sbart <- fit.sbart(y,x,w,z,test,c)
-  })
-  time.polynomial <- system.time({
-    pred.polynomial <- fit.polynomial(y,x,w,z,h,test,c)
-  })
-  write.table(c(time.barddt[3],sample),paste0("Time/",dgp,"/barddt.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
-  write.table(c(time.tbart[3],sample),paste0("Time/",dgp,"/tbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
-  write.table(c(time.sbart[3],sample),paste0("Time/",dgp,"/sbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
-  write.table(c(time.polynomial[3],sample),paste0("Time/",dgp,"/polynomial.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
-  write.table(c(time.barddt[3]+time.tbart[3]+time.sbart[3]+time.polynomial[3],sample),paste0("Time/",dgp,"/total_per_sample.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
-  # Processing results
-  calc.rmse(sample,ate,test,pred.barddt,pred.tbart,pred.sbart,pred.polynomial)
-  point.est(sample,test,h,c,pred.barddt,pred.tbart,pred.sbart,pred.polynomial)
+  # ate <- fit.ate(y,x)
+  # h <- ate$bws[2,2]
+  # ate <- ate$coef[3]
+  # test <- -Owidth+c<=x & x<=Owidth+c
+  # write.table(ate,paste0("Results/",dgp,"/ate_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+  # time.barddt <- system.time({
+  #   pred.barddt <- fit.barddt(y,x,w,z,test,c)
+  # })
+  # time.tbart <- system.time({
+  #   pred.tbart <- fit.tbart(y,x,w,z,test,c)
+  # })
+  # time.sbart <- system.time({
+  #   pred.sbart <- fit.sbart(y,x,w,z,test,c)
+  # })
+  # time.polynomial <- system.time({
+  #   pred.polynomial <- fit.polynomial(y,x,w,z,h,test,c)
+  # })
+  # write.table(c(time.barddt[3],sample),paste0("Time/",dgp,"/barddt.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  # write.table(c(time.tbart[3],sample),paste0("Time/",dgp,"/tbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  # write.table(c(time.sbart[3],sample),paste0("Time/",dgp,"/sbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  # write.table(c(time.polynomial[3],sample),paste0("Time/",dgp,"/polynomial.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  # write.table(c(time.barddt[3]+time.tbart[3]+time.sbart[3]+time.polynomial[3],sample),paste0("Time/",dgp,"/total_per_sample.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  # # Processing results
+  # calc.rmse(sample,ate,test,pred.barddt,pred.tbart,pred.sbart,pred.polynomial)
+  # point.est(sample,test,h,c,pred.barddt,pred.tbart,pred.sbart,pred.polynomial)
 }
