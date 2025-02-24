@@ -13,6 +13,8 @@ for i = 1:length(dgps)
     files = files(~ismember({files.name}, {'.', '..'}));
     for j = 1:length(files)
         sample = fullfile("Data",dgps(i).name,files(j).name);
+        res_file = strrep(sample,"mat","csv");
+        res_file = strrep(res_file,"Data","Results");
         run_sims;
     end
 end

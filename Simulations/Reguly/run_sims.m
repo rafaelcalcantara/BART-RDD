@@ -68,5 +68,5 @@ tostring( est_tree )
 test = find(X>-0.1 & X<0.1);
 Z_test = Z(test,:);
 tau = predict(est_tree,Z_test);
-resultfile = fullfile("Results",dgps(i).name,strcat("samples_",num2str(j),".csv"));
+resultfile = res_file;
 writematrix(tau,resultfile)
