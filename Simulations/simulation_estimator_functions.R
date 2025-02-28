@@ -3,7 +3,7 @@
 fit.barddt <- function(y,x,w,z,test,c)
 {
   barddt.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.1)
-  barddt.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
+  barddt.mean.parmlist <- list(num_trees=50, min_samples_leaf=20, alpha=0.95, beta=2,
                                max_depth=20, sample_sigma2_leaf=FALSE, sigma2_leaf_init = diag(rep(0.1/150,4)))
   # barddt.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
   B <- cbind(z*x,(1-z)*x, z,rep(1,n))
@@ -28,7 +28,7 @@ fit.barddt <- function(y,x,w,z,test,c)
 fit.tbart <- function(y,x,w,z,test,c)
 {
   tbart.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
-  tbart.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
+  tbart.mean.parmlist <- list(num_trees=50, min_samples_leaf=20, alpha=0.95, beta=2,
                               max_depth=20, sample_sigma2_leaf=TRUE)
   # tbart.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
   tbart.fit.0 = stochtree::bart(X_train= as.matrix(cbind(x,w)[z==0,]), y_train=y[z==0],
@@ -54,7 +54,7 @@ fit.tbart <- function(y,x,w,z,test,c)
 fit.sbart <- function(y,x,w,z,test,c)
 {
   sbart.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.01)
-  sbart.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
+  sbart.mean.parmlist <- list(num_trees=50, min_samples_leaf=20, alpha=0.95, beta=2,
                               max_depth=20, sample_sigma2_leaf=TRUE)
   # sbart.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
   sbart.fit = stochtree::bart(X_train= as.matrix(cbind(x,z,w)), y_train=y,
@@ -105,29 +105,29 @@ fit_general <- function(sample)
   ## Saving data
   saveRDS(list(y=y,x=x,z=z,w=w,cate=cate),paste0("Data/dgp_",dgp,"_sample_",sample,".rds"))
   ###
-  # ate <- fit.ate(y,x)
-  # h <- ate$bws[2,2]
-  # ate <- ate$coef[3]
-  # test <- -Owidth+c<=x & x<=Owidth+c
-  # write.table(ate,paste0("Results/",dgp,"/ate_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
-  # time.barddt <- system.time({
-  #   pred.barddt <- fit.barddt(y,x,w,z,test,c)
-  # })
-  # time.tbart <- system.time({
-  #   pred.tbart <- fit.tbart(y,x,w,z,test,c)
-  # })
-  # time.sbart <- system.time({
-  #   pred.sbart <- fit.sbart(y,x,w,z,test,c)
-  # })
-  # time.polynomial <- system.time({
-  #   pred.polynomial <- fit.polynomial(y,x,w,z,h,test,c)
-  # })
-  # write.table(c(time.barddt[3],sample),paste0("Time/",dgp,"/barddt.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
-  # write.table(c(time.tbart[3],sample),paste0("Time/",dgp,"/tbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
-  # write.table(c(time.sbart[3],sample),paste0("Time/",dgp,"/sbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
-  # write.table(c(time.polynomial[3],sample),paste0("Time/",dgp,"/polynomial.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
-  # write.table(c(time.barddt[3]+time.tbart[3]+time.sbart[3]+time.polynomial[3],sample),paste0("Time/",dgp,"/total_per_sample.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
-  # # Processing results
-  # calc.rmse(sample,ate,test,pred.barddt,pred.tbart,pred.sbart,pred.polynomial)
-  # point.est(sample,test,h,c,pred.barddt,pred.tbart,pred.sbart,pred.polynomial)
+  ate <- fit.ate(y,x)
+  h <- ate$bws[2,2]
+  ate <- ate$coef[3]
+  test <- -Owidth+c<=x & x<=Owidth+c
+  write.table(ate,paste0("Results/",dgp,"/ate_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
+  time.barddt <- system.time({
+    pred.barddt <- fit.barddt(y,x,w,z,test,c)
+  })
+  time.tbart <- system.time({
+    pred.tbart <- fit.tbart(y,x,w,z,test,c)
+  })
+  time.sbart <- system.time({
+    pred.sbart <- fit.sbart(y,x,w,z,test,c)
+  })
+  time.polynomial <- system.time({
+    pred.polynomial <- fit.polynomial(y,x,w,z,h,test,c)
+  })
+  write.table(c(time.barddt[3],sample),paste0("Time/",dgp,"/barddt.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  write.table(c(time.tbart[3],sample),paste0("Time/",dgp,"/tbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  write.table(c(time.sbart[3],sample),paste0("Time/",dgp,"/sbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  write.table(c(time.polynomial[3],sample),paste0("Time/",dgp,"/polynomial.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  write.table(c(time.barddt[3]+time.tbart[3]+time.sbart[3]+time.polynomial[3],sample),paste0("Time/",dgp,"/total_per_sample.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  # Processing results
+  calc.rmse(sample,ate,test,pred.barddt,pred.tbart,pred.sbart,pred.polynomial)
+  point.est(sample,test,h,c,pred.barddt,pred.tbart,pred.sbart,pred.polynomial)
 }

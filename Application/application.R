@@ -3,6 +3,7 @@ library(stochtree)
 library(rpart)
 library(rpart.plot)
 library(xtable)
+library(MASS)
 run.model <- FALSE ## toggle to actually fit BARDDT
 ## Read data
 data <- read.csv("gpa.csv")
@@ -102,7 +103,6 @@ if (isTRUE(run.model))
   barddt.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.1)
   barddt.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
                                max_depth=20, sample_sigma2_leaf=FALSE, sigma2_leaf_init = diag(rep(0.1/150,4)))
-  # barddt.var.parmlist <- list(num_trees = 2,min_samples_leaf = 10)
   B <- cbind(z*x,(1-z)*x, z,rep(1,n))
   B1 <- cbind(rep(c,n), rep(0,n), rep(1,n), rep(1,n))
   B0 <- cbind(rep(0,n), rep(c,n), rep(0,n), rep(1,n))
@@ -110,7 +110,6 @@ if (isTRUE(run.model))
     barddt.fit = stochtree::bart(X_train= cbind(x,w), y_train=y,
                                  W_train = B, mean_forest_params=barddt.mean.parmlist,
                                  general_params=barddt.global.parmlist,
-                                 # variance_forest_params=barddt.var.parmlist,
                                  num_mcmc=10000,num_gfr=30)
   })
   time.pred <- system.time({
@@ -126,62 +125,42 @@ if (isTRUE(run.model))
 pred <- readRDS("Results/bart_rdd_posterior.rds")
 ###
 cate <- rpart(y~.,data.frame(y=rowMeans(pred),w[test,]),control = rpart.control(cp=0.015))
-nodes <- rep(NA,nrow(cate$frame))
-for (i in 1:length(nodes))
+## Define separate colors for left and rightmost nodes
+plot.cart <- function(rpart.obj)
 {
-  if (cate$frame$yval[i]>0.25) nodes[i] <- "gold2"
-  else if (cate$frame$yval[i]<0.15) nodes[i] <- "tomato3"
-  else nodes[i] <- "lightblue3"
+  rpart.frame <- rpart.obj$frame
+  left <- which.min(rpart.frame$yval)
+  right <- which.max(rpart.frame$yval)
+  nodes <- rep(NA,nrow(rpart.frame))
+  for (i in 1:length(nodes))
+  {
+    if (rpart.frame$yval[i]==rpart.frame$yval[right]) nodes[i] <- "gold2"
+    else if (rpart.frame$yval[i]==rpart.frame$yval[left]) nodes[i] <- "tomato3"
+    else nodes[i] <- "lightblue3"
+  }
+  return(nodes)
 }
+## Plot CART tree
 pdf("Figures/cate_gpa.pdf")
 par(mfrow=c(1,1))
-rpart.plot(cate,main="",box.col=nodes)
+rpart.plot(cate,main="",box.col=plot.cart(cate))
 dev.off()
-####
-sum.post <- function(x)
+## Define function to produce KD estimates of the joint distribution of two subgroups
+cate.kde <- function(rpart.obj,pred)
 {
-  out <- colMeans(x)
-  return(c(mean(out),mean(out)-sd(out),mean(out)+sd(out)))
+  rpart.frame <- rpart.obj$frame
+  left <- rpart.obj$where==which.min(rpart.frame$yval)
+  right <- rpart.obj$where==which.max(rpart.frame$yval)
+  ## Calculate CATE posterior for groups A and B
+  cate.a <- do.call("cbind",by(pred,left, colMeans))
+  cate.b <- do.call("cbind",by(pred,right, colMeans))
+  cate.a <- cate.a[,2]
+  cate.b <- cate.b[,2]
+  ## Estimate kernel density
+  denshat <- MASS::kde2d(cate.a, cate.b, n=200)
+  return(denshat)
 }
-hline <- function(x, y, color = "black") segments(x0=x,x1=x,y0=y[1],y1=y[2],col=color)
-plot.new()
-pdf("Figures/posterior_per_feature.pdf")
-for (var in names(w))
-{
-  plot.mat <- do.call("rbind",by(pred, subset(w,test,select=var), sum.post))
-  matplot(rownames(plot.mat),plot.mat,bty="n",xlab=var,ylab="",type=c("p","n","n"),pch=19,xaxt="n")
-  axis(1,as.numeric(rownames(plot.mat)),as.numeric(rownames(plot.mat)))
-  grid()
-  for (i in 1:nrow(plot.mat)) hline(as.numeric(rownames(plot.mat)[i]),plot.mat[i,2:3])
-}
-dev.off()
-####
-
-####
-cate.credits.geq.5 <- do.call("cbind",by(pred,w$totcredits_year1[test] >= 4.8
-                                         & w$male[test]==1 & w$age_at_entry[test] >= 19, colMeans))
-cate.credits.leq.5 <- do.call("cbind",by(pred,w$totcredits_year1[test] < 4.8
-                                         & w$totcredits_year1[test] >= 4.3
-                                         & w$age_at_entry[test] < 19, colMeans))
-####
-pct <- mean((cate.credits.geq.5[,2]-cate.credits.leq.5[,2])<0)
-pct
-####
-# d <- density(cate.credits.geq.5[,2]-cate.credits.leq.5[,2])
-# pdf("Figures/cate_difference.pdf")
-# par(mfrow=c(1,1))
-# plot(d,bty="n",main="",ylab="",xlab="",cex=1.5)
-# polygon(c(0,d$x[d$x<0]),c(0,d$y[d$x<0]),col=rgb(96/256,96/256,96/256,0.4),border=1)
-# mtext("Difference in subgroup average treatment effect",1,outer=TRUE,line=-2.5)
-# dev.off()
-####
-saveRDS(cbind(Left=cate.credits.geq.5[,2],Right=cate.credits.leq.5[,2]),"CATE_draws.rds")
-####
-x <- cate.credits.geq.5[,2]
-y <- cate.credits.leq.5[,2]
-library(MASS)
-denshat <- kde2d(x[1:10000], y[1:10000], n=200)
 pdf("Figures/cate_difference.pdf")
-contour(denshat,bty='n',xlab="Group A",ylab="Group B")
+contour(cate.kde(cate,pred),bty='n',xlab="Group A",ylab="Group B")
 abline(a=0,b=1)
 dev.off()
