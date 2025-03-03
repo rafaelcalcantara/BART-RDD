@@ -24,3 +24,5 @@ Application/search.rds
 *.sh
 Benchmarking/
 *.zip
+*.rds
+.DS_Store

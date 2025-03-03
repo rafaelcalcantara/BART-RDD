@@ -4,7 +4,9 @@ library(rpart)
 library(rpart.plot)
 library(xtable)
 library(MASS)
-run.model <- FALSE ## toggle to actually fit BARDDT
+library(doParallel)
+library(foreach)
+run.model <- TRUE ## toggle to actually fit BARDDT
 ## Read data
 data <- read.csv("gpa.csv")
 y <- data$nextGPA
@@ -15,8 +17,10 @@ c <- 0
 n <- nrow(data)
 z <- as.numeric(x>c)
 h <- 0.1
-id0 <- -h < x & x < 0
-id1 <- 0 < x & x< h
+id0 <- -h < x
+id1 <- x < h
+test <- -h < x & x < h
+ntest <- sum(test)
 if ("Figures" %in% list.files() == FALSE) dir.create("Figures")
 if ("Tables" %in% list.files() == FALSE) dir.create("Tables")
 if ("Results" %in% list.files() == FALSE) dir.create("Results")
@@ -64,35 +68,8 @@ sum.tab.test.tex <- stargazer::stargazer(sum.tab,summary=F,rownames = F,
                                                    paste(c("\\tiny Total:","Campus 1:","Campus 2:","Campus 3:"),
                                                          paste(obs0,obs1,sep="/"),collapse="; ")))
 writeLines(sum.tab.test.tex,"Tables/application_sum_stat_test.tex")
-### Plots
-#### W
-l0 <- lapply(1:ncol(w), function(i) predict(loess(w~x,data=data.frame(w=w[id0,i],x=x[id0])),se=T)[1:2])
-l0 <- lapply(l0,function(i) cbind(i$fit,i$fit-1.96*i$se.fit,i$fit+1.96*i$se.fit))
-l1 <- lapply(1:ncol(w), function(i) predict(loess(w~x,data=data.frame(w=w[id1,i],x=x[id1])),se=T)[1:2])
-l1 <- lapply(l1,function(i) cbind(i$fit,i$fit-1.96*i$se.fit,i$fit+1.96*i$se.fit))
-#### Y
-yhat0 <- predict(loess(y~x,data=data.frame(y=y[id0],x=x[id0])),se=T)[1:2]
-yhat0 <- cbind(yhat0$fit,yhat0$fit-1.96*yhat0$se.fit,yhat0$fit+1.96*yhat0$se.fit)
-yhat1 <- predict(loess(y~x,data=data.frame(y=y[id1],x=x[id1])),se=T)[1:2]
-yhat1 <- cbind(yhat1$fit,yhat1$fit-1.96*yhat1$se.fit,yhat1$fit+1.96*yhat1$se.fit)
-####
-xplot <- x[id0 | id1]
-pdf("Figures/application_summary.pdf",width=9,height=12)
-par(mfrow=c(3,3))
-matplot(xplot,rbind(yhat0,yhat1),xlab="X",ylab="Y",bty="n",type="n")
-matlines(sort(xplot[xplot<c]),yhat0[order(xplot[xplot<c]),],col=1,lty=c(1,2,2))
-matlines(sort(xplot[xplot>c]),yhat1[order(xplot[xplot>c]),],col=1,lty=c(1,2,2))
-abline(v=c,lty=2)
-for (i in 1:ncol(w))
-{
-  matplot(xplot,rbind(l0[[i]],l1[[i]]),xlab="X",ylab=colnames(w)[i],bty="n",type="n")
-  matlines(sort(xplot[xplot<c]),l0[[i]][order(xplot[xplot<c]),],col=1,lty=c(1,2,2))
-  matlines(sort(xplot[xplot>c]),l1[[i]][order(xplot[xplot>c]),],col=1,lty=c(1,2,2))
-  abline(v=c,lty=2)
-}
-dev.off()
 ## Fitting the model-----------------------------
-test <- id0 | id1
+w$totcredits_year1 <- factor(w$totcredits_year1,ordered=TRUE)
 w$male <- factor(w$male,ordered=FALSE)
 w$bpl_north_america <- factor(w$bpl_north_america,ordered=FALSE)
 w$loc_campus1 <- factor(w$loc_campus1,ordered=FALSE)
@@ -100,29 +77,56 @@ w$loc_campus2 <- factor(w$loc_campus2,ordered=FALSE)
 w$loc_campus3 <- factor(w$loc_campus3,ordered=FALSE)
 if (isTRUE(run.model))
 {
-  barddt.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.1)
-  barddt.mean.parmlist <- list(num_trees=150, min_samples_leaf=20, alpha=0.95, beta=2,
-                               max_depth=20, sample_sigma2_leaf=FALSE, sigma2_leaf_init = diag(rep(0.1/150,4)))
+  ## We will sample multiple chains sequentially
+  num_chains <- 20
+  num_gfr <- 2
+  num_burnin <- 0
+  num_mcmc <- 500
+  bart_models <- list()
+  ## Define basis functions for training and testing
   B <- cbind(z*x,(1-z)*x, z,rep(1,n))
   B1 <- cbind(rep(c,n), rep(0,n), rep(1,n), rep(1,n))
   B0 <- cbind(rep(0,n), rep(c,n), rep(0,n), rep(1,n))
-  time.fit <- system.time({
-    barddt.fit = stochtree::bart(X_train= cbind(x,w), y_train=y,
-                                 W_train = B, mean_forest_params=barddt.mean.parmlist,
-                                 general_params=barddt.global.parmlist,
-                                 num_mcmc=10000,num_gfr=30)
-  })
-  time.pred <- system.time({
-    B1 <- B1[test,]
-    B0 <- B0[test,]
-    xmat_test <- cbind(x=rep(0,n),w)[test,]
-    pred1 <- predict(barddt.fit,xmat_test,B1)$y_hat
-    pred0 <- predict(barddt.fit,xmat_test,B0)$y_hat
-    post <- pred1-pred0
-  })
-  saveRDS(post,"Results/bart_rdd_posterior.rds")
+  B1 <- B1[test,]
+  B0 <- B0[test,]
+  B_test <- rbind(B1,B0)
+  xmat_test <- cbind(x=rep(0,n),w)[test,]
+  xmat_test <- rbind(xmat_test,xmat_test)
+  ### We combine the basis for Z=1 and Z=0 to feed it to the BART call and get the Y(z) predictions instantaneously
+  ### Then we separate the posterior matrix between each Z and calculate the CATE prediction
+  ## Sampling trees in parallel
+  ncores <- 5
+  cl <- makeCluster(ncores)
+  registerDoParallel(cl)
+  
+  start_time <- Sys.time()
+  bart_model_outputs <- foreach (i = 1:num_chains) %dopar% {
+    random_seed <- i
+    ## Lists to define BARDDT parameters
+    barddt.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.1)
+    barddt.mean.parmlist <- list(num_trees=50, min_samples_leaf=20, alpha=0.95, beta=2,
+                                 max_depth=20, sample_sigma2_leaf=FALSE, sigma2_leaf_init = diag(rep(0.1/50,4)))
+    bart_model <- stochtree::bart(
+      X_train = cbind(x,w), leaf_basis_train = B, y_train = y, 
+      X_test = xmat_test, leaf_basis_test = B_test,
+      num_gfr = num_gfr, num_burnin = num_burnin, num_mcmc = num_mcmc, 
+      general_params = barddt.global.parmlist, mean_forest_params = barddt.mean.parmlist
+    )
+    bart_model <- bart_model$y_hat_test[1:ntest,]-bart_model$y_hat_test[(ntest+1):(2*ntest),]
+  }
+  stopCluster(cl)
+  ## Combine CATE predictions
+  pred <- do.call("cbind",bart_model_outputs)
+  
+  end_time <- Sys.time()
+  
+  print(end_time - start_time)
+  ## Save the results
+  saveRDS(pred,"bart_rdd_posterior.rds")
+} else
+{
+  pred <- readRDS("Results/bart_rdd_posterior.rds")
 }
-pred <- readRDS("Results/bart_rdd_posterior.rds")
 ###
 cate <- rpart(y~.,data.frame(y=rowMeans(pred),w[test,]),control = rpart.control(cp=0.015))
 ## Define separate colors for left and rightmost nodes
