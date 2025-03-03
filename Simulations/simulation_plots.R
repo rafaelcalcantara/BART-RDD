@@ -35,9 +35,9 @@ for (i in 1:length(res.list))
   {
     file.name <- list.files(paste0("Results/RMSE/",dgp))[sample]
     file.name <- paste0("Results/RMSE/",dgp,"/",file.name)
-    file.reguly <- list.files(paste0("Reguly/Results/",dgp))[sample]
-    file.reguly <- paste0("Reguly/Results/",dgp,"/",file.reguly)
-    data <- readRDS(paste0("Data/dgp_",dgp,"_",gsub("\\.csv","\\.rds",list.files(paste0("Reguly/Results/",dgp))[sample])))
+    file.reguly <- list.files(paste0("RD-Tree/Results/",dgp))[sample]
+    file.reguly <- paste0("RD-Tree/Results/",dgp,"/",file.reguly)
+    data <- readRDS(paste0("Data/dgp_",dgp,"_",gsub("\\.csv","\\.rds",list.files(paste0("RD-Tree/Results/",dgp))[sample])))
     cate <- data$cate[data$x>-0.1 & data$x<0.1]
     ##
     out[sample,] <- as.matrix(read.table(file.name))
@@ -73,9 +73,9 @@ for (dgp in res.list[1:3])
   {
     file.name <- list.files(paste0("Results/RMSE/",dgp))[sample]
     file.name <- paste0("Results/RMSE/",dgp,"/",file.name)
-    file.reguly <- list.files(paste0("Reguly/Results/",dgp))[sample]
-    file.reguly <- paste0("Reguly/Results/",dgp,"/",file.reguly)
-    data <- readRDS(paste0("Data/dgp_",dgp,"_",gsub("\\.csv","\\.rds",list.files(paste0("Reguly/Results/",dgp))[sample])))
+    file.reguly <- list.files(paste0("RD-Tree/Results/",dgp))[sample]
+    file.reguly <- paste0("RD-Tree/Results/",dgp,"/",file.reguly)
+    data <- readRDS(paste0("Data/dgp_",dgp,"_",gsub("\\.csv","\\.rds",list.files(paste0("RD-Tree/Results/",dgp))[sample])))
     cate <- data$cate[data$x>-0.1 & data$x<0.1]
     ##
     out[sample,] <- as.matrix(read.table(file.name))
@@ -110,9 +110,9 @@ for (dgp in res.list[4:6])
   {
     file.name <- list.files(paste0("Results/RMSE/",dgp))[sample]
     file.name <- paste0("Results/RMSE/",dgp,"/",file.name)
-    file.reguly <- list.files(paste0("Reguly/Results/",dgp))[sample]
-    file.reguly <- paste0("Reguly/Results/",dgp,"/",file.reguly)
-    data <- readRDS(paste0("Data/dgp_",dgp,"_",gsub("\\.csv","\\.rds",list.files(paste0("Reguly/Results/",dgp))[sample])))
+    file.reguly <- list.files(paste0("RD-Tree/Results/",dgp))[sample]
+    file.reguly <- paste0("RD-Tree/Results/",dgp,"/",file.reguly)
+    data <- readRDS(paste0("Data/dgp_",dgp,"_",gsub("\\.csv","\\.rds",list.files(paste0("RD-Tree/Results/",dgp))[sample])))
     cate <- data$cate[data$x>-0.1 & data$x<0.1]
     ##
     out[sample,] <- as.matrix(read.table(file.name))
@@ -139,7 +139,7 @@ dev.off()
 ##
 dgp <- res.list[1]
 file.name <- paste0("Results/Fits/",dgp,"/cate/sample_16.csv")
-file.reguly <- paste0("Reguly/Results/",dgp,"/sample_16.csv")
+file.reguly <- paste0("RD-Tree/Results/",dgp,"/sample_16.csv")
 mat <- read.table(file.name)
 reguly <- read.table(file.reguly)
 mat <- cbind(mat,reguly)
@@ -148,7 +148,7 @@ saveRDS(mat,"easy_fits.rds")
 ##
 dgp <- res.list[4]
 file.name <- paste0("Results/Fits/",dgp,"/cate/sample_1.csv")
-file.reguly <- paste0("Reguly/Results/",dgp,"/sample_1.csv")
+file.reguly <- paste0("RD-Tree/Results/",dgp,"/sample_1.csv")
 mat <- read.table(file.name)
 reguly <- read.table(file.reguly)
 mat <- cbind(mat,reguly)
