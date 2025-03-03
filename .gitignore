@@ -26,3 +26,4 @@ Benchmarking/
 *.zip
 *.rds
 .DS_Store
+Simulations/Ignore
