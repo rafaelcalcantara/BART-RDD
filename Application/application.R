@@ -6,7 +6,10 @@ library(xtable)
 library(MASS)
 library(doParallel)
 library(foreach)
-run.model <- TRUE ## toggle to actually fit BARDDT
+run.barddt <- FALSE ## toggle to fit BARDDT
+run.sbart <- FALSE ## toggle to fit S-BART
+run.tbart <- FALSE ## toggle to fit T-BART
+run.llr <- FALSE ## toggle to fit LLR
 ## Read data
 data <- read.csv("gpa.csv")
 y <- data$nextGPA
@@ -43,7 +46,7 @@ sum.tab.tex <- stargazer::stargazer(sum.tab,summary=F,rownames = F,
                                     notes = c("\\tiny Sample size:",paste(c("\\tiny Total:","Campus 1:","Campus 2:","Campus 3:"),obs,collapse="; ")))
 writeLines(sum.tab.tex,"Tables/application_sum_stat.tex")
 #### Test sample
-sum.stat.h <- function(dat,id0,id1) 
+sum.stat.h <- function(dat,id0,id1)
 {
   out <- round(cbind(t(apply(dat[id0,],2,function(i) c(Mean=mean(i),SD=sd(i)))),
                      t(apply(dat[id1,],2,function(i) c(Mean=mean(i),SD=sd(i))))), 3)
@@ -68,14 +71,15 @@ sum.tab.test.tex <- stargazer::stargazer(sum.tab,summary=F,rownames = F,
                                                    paste(c("\\tiny Total:","Campus 1:","Campus 2:","Campus 3:"),
                                                          paste(obs0,obs1,sep="/"),collapse="; ")))
 writeLines(sum.tab.test.tex,"Tables/application_sum_stat_test.tex")
-## Fitting the model-----------------------------
+## Fitting the models----------------------------
 w$totcredits_year1 <- factor(w$totcredits_year1,ordered=TRUE)
 w$male <- factor(w$male,ordered=FALSE)
 w$bpl_north_america <- factor(w$bpl_north_america,ordered=FALSE)
 w$loc_campus1 <- factor(w$loc_campus1,ordered=FALSE)
 w$loc_campus2 <- factor(w$loc_campus2,ordered=FALSE)
 w$loc_campus3 <- factor(w$loc_campus3,ordered=FALSE)
-if (isTRUE(run.model))
+## BARDDT
+if (isTRUE(run.barddt))
 {
   ## We will sample multiple chains sequentially
   num_chains <- 20
@@ -98,7 +102,7 @@ if (isTRUE(run.model))
   ncores <- 5
   cl <- makeCluster(ncores)
   registerDoParallel(cl)
-  
+
   start_time <- Sys.time()
   bart_model_outputs <- foreach (i = 1:num_chains) %dopar% {
     random_seed <- i
@@ -107,9 +111,9 @@ if (isTRUE(run.model))
     barddt.mean.parmlist <- list(num_trees=50, min_samples_leaf=20, alpha=0.95, beta=2,
                                  max_depth=20, sample_sigma2_leaf=FALSE, sigma2_leaf_init = diag(rep(0.1/50,4)))
     bart_model <- stochtree::bart(
-      X_train = cbind(x,w), leaf_basis_train = B, y_train = y, 
+      X_train = cbind(x,w), leaf_basis_train = B, y_train = y,
       X_test = xmat_test, leaf_basis_test = B_test,
-      num_gfr = num_gfr, num_burnin = num_burnin, num_mcmc = num_mcmc, 
+      num_gfr = num_gfr, num_burnin = num_burnin, num_mcmc = num_mcmc,
       general_params = barddt.global.parmlist, mean_forest_params = barddt.mean.parmlist
     )
     bart_model <- bart_model$y_hat_test[1:ntest,]-bart_model$y_hat_test[(ntest+1):(2*ntest),]
@@ -117,17 +121,140 @@ if (isTRUE(run.model))
   stopCluster(cl)
   ## Combine CATE predictions
   pred <- do.call("cbind",bart_model_outputs)
-  
+
   end_time <- Sys.time()
-  
+
   print(end_time - start_time)
   ## Save the results
   saveRDS(pred,"bart_rdd_posterior.rds")
 } else
 {
-  pred <- readRDS("Results/bart_rdd_posterior.rds")
+  pred <- readRDS("bart_rdd_posterior.rds")
 }
-###
+## S-BART
+if (isTRUE(run.sbart))
+{
+  ## We will sample multiple chains sequentially
+  num_chains <- 20
+  num_gfr <- 2
+  num_burnin <- 0
+  num_mcmc <- 500
+  bart_models <- list()
+  ## Define test set
+  xmat_test.1 <- cbind(x=c,z=1,w)[test,]
+  xmat_test.0 <- cbind(x=c,z=0,w)[test,]
+  ## Sampling trees in parallel
+  ncores <- 5
+  cl <- makeCluster(ncores)
+  registerDoParallel(cl)
+
+  start_time <- Sys.time()
+  bart_model_outputs <- foreach (i = 1:num_chains) %dopar% {
+    random_seed <- i
+    ## Lists to define BARDDT parameters
+    barddt.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.1)
+    barddt.mean.parmlist <- list(num_trees=50, min_samples_leaf=20, alpha=0.95, beta=2,
+                                 max_depth=20, sample_sigma2_leaf=TRUE)
+    bart_model <- stochtree::bart(
+      X_train = cbind(x,z,w), y_train = y,
+      num_gfr = num_gfr, num_burnin = num_burnin, num_mcmc = num_mcmc,
+      general_params = barddt.global.parmlist, mean_forest_params = barddt.mean.parmlist
+    )
+    pred1 <- predict(bart_model,xmat_test.1)$y_hat
+    pred0 <- predict(bart_model,xmat_test.0)$y_hat
+    post <- pred1-pred0
+  }
+  stopCluster(cl)
+  ## Combine CATE predictions
+  pred.sbart <- do.call("cbind",bart_model_outputs)
+
+  end_time <- Sys.time()
+
+  print(end_time - start_time)
+  ## Save the results
+  saveRDS(pred.sbart,"sbart_posterior.rds")
+} else
+{
+  pred.sbart <- readRDS("sbart_posterior.rds")
+}
+## T-BART
+if (isTRUE(run.tbart))
+{
+  ## We will sample multiple chains sequentially
+  num_chains <- 20
+  num_gfr <- 2
+  num_burnin <- 0
+  num_mcmc <- 500
+  bart_models <- list()
+  ## Define test set
+  xmat_test <- cbind(x=c,w)[test,]
+  ## Sampling trees in parallel
+  ncores <- 5
+  cl <- makeCluster(ncores)
+  registerDoParallel(cl)
+
+  start_time <- Sys.time()
+  bart_model_outputs <- foreach (i = 1:num_chains) %dopar% {
+    random_seed <- i
+    ## Lists to define BARDDT parameters
+    barddt.global.parmlist <- list(standardize=T,sample_sigma_global=TRUE,sigma2_global_init=0.1)
+    barddt.mean.parmlist <- list(num_trees=50, min_samples_leaf=20, alpha=0.95, beta=2,
+                                 max_depth=20, sample_sigma2_leaf=TRUE)
+    ## X>c regression
+    bart_model <- stochtree::bart(
+      X_train = cbind(x,w)[x>c,], y_train = y[x>c],
+      num_gfr = num_gfr, num_burnin = num_burnin, num_mcmc = num_mcmc,
+      general_params = barddt.global.parmlist, mean_forest_params = barddt.mean.parmlist
+    )
+    pred1 <- predict(bart_model,xmat_test)$y_hat
+    ## X<=c regression
+    bart_model <- stochtree::bart(
+      X_train = cbind(x,w)[x<=c,], y_train = y[x<=c],
+      num_gfr = num_gfr, num_burnin = num_burnin, num_mcmc = num_mcmc,
+      general_params = barddt.global.parmlist, mean_forest_params = barddt.mean.parmlist
+    )
+    pred0 <- predict(bart_model,xmat_test)$y_hat
+    ## Posterior
+    post <- pred1-pred0
+  }
+  stopCluster(cl)
+  ## Combine CATE predictions
+  pred.tbart <- do.call("cbind",bart_model_outputs)
+
+  end_time <- Sys.time()
+
+  print(end_time - start_time)
+  ## Save the results
+  saveRDS(pred.tbart,"tbart_posterior.rds")
+} else
+{
+  pred.tbart <- readRDS("tbart_posterior.rds")
+}
+## LLR
+if (isTRUE(run.llr))
+{
+  dfw <- data.frame(w=w)
+  fmla <- as.formula(paste0("y~(",paste(paste("as.factor(",names(dfw),")",sep=""),collapse="+"),")*poly(x,1)*z + poly(x,3)"))
+  df <- data.frame(x=x,w=w,y=y,z=z)
+  df$z <- as.factor(df$z)
+  df.train <- subset(df,c-h<=x & x<=c+h)
+  poly.fit <- lm(fmla,data = df.train)
+  df.test <- df[test,]
+  xmat_test.1 <- xmat_test.0 <- df.test
+  xmat_test.1$x <- c
+  xmat_test.1$z <- "1"
+  xmat_test.0$x <- c
+  xmat_test.0$z <- "0"
+  pred1 <- predict(poly.fit,newdata=xmat_test.1)
+  pred0 <- predict(poly.fit,newdata=xmat_test.0)
+  pred.llr <- pred1-pred0
+  ## Save results
+  saveRDS(pred.llr,"llr.rds")
+} else
+{
+  pred.llr <- readRDS("llr.rds")
+}
+##########
 cate <- rpart(y~.,data.frame(y=rowMeans(pred),w[test,]),control = rpart.control(cp=0.015))
 ## Define separate colors for left and rightmost nodes
 plot.cart <- function(rpart.obj)
