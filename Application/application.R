@@ -9,7 +9,7 @@ library(foreach)
 run.barddt <- FALSE ## toggle to fit BARDDT
 run.sbart <- FALSE ## toggle to fit S-BART
 run.tbart <- FALSE ## toggle to fit T-BART
-run.llr <- FALSE ## toggle to fit LLR
+run.llr <- TRUE ## toggle to fit LLR
 ## Read data
 data <- read.csv("gpa.csv")
 y <- data$nextGPA
@@ -234,7 +234,7 @@ if (isTRUE(run.tbart))
 if (isTRUE(run.llr))
 {
   dfw <- data.frame(w=w)
-  fmla <- as.formula(paste0("y~(",paste(paste("as.factor(",names(dfw),")",sep=""),collapse="+"),")*poly(x,1)*z + poly(x,3)"))
+  fmla <- as.formula(paste0("y~(",names(dfw)[1],"+",paste(paste("as.factor(",names(dfw)[-1],")",sep=""),collapse="+"),")*poly(x,1)*z + poly(x,3)"))
   df <- data.frame(x=x,w=w,y=y,z=z)
   df$z <- as.factor(df$z)
   df.train <- subset(df,c-h<=x & x<=c+h)
@@ -295,3 +295,6 @@ pdf("Figures/cate_difference.pdf")
 contour(cate.kde(cate,pred),bty='n',xlab="Group A",ylab="Group B")
 abline(a=0,b=1)
 dev.off()
+## Results for other estimators
+cate.sbart <- rowMeans(pred.sbart)
+cate.tbart <- rowMeans(pred.tbart)
