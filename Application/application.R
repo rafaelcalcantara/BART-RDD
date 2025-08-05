@@ -298,3 +298,25 @@ dev.off()
 ## Results for other estimators
 cate.sbart <- rowMeans(pred.sbart)
 cate.tbart <- rowMeans(pred.tbart)
+### methods x BARDDT
+colors <- c("magenta3","dodgerblue", "green3")
+colors[1] <- grDevices::adjustcolor(colors[1],alpha=1)
+bgcolors <- colors
+cex = 1.25
+pch <- 21
+####
+pdf("Figures/others_vs_barddt.pdf",width=7,height=10)
+# layout(matrix(c(1:4),ncol=1),heights = c(2,2,2,1))
+layout(matrix(c(1:3),ncol=1),heights = c(2,2,2))
+par(mar=c(4,4,0.1,0.1))
+plot(rowMeans(pred),cate.tbart,bty="n",xlab="BARDDT",ylab="T-BART",pch=pch,col="black", bg=colors[1],cex = cex)
+abline(a=0,b=1)
+plot(rowMeans(pred),cate.sbart,bty="n",xlab="BARDDT",ylab="S-BART",pch=pch,col="black", bg=colors[2],cex = cex)
+abline(a=0,b=1)
+plot(rowMeans(pred),pred.llr,bty="n",xlab="BARDDT",ylab="Polynomial",pch=pch,col="black", bg=colors[3],cex = cex)
+abline(a=0,b=1)
+# par(mar=c(0.1,4,0.05,0.1))
+# plot.new()
+# legend("center",legend=c("T-BART","S-BART","Polynomial"),
+#        col="black",pt.bg=colors,pch=21,cex=1.25,title="Estimator",title.font = 2,ncol=3)
+dev.off()
