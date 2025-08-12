@@ -6,10 +6,11 @@ library(xtable)
 library(MASS)
 library(doParallel)
 library(foreach)
+library(bayeslm)
 run.barddt <- FALSE ## toggle to fit BARDDT
 run.sbart <- FALSE ## toggle to fit S-BART
 run.tbart <- FALSE ## toggle to fit T-BART
-run.llr <- TRUE ## toggle to fit LLR
+run.llr <- FALSE ## toggle to fit LLR
 ## Read data
 data <- read.csv("gpa.csv")
 y <- data$nextGPA
@@ -238,16 +239,28 @@ if (isTRUE(run.llr))
   df <- data.frame(x=x,w=w,y=y,z=z)
   df$z <- as.factor(df$z)
   df.train <- subset(df,c-h<=x & x<=c+h)
-  poly.fit <- lm(fmla,data = df.train)
+  poly.fit <- bayeslm(y ~ (w.hsgrade_pct + as.factor(w.totcredits_year1) + as.factor(w.age_at_entry) +
+                             as.factor(w.male) + as.factor(w.bpl_north_america) + as.factor(w.loc_campus1) +
+                             as.factor(w.loc_campus2) + as.factor(w.loc_campus3)) * x * z + poly(x, 3),
+                      df.train,singular=TRUE,penalize=rep(1,74),prior="horseshoe")
+  ######
   df.test <- df[test,]
-  xmat_test.1 <- xmat_test.0 <- df.test
-  xmat_test.1$x <- c
-  xmat_test.1$z <- "1"
-  xmat_test.0$x <- c
-  xmat_test.0$z <- "0"
-  pred1 <- predict(poly.fit,newdata=xmat_test.1)
-  pred0 <- predict(poly.fit,newdata=xmat_test.0)
-  pred.llr <- pred1-pred0
+  xtest.a <- df.test
+  xtest.a$x <- c
+  xtest.a$z <- "1"
+  xtest.b <- df.test
+  xtest.b$x <- c
+  xtest.b$z <- "0"
+  xtest <- rbind(xtest.a,xtest.b,df.test)
+  ####
+  formula = poly.fit$call$formula
+  tt = terms(as.formula(formula))
+  TT = delete.response(tt)
+  mf <- model.frame(TT, data = xtest)
+  X <- model.matrix(attr(mf, "terms"), data = mf)
+  X1 <- X[1:(nrow(X)/3),]
+  X0 <- X[(nrow(X)/3+1):(2*nrow(X)/3),]
+  pred.llr <- apply(poly.fit$beta,1, function(i) (X1-X0) %*% i)
   ## Save results
   saveRDS(pred.llr,"llr.rds")
 } else
@@ -291,13 +304,42 @@ cate.kde <- function(rpart.obj,pred)
   denshat <- MASS::kde2d(cate.a, cate.b, n=200)
   return(denshat)
 }
+### BARDDT
 pdf("Figures/cate_difference.pdf")
 contour(cate.kde(cate,pred),bty='n',xlab="Group A",ylab="Group B")
 abline(a=0,b=1)
 dev.off()
-## Results for other estimators
+### S-BART
+pdf("Figures/cate_difference_sbart.pdf")
+contour(cate.kde(cate,pred.sbart),bty='n',xlab="Group A",ylab="Group B")
+abline(a=0,b=1)
+dev.off()
+### T-BART
+pdf("Figures/cate_difference_tbart.pdf")
+contour(cate.kde(cate,pred.tbart),bty='n',xlab="Group A",ylab="Group B")
+abline(a=0,b=1)
+dev.off()
+### LLR
+pdf("Figures/cate_difference_llr.pdf")
+contour(cate.kde(cate,pred.llr),bty='n',xlab="Group A",ylab="Group B")
+abline(a=0,b=1)
+dev.off()
+#######
+kdens.barddt <- cate.kde(cate,pred)
+kdens.sbart <- cate.kde(cate,pred.sbart)
+kdens.tbart <- cate.kde(cate,pred.tbart)
+kdens.llr <- cate.kde(cate,pred.llr)
+contour.min <- 1
+contour(kdens.barddt,bty='n',xlab="Group A",ylab="Group B",col="black",levels=seq(contour.min,max(kdens.barddt$z),length.out=10)
+        ,ylim=quantile(c(kdens.barddt$y,kdens.tbart$y,kdens.sbart$y),c(0.2,0.8)),
+        xlim=quantile(c(kdens.barddt$x,kdens.tbart$x,kdens.sbart$x),c(0.2,0.8)))
+contour(cate.kde(cate,pred.sbart),bty='n',xlab="Group A",ylab="Group B",add=TRUE,col=colors[1],levels=seq(contour.min,max(kdens.sbart$z),length.out=10))
+contour(cate.kde(cate,pred.tbart),bty='n',xlab="Group A",ylab="Group B",add=TRUE,col=colors[2],levels=seq(contour.min,max(kdens.tbart$z),length.out=10))
+contour(cate.kde(cate,pred.llr),bty='n',xlab="Group A",ylab="Group B",add=TRUE,col=colors[3])
+# ## Results for other estimators
 cate.sbart <- rowMeans(pred.sbart)
 cate.tbart <- rowMeans(pred.tbart)
+cate.llr <- rowMeans(pred.llr)
 ### methods x BARDDT
 colors <- c("magenta3","dodgerblue", "green3")
 colors[1] <- grDevices::adjustcolor(colors[1],alpha=1)
@@ -305,7 +347,7 @@ bgcolors <- colors
 cex = 1.25
 pch <- 21
 ####
-pdf("Figures/others_vs_barddt.pdf",width=7,height=10)
+# pdf("Figures/others_vs_barddt.pdf",width=6,height=10)
 # layout(matrix(c(1:4),ncol=1),heights = c(2,2,2,1))
 layout(matrix(c(1:3),ncol=1),heights = c(2,2,2))
 par(mar=c(4,4,0.1,0.1))
@@ -313,10 +355,87 @@ plot(rowMeans(pred),cate.tbart,bty="n",xlab="BARDDT",ylab="T-BART",pch=pch,col="
 abline(a=0,b=1)
 plot(rowMeans(pred),cate.sbart,bty="n",xlab="BARDDT",ylab="S-BART",pch=pch,col="black", bg=colors[2],cex = cex)
 abline(a=0,b=1)
-plot(rowMeans(pred),pred.llr,bty="n",xlab="BARDDT",ylab="Polynomial",pch=pch,col="black", bg=colors[3],cex = cex)
+plot(rowMeans(pred),cate.llr,bty="n",xlab="BARDDT",ylab="Polynomial",pch=pch,col="black", bg=colors[3],cex = cex)
 abline(a=0,b=1)
 # par(mar=c(0.1,4,0.05,0.1))
 # plot.new()
 # legend("center",legend=c("T-BART","S-BART","Polynomial"),
 #        col="black",pt.bg=colors,pch=21,cex=1.25,title="Estimator",title.font = 2,ncol=3)
-dev.off()
+# dev.off()
+## CART tree for other methods
+### Function to calculate mean and sd of predicted CATE
+# summary.cate <- function(rpart.obj,pred,BART=TRUE)
+# {
+#   rpart.frame <- rpart.obj$frame
+#   left <- rpart.obj$where==which.min(rpart.frame$yval)
+#   right <- rpart.obj$where==which.max(rpart.frame$yval)
+#   ## Calculate CATE posterior for groups A and B
+#   if (BART)
+#   {
+#     cate.a <- colMeans(pred[left,])
+#     cate.b <- colMeans(pred[right,])
+#     sum.a <- c(mean(cate.a),sd(cate.a))
+#     sum.b <- c(mean(cate.b),sd(cate.b))
+#   } else
+#   {
+#     cate.a <- pred[left]
+#     cate.b <- pred[right]
+#     sum.a <- c(mean(cate.a),sd(cate.a))
+#     sum.b <- c(mean(cate.b),sd(cate.b))
+#   }
+#   return(cbind(sum.a,sum.b))
+# }
+# ### Function to make the table for each CART
+# cart.table <- function(rpart.obj,method)
+# {
+#   summary.barddt <- summary.cate(rpart.obj,pred)
+#   summary.tbart <- summary.cate(rpart.obj,pred.tbart)
+#   summary.sbart <- summary.cate(rpart.obj,pred.sbart)
+#   summary.llr <- summary.cate(rpart.obj,pred.llr,BART=FALSE)
+#   out <- rbind(summary.barddt,summary.tbart,summary.sbart,summary.llr)
+#   out <- round(out,2)
+#   out[c(2,4,6,8),1] <- paste0("(",out[c(2,4,6,8),1],")")
+#   out[c(2,4,6,8),2] <- paste0("(",out[c(2,4,6,8),2],")")
+#   out <- rbind(c("(A)","(B)"),out)
+#   out <- rbind(c(method,""),out)
+#   out <- cbind(c("","","BARDDT","","T-BART","","S-BART","","Polynomial",""),out)
+# }
+# ### T-BART
+# cart.tbart <- rpart(y~.,data.frame(y=cate.tbart,w[test,]),control = rpart.control(cp=0.015))
+# ## Plot CART tree
+# pdf("Figures/cate_gpa_tbart.pdf")
+# par(mfrow=c(1,1))
+# rpart.plot(cart.tbart,main="",box.col=plot.cart(cart.tbart))
+# dev.off()
+# ### S-BART
+# cart.sbart <- rpart(y~.,data.frame(y=cate.sbart,w[test,]),control = rpart.control(cp=0.015))
+# ## Plot CART tree
+# pdf("Figures/cate_gpa_sbart.pdf")
+# par(mfrow=c(1,1))
+# rpart.plot(cart.sbart,main="",box.col=plot.cart(cart.sbart))
+# dev.off()
+# ### Polynomial
+# cart.polynomial <- rpart(y~.,data.frame(y=pred.llr,w[test,]),control = rpart.control(cp=0.015))
+# ## Plot CART tree
+# pdf("Figures/cate_gpa_polynomial.pdf")
+# par(mfrow=c(1,1))
+# rpart.plot(cart.polynomial,main="",box.col=plot.cart(cart.polynomial))
+# dev.off()
+# #######
+# pdf("Figures/cate_gpa_others.pdf",width=6,height=10)
+# par(mfrow = c(3,1), mar = c(1,1,5,1))
+# rpart.plot(cart.tbart,main="",box.col=plot.cart(cart.tbart))
+# title(main="T-BART", line=1)
+# rpart.plot(cart.sbart,main="",box.col=plot.cart(cart.sbart))
+# title(main="S-BART", line=1)
+# rpart.plot(cart.polynomial,main="",box.col=plot.cart(cart.polynomial))
+# title(main="Polynomial", line=0)
+# dev.off()
+# ### CATE table
+# tab <- cart.table(cart.tbart,"T-BART")
+# tab <- rbind(tab,cart.table(cart.sbart,"S-BART"))
+# tab <- rbind(tab,cart.table(cart.polynomial,"Polynomial"))
+# stargazer::stargazer(tab,summary = F,rownames = F,colnames = F,
+#                      title="CATE mean and standard deviation (in parenthesis) for CART subgroups flagged by each method. Each panel represents the model whose results we fit the CART tree to. Column A is the subgroup with the lowest effect size, and column B is the subgroups with largest effect size.",
+#                      label = "tab:cart.others",
+#                      table.placement = "!htpb", font.size = "small")
