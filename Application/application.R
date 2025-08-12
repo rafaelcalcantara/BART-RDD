@@ -239,10 +239,7 @@ if (isTRUE(run.llr))
   df <- data.frame(x=x,w=w,y=y,z=z)
   df$z <- as.factor(df$z)
   df.train <- subset(df,c-h<=x & x<=c+h)
-  poly.fit <- bayeslm(y ~ (w.hsgrade_pct + as.factor(w.totcredits_year1) + as.factor(w.age_at_entry) +
-                             as.factor(w.male) + as.factor(w.bpl_north_america) + as.factor(w.loc_campus1) +
-                             as.factor(w.loc_campus2) + as.factor(w.loc_campus3)) * x * z + poly(x, 3),
-                      df.train,singular=TRUE,penalize=rep(1,74),prior="horseshoe")
+  poly.fit <- bayeslm(fmla,df.train,singular=TRUE,prior="horseshoe")
   ######
   df.test <- df[test,]
   xtest.a <- df.test
