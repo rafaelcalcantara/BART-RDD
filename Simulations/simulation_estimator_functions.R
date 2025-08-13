@@ -75,7 +75,7 @@ fit.sbart <- function(y,x,w,z,test,c)
 fit.polynomial <- function(y,x,w,z,h,test,c)
 {
   dfw <- data.frame(w=w)
-  fmla <- as.formula(paste('y~(',paste(paste('poly(', names(dfw), ', 4)', sep=''),collapse="+"),')*poly(x,1)*z + poly(x,3)'))
+  fmla <- as.formula(paste('y~(',paste(paste('poly(', names(dfw), ', 4,raw=FALSE)', sep=''),collapse="+"),')*x*z + poly(x,3,raw=FALSE) - x'))
   df <- data.frame(x=x,w=w,y=y,z=z)
   df$z <- as.factor(df$z)
   df.train <- subset(df,c-h<=x & x<=c+h)
@@ -83,9 +83,9 @@ fit.polynomial <- function(y,x,w,z,h,test,c)
   df.test <- df[test,]
   xmat_test.1 <- xmat_test.0 <- df.test
   xmat_test.1$x <- c
-  xmat_test.1$z <- "1"
+  xmat_test.1$z <- factor(1,levels=0:1)
   xmat_test.0$x <- c
-  xmat_test.0$z <- "0"
+  xmat_test.0$z <- factor(0,levels=0:1)
   pred1 <- predict(poly.fit,newdata=xmat_test.1)
   pred0 <- predict(poly.fit,newdata=xmat_test.0)
   cate <- pred1-pred0
@@ -93,6 +93,76 @@ fit.polynomial <- function(y,x,w,z,h,test,c)
   out <- list(yhat=yhat,cate=cate)
   return(out)
 }
+## Horseshoe
+fit.horseshoe <- function(y,x,w,z,h,test,c)
+{
+  dfw <- data.frame(w=w)
+  fmla <- as.formula(paste('y~(',paste(paste('poly(', names(dfw), ', 4,raw=TRUE)', sep=''),collapse="+"),')*x*z + poly(x,3,raw=TRUE) - x'))
+  df <- data.frame(x=x,w=w,y=y,z=z)
+  df$z <- as.factor(df$z)
+  df.train <- subset(df,c-h<=x & x<=c+h)
+  ####
+  tt = terms(fmla)
+  TT = delete.response(tt)
+  mf <- model.frame(TT, data = df.train)
+  X <- model.matrix(attr(mf, "terms"), data = mf)
+  ####
+  poly.fit <- bayeslm::bayeslm(fmla,df.train,penalize=rep(1,ncol(X)-1),singular=TRUE,prior="horseshoe")
+  df.test <- df[test,]
+  xmat_test.1 <- xmat_test.0 <- df.test
+  xmat_test.1$x <- c
+  xmat_test.1$z <- factor(1,levels=0:1)
+  xmat_test.0$x <- c
+  xmat_test.0$z <- factor(0,levels=0:1)
+  xtest <- rbind(xmat_test.1,xmat_test.0,df.test)
+  ####
+  tt = terms(fmla)
+  TT = delete.response(tt)
+  mf <- model.frame(TT, data = xtest)
+  X <- model.matrix(attr(mf, "terms"), data = mf)
+  ####
+  X1 <- X[1:(nrow(X)/3),]
+  X0 <- X[(nrow(X)/3+1):(2*nrow(X)/3),]
+  post <- apply(poly.fit$beta,1, function(i) (X1-X0) %*% i)
+  yhat <- apply(poly.fit$beta,1, function(i) X[(2*nrow(X)/3+1):nrow(X),] %*% i)
+  out <- list(yhat=yhat,post=post)
+  return(out)
+}
+## Ridge
+fit.ridge <- function(y,x,w,z,h,test,c)
+{
+  dfw <- data.frame(w=w)
+  fmla <- as.formula(paste('y~(',paste(paste('poly(', names(dfw), ', 4,raw=TRUE)', sep=''),collapse="+"),')*x*z + poly(x,3,raw=TRUE) - x'))
+  df <- data.frame(x=x,w=w,y=y,z=z)
+  df$z <- as.factor(df$z)
+  df.train <- subset(df,c-h<=x & x<=c+h)
+  ####
+  tt = terms(fmla)
+  TT = delete.response(tt)
+  mf <- model.frame(TT, data = df.train)
+  X <- model.matrix(attr(mf, "terms"), data = mf)
+  ####
+  poly.fit <- bayeslm::bayeslm(fmla,df.train,penalize=rep(1,ncol(X)-1),singular=TRUE,prior="ridge")
+  df.test <- df[test,]
+  xmat_test.1 <- xmat_test.0 <- df.test
+  xmat_test.1$x <- c
+  xmat_test.1$z <- factor(1,levels=0:1)
+  xmat_test.0$x <- c
+  xmat_test.0$z <- factor(0,levels=0:1)
+  xtest <- rbind(xmat_test.1,xmat_test.0,df.test)
+  ####
+  tt = terms(as.formula(fmla))
+  TT = delete.response(tt)
+  mf <- model.frame(TT, data = xtest)
+  X <- model.matrix(attr(mf, "terms"), data = mf)
+  X1 <- X[1:(nrow(X)/3),]
+  X0 <- X[(nrow(X)/3+1):(2*nrow(X)/3),]
+  post <- apply(poly.fit$beta,1, function(i) (X1-X0) %*% i)
+  yhat <- apply(poly.fit$beta,1, function(i) X[(2*nrow(X)/3+1):nrow(X),] %*% i)
+  out <- list(yhat=yhat,post=post)
+  return(out)
+}
+## ATE
 fit.ate <- function(y,x)
 {
   return(rdrobust::rdrobust(y,x,c))
@@ -109,25 +179,53 @@ fit_general <- function(sample)
   h <- ate$bws[2,2]
   ate <- ate$coef[3]
   test <- -Owidth+c<=x & x<=Owidth+c
-  write.table(ate,paste0("Results/",dgp,"/ate_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE, sep = ",")
-  time.barddt <- system.time({
-    pred.barddt <- fit.barddt(y,x,w,z,test,c)
-  })
-  time.tbart <- system.time({
-    pred.tbart <- fit.tbart(y,x,w,z,test,c)
-  })
-  time.sbart <- system.time({
-    pred.sbart <- fit.sbart(y,x,w,z,test,c)
-  })
-  time.polynomial <- system.time({
-    pred.polynomial <- fit.polynomial(y,x,w,z,h,test,c)
-  })
-  write.table(c(time.barddt[3],sample),paste0("Time/",dgp,"/barddt.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
-  write.table(c(time.tbart[3],sample),paste0("Time/",dgp,"/tbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
-  write.table(c(time.sbart[3],sample),paste0("Time/",dgp,"/sbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
-  write.table(c(time.polynomial[3],sample),paste0("Time/",dgp,"/polynomial.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
-  write.table(c(time.barddt[3]+time.tbart[3]+time.sbart[3]+time.polynomial[3],sample),paste0("Time/",dgp,"/total_per_sample.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  if ("barddt" %in% models)
+  {
+    time.barddt <- system.time({
+      pred.barddt <- fit.barddt(y,x,w,z,test,c)
+    })
+    write.table(c(time.barddt[3],sample),paste0("Time/",dgp,"/barddt.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  }
+  if ("tbart" %in% models)
+  {
+    time.tbart <- system.time({
+      pred.tbart <- fit.tbart(y,x,w,z,test,c)
+    })
+    write.table(c(time.tbart[3],sample),paste0("Time/",dgp,"/tbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  }
+  if ("sbart" %in% models)
+  {
+    time.sbart <- system.time({
+      pred.sbart <- fit.sbart(y,x,w,z,test,c)
+    })
+    write.table(c(time.sbart[3],sample),paste0("Time/",dgp,"/sbart.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+  }
+  if ("polynomial" %in% models)
+  {
+    time.polynomial <- system.time({
+      pred.polynomial <- fit.polynomial(y,x,w,z,h,test,c)
+    })
+    write.table(c(time.polynomial[3],sample),paste0("Time/",dgp,"/polynomial.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+    # print("Ran polynomial")
+  }
+  if ("horseshoe" %in% models)
+  {
+    time.horseshoe <- system.time({
+      pred.horseshoe <- fit.horseshoe(y,x,w,z,h,test,c)
+    })
+    write.table(c(time.horseshoe[3],sample),paste0("Time/",dgp,"/horseshoe.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+    # print("Ran horseshoe")
+  }
+  if ("ridge" %in% models)
+  {
+    time.ridge <- system.time({
+      pred.ridge <- fit.ridge(y,x,w,z,h,test,c)
+    })
+    write.table(c(time.ridge[3],sample),paste0("Time/",dgp,"/ridge.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
+    # print("Ran ridge")
+  }
+  # write.table(c(time.barddt[3]+time.tbart[3]+time.sbart[3]+time.polynomial[3]+time.horseshoe[3]+time.ridge[3],sample),paste0("Time/",dgp,"/total_per_sample.csv"), append=TRUE, row.names = FALSE, col.names = FALSE, sep = ",")
   # Processing results
-  calc.rmse(sample,ate,test,pred.barddt,pred.tbart,pred.sbart,pred.polynomial)
-  point.est(sample,test,h,c,pred.barddt,pred.tbart,pred.sbart,pred.polynomial)
+  calc.rmse(sample,ate,test)
+  point.est(sample,ate,test)
 }

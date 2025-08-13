@@ -1,4 +1,4 @@
-cluster <- TRUE
+cluster <- FALSE
 n <- 4000
 s <- 100
 # Create necessary folders if non-existent
@@ -15,10 +15,13 @@ if ("Logs" %in% list.files() == FALSE) dir.create("Logs")
 if ("Results" %in% list.files() == FALSE) dir.create("Results")
 if ("RMSE" %in% list.files("Results") == FALSE) dir.create("Results/RMSE")
 if ("Fits" %in% list.files("Results") == FALSE) dir.create("Results/Fits")
-if ("Screenshots" %in% list.files("Results") == FALSE) dir.create("Results/Screenshots")
+# if ("Screenshots" %in% list.files("Results") == FALSE) dir.create("Results/Screenshots")
 ## Times
 if ("Time" %in% list.files() == FALSE) dir.create("Time")
 # Generate scripts for each DGP
+models <- c("barddt","tbart","sbart","polynomial","horseshoe","ridge")
+# models <- c("polynomial","horseshoe","ridge")
+# models <- "polynomial"
 source("generate_master_scripts.R")
 # Run all regressions
 for (i in 1:6)
