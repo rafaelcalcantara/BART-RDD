@@ -15,7 +15,7 @@ n <- 4000
 ## Simulation reps
 s <- 100
 ## Which models to run
-models <- c('barddt','tbart','sbart','polynomial','horseshoe','ridge')
+models <- c('horseshoe','ridge')
 ## Generate data
 ### Identifier of DGP configuration for names of data and results files
 dgp <- 'k1_1_k2_1_k3_0_k4_0.1_k5_1_p_2_rho_0'

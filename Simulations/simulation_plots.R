@@ -1,23 +1,3 @@
-# ## Check best estimator for all 128 DGPs
-# rmse <- matrix(0,128,11)
-# colnames(rmse) <- c("k1","k2","k3","k4","k5","p","rho",
-#                     "BARDDT","T-BART","S-BART","Polynomial")
-# for (i in 1:length(list.files("Results/RMSE")))
-# {
-#   dgp <- list.files("Results/RMSE")[i]
-#   out <- matrix(0,length(list.files(paste0("Results/RMSE/",dgp))),5)
-#   for (sample in 1:length(list.files(paste0("Results/RMSE/",dgp))))
-#   {
-#     file.name <- list.files(paste0("Results/RMSE/",dgp))[sample]
-#     file.name <- paste0("Results/RMSE/",dgp,"/",file.name)
-#     out[sample,] <- as.matrix(read.table(file.name))
-#     out[sample,] <- out[sample,]/out[sample,5]
-#   }
-#   rmse[i,] <- as.numeric(c(strsplit(dgp,"_")[[1]][(1:7)*2],round(colMeans(out)[1:4],3)))
-# }
-# table(apply(rmse[,8:11],1,function(i) which(i==min(i))))
-# rmse[apply(rmse[,8:11],1,function(i) which(i==min(i)))!=1,]
-## Average for each DGP
 Owidth <- 0.1
 res.list <- c("k1_1_k2_1_k3_0_k4_0.1_k5_0_p_2_rho_0.5",
               "k1_1_k2_1_k3_0_k4_0.1_k5_0_p_4_rho_0",
@@ -54,9 +34,6 @@ for (i in 1:length(res.list))
   rmse.mean[i,] <- as.numeric(c(strsplit(dgp,"_")[[1]][(1:7)*2],round(colMeans(out),3)))
 }
 rmse.mean <- as.data.frame(rmse.mean)
-subset(rmse.mean,k3==1)
-subset(rmse.mean,k3==0)
-rmse.mean
 print(xtable::xtable(subset(rmse.mean,(k1==1 & k2==1 & k3==0 & k4==0.1) | (k1==5 & k2==0.25 & k3==1 & k4==0.5)),
                      caption="Average RMSE per DGP, also divided here by the RMSE of the naive ATE estimator",
                      label="tab:rmse.average",
@@ -65,7 +42,7 @@ print(xtable::xtable(subset(rmse.mean,(k1==1 & k2==1 & k3==0 & k4==0.1) | (k1==5
       include.rownames=FALSE)
 ## Boxplot grid
 ind <- 0
-pdf(paste0("Results/Figures/boxplots.pdf"))
+# pdf(paste0("Results/Figures/boxplots.pdf"))
 par(mfrow=c(2,3),mai=c(0.7,0.4,0.4,0.1))
 for (dgp in res.list[1:3])
 {
@@ -145,7 +122,7 @@ for (dgp in res.list[4:6])
   }
   abline(h=1,col="red")
 }
-dev.off()
+# dev.off()
 ##
 sample <- 4
 dgp <- res.list[1]

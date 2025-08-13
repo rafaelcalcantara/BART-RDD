@@ -113,44 +113,4 @@ point.est <- function(sample,ate,test)
     out <- cbind(temp,Ridge=rowMeans(ridge))
     write.table(out,paste0("Results/Fits/",dgp,"/cate/ridge_sample_",sample,".csv"), row.names = FALSE, col.names = FALSE)
   }
-  # ## Yhat
-  # barddt <- pred.barddt$yhat
-  # tbart1 <- pred.tbart$yhat1
-  # tbart0 <- pred.tbart$yhat0
-  # sbart <- pred.sbart$yhat
-  # polynomial <- pred.polynomial$yhat
-  # horseshoe <- pred.horseshoe$yhat
-  # ridge <- pred.ridge$yhat
-  # ### Make polynomial match dimensions
-  # poly.sample <- c-bw<=x & x<=c+h
-  # ind <- 1
-  # poly <- rep(NA,length(poly.sample))
-  # for (i in 1:length(poly.sample))
-  # {
-  #   if (isTRUE(poly.sample[i]))
-  #   {
-  #     poly[i] <- polynomial[ind]
-  #     ind <- ind+1
-  #   }
-  # }
-  # ## Make T-BART match dimensions
-  # ind0 <- ind1 <- 1
-  # tbart <- rep(NA,length(z))
-  # tbart1 <- rowMeans(tbart1)
-  # tbart0 <- rowMeans(tbart0)
-  # for (i in 1:length(z))
-  # {
-  #   if (z[i]==1)
-  #   {
-  #     tbart[i] <- tbart1[ind1]
-  #     ind1 <- ind1 + 1
-  #   } else
-  #   {
-  #     tbart[i] <- tbart0[ind0]
-  #     ind0 <- ind0 + 1
-  #   }
-  # }
-  # ##
-  # out <- cbind(X=x,Y=y,BARDDT=rowMeans(barddt),`T-BART`=tbart,`S-BART`=rowMeans(sbart),Polynomial=poly)
-  # write.table(out,paste0("Results/Fits/",dgp,"/yhat/sample_",sample,".csv"), row.names = FALSE, col.names = FALSE)
 }
