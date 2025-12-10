@@ -4,14 +4,14 @@ folders <- gsub(".*dgp_(.+)_sample.*","\\1",files)
 samples <- gsub(".*sample","sample",files)
 samples <- gsub(".rds",".mat",samples)
 ## Create data folder for Reguly estimation
-if (dir.exists("Reguly/Data")==FALSE)
+if (dir.exists("RD-Tree/Data")==FALSE)
 {
-  dir.create("Reguly/Data")
+  dir.create("RD-Tree/Data")
 }
 for (i in 1:length(files))
 {
   dgp <- files[i]
-  subfolder <- paste0("Reguly/Data/",folders[i])
+  subfolder <- paste0("RD-Tree/Data/",folders[i])
   sample <- samples[i]
   if (dir.exists(subfolder)==FALSE)
   {

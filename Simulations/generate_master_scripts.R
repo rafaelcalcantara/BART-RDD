@@ -22,7 +22,6 @@ dgp[6,] <- c(5,0.25,1,0.5,1,4,0)
 # }
 # dgp <- expand.grid(k1,k2,k3,k4,k5,p,rho)
 colnames(dgp) <- c("k1","k2","k3","k4","k5","p","rho")
-models <- c("leaf.rdd","tbart","sbart","polynomial")
 ##
 txt <- NA
 for (i in 1:nrow(dgp))
@@ -62,7 +61,7 @@ for (i in 1:nrow(dgp))
   } else
   {
     txt[30] <- 'batch <- c(1,5)'
-    txt[31] <- 'for (i in 0:floor((s-1)/batch[2])) { # Running simulations in batches of 10' 
+    txt[31] <- 'for (i in 0:floor((s-1)/batch[2])) { # Running simulations in batches of 10'
     txt[32] <- 's0 <- batch[1]+i*batch[2]'
     txt[33] <- 's1 <- batch[2]+i*batch[2]'
     txt[34] <- 'batch.args <- paste(s0,s1,dgp,n,c,Owidth,paste(k1,k2,k3,k4,k5,p,rho, colapse=" "),collapse=" ")'
