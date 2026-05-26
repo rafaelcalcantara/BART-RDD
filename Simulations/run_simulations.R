@@ -20,7 +20,7 @@ if ("Fits" %in% list.files("Results") == FALSE) dir.create("Results/Fits")
 if ("Time" %in% list.files() == FALSE) dir.create("Time")
 # Generate scripts for each DGP
 # models <- c("barddt","tbart","sbart","polynomial","horseshoe","ridge")
-models <- c("polynomial","horseshoe","ridge")
+models <- c("barddt","tbart","sbart","polynomial","horseshoe","ridge")
 # models <- "polynomial"
 source("generate_master_scripts.R")
 # Run all regressions

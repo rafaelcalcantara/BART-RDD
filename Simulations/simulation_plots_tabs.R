@@ -1,5 +1,5 @@
 if ("Figures" %in% list.files("Results") == FALSE) dir.create("Results/Figures/")
-# Table 1----------------------------------------------------------------------
+# Table 2----------------------------------------------------------------------
 Owidth <- 0.1
 res.list <- c("k1_1_k2_1_k3_0_k4_0.1_k5_0_p_2_rho_0.5",
               "k1_1_k2_1_k3_0_k4_0.1_k5_0_p_4_rho_0",
@@ -42,7 +42,7 @@ print(xtable::xtable(subset(rmse.mean,(k1==1 & k2==1 & k3==0 & k4==0.1) | (k1==5
                      digits=2,
                      align=rep("c",1+ncol(rmse.mean))),
       include.rownames=FALSE)
-# Figure 5---------------------------------------------------------------------
+# Figure 4---------------------------------------------------------------------
 axis.font.size <- 0.7
 estimators <- c("BARDDT","T-BART","OLS","HS","Ridge","RD-Tree")
 angle <- 90
@@ -133,7 +133,7 @@ for (dgp in res.list[4:6])
   abline(h=1,col="red")
 }
 dev.off()
-# Figure 6---------------------------------------------------------------------
+# Figure 5---------------------------------------------------------------------
 sample <- 4
 ## Easy fits
 dgp <- res.list[1]
