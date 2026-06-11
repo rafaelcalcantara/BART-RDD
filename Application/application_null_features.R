@@ -7,7 +7,7 @@ library(xtable)
 library(MASS)
 library(doParallel)
 library(foreach)
-run.barddt <- TRUE ## toggle to fit BARDDT
+run.barddt <- FALSE ## toggle to fit BARDDT
 ## Read data-------------------------------------------------------------------
 data <- read.csv("gpa.csv")
 y <- data$nextGPA
@@ -132,53 +132,36 @@ cate.kde <- function(rpart.obj,pred)
 }
 ## Produce KD estimates
 kdens.barddt <- cate.kde(cate,pred)
-kdens.sbart <- cate.kde(cate,pred.sbart)
-kdens.tbart <- cate.kde(cate,pred.tbart)
-kdens.llr <- cate.kde(cate,pred.llr)
-
-colors <- c("magenta3","dodgerblue","green3")
 
 contour.min <- 1
 
-ylim <- quantile(c(kdens.barddt$y,kdens.tbart$y,kdens.sbart$y),c(0.3,0.9))
-xlim <- quantile(c(kdens.barddt$x,kdens.tbart$x,kdens.sbart$x),c(0.3,0.9))
 drawlabels <- FALSE
 lwd <- 1.2
 lvl <- c(1,15,50)
 
 pdf("Figures/contour_null_features.pdf",width=9,height=4.5)
-layout(matrix(c(1,2,1,3,1,4),ncol=3),heights = c(0.25,1.75))
-par(mar=c(0.1,4,0.05,0.1))
-plot.new()
-legend("center",col=c("black",colors),legend = c("BARDDT","T-BART","S-BART","Horseshoe"),ncol=4,lty=1,lwd=1.5)
-par(mar=c(4,4,0.1,0.1))
-contour(kdens.barddt,bty='n',xlab="Group A",ylab="Group B",col="black",levels=lvl,ylim=ylim,xlim=xlim,drawlabels=drawlabels,lwd=lwd+0.25)
-contour(cate.kde(cate,pred.tbart),bty='n',xlab="Group A",ylab="Group B",add=TRUE,col=colors[1],levels=lvl,drawlabels=drawlabels,lwd=lwd)
-abline(a=0,b=1)
-contour(kdens.barddt,bty='n',xlab="Group A",ylab="Group B",col="black",levels=lvl,ylim=ylim,xlim=xlim,drawlabels=drawlabels,lwd=lwd+0.25)
-contour(cate.kde(cate,pred.sbart),bty='n',xlab="Group A",ylab="Group B",add=TRUE,col=colors[2],levels=lvl,drawlabels=drawlabels,lwd=lwd)
-abline(a=0,b=1)
-contour(kdens.barddt,bty='n',xlab="Group A",ylab="Group B",col="black",levels=lvl,ylim=ylim,xlim=xlim,drawlabels=drawlabels,lwd=lwd+0.25)
-contour(cate.kde(cate,pred.llr),bty='n',xlab="Group A",ylab="Group B",add=TRUE,col=colors[3],levels=lvl,drawlabels=drawlabels,lwd=lwd)
+contour(kdens.barddt,bty='n',xlab="Group A",ylab="Group B",col="black",levels=lvl,drawlabels=drawlabels,lwd=lwd+0.25)
 abline(a=0,b=1)
 dev.off()
-# ### BARDDT
-# pdf("Figures/cate_difference.pdf")
-# contour(cate.kde(cate,pred),bty='n',xlab="Group A",ylab="Group B")
-# abline(a=0,b=1)
-# dev.off()
-# ### S-BART
-# pdf("Figures/cate_difference_sbart.pdf")
-# contour(cate.kde(cate,pred.sbart),bty='n',xlab="Group A",ylab="Group B")
-# abline(a=0,b=1)
-# dev.off()
-# ### T-BART
-# pdf("Figures/cate_difference_tbart.pdf")
-# contour(cate.kde(cate,pred.tbart),bty='n',xlab="Group A",ylab="Group B")
-# abline(a=0,b=1)
-# dev.off()
-# ### LLR
-# pdf("Figures/cate_difference_llr.pdf")
-# contour(cate.kde(cate,pred.llr),bty='n',xlab="Group A",ylab="Group B")
-# abline(a=0,b=1)
-# dev.off()
+## Correlations
+vals <- cor(rowMeans(pred),w[test,9:28])
+n   <- length(vals)
+row_names <- paste0("$W_{", seq_len(n), "}$")
+rounded   <- formatC(round(vals, 3), format = "f", digits = 3)
+
+sink("Tables/null_correlations.tex")
+cat("\\begin{table}[ht]\n")
+cat("\\centering\n")
+cat("\\begin{tabular}{lc}\n")
+cat("\\hline\n")
+cat("& Value \\\\\n")
+cat("\\hline\n")
+for (i in seq_len(n)) {
+  cat(row_names[i], "&", rounded[i], "\\\\\n")
+}
+cat("\\hline\n")
+cat("\\end{tabular}\n")
+cat("\\caption{}\n")
+cat("\\label{tab:}\n")
+cat("\\end{table}\n")
+sink()
