@@ -82,7 +82,7 @@ run_one_sample <- function(sample, dgp_params, w_fixed, c_val, Owidth, sig.prior
   #   set.seed(sample); source("simulation_data.R")  [wcond drawn inside]
   set.seed(sample)
   Kcond   <- K - K %*% beta %*% t(beta) %*% K
-  wcond   <- MASS::mvrnorm(10000, -beta * m, Kcond)
+  wcond   <- MASS::mvrnorm(10000, -drop(K%*%beta) * m, Kcond)
   sf      <- 1 / sd(mu_fn(c_val, wcond, k1, k3, 1))
   k2.new  <- k2 / sd(tau0(wcond))
   tau.bar <- mean(tau0(wcond))

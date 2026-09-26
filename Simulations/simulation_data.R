@@ -27,7 +27,7 @@ tau <- function(wval,minval,k2,tau.bar) k2*(tau0(wval) - tau.bar) + minval
 
 ## Demeaning tau and adjusting parameters
 Kcond <- K - K%*%beta%*%t(beta)%*%K
-wcond <- MASS::mvrnorm(10000,-beta*m, Kcond)
+wcond <- MASS::mvrnorm(10000,-drop(K%*%beta)*m, Kcond)
 
 sf <- 1/sd(mu(c,wcond,k1,k3,1))
 
